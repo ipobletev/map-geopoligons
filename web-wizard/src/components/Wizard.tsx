@@ -5,11 +5,13 @@ import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { ArrowRight, ArrowLeft, Save, CheckCircle, Trash2, Upload, Download } from 'lucide-react';
+import { parseHolFile } from '../utils/holParser';
 
 const Wizard = () => {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [data, setData] = useState<Record<string, any>>({});
     const [currentStepData, setCurrentStepData] = useState<any>(null);
+    const [centerTrigger, setCenterTrigger] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const currentStep = WIZARD_STEPS[currentStepIndex];
@@ -67,6 +69,10 @@ const Wizard = () => {
         }
     };
 
+    const handleCenterMap = () => {
+        setCenterTrigger(prev => prev + 1);
+    };
+
     const handleLoadGeoJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -75,7 +81,15 @@ const Wizard = () => {
         reader.onload = (e) => {
             try {
                 const content = e.target?.result as string;
-                const parsed = JSON.parse(content);
+                let parsed;
+
+                if (file.name.toLowerCase().endsWith('.hol')) {
+                    parsed = parseHolFile(content);
+                    alert(`Parsed .hol file with ${parsed.features.length} points.`);
+                } else {
+                    parsed = JSON.parse(content);
+                }
+
                 // We assume loading into current step
                 // But maybe we want to load a full project?
                 // Request says "un boton para cargar geojson".
@@ -90,15 +104,17 @@ const Wizard = () => {
                 // We can pass it via a new prop or just let the user draw.
                 // Wait, if we want to load it into the map, we need to pass it to MapComponent.
                 // Let's update MapComponent to accept `initialData` for the editable layer.
+                // Let's update MapComponent to accept `initialData` for the editable layer.
 
                 // Actually, a better way for "Load GeoJSON" in this context might be to load it as the *saved* data for this step.
                 const enriched = enrichGeoJSONWithUTM(parsed);
                 setData(prev => ({ ...prev, [currentStep.key]: enriched }));
 
-                alert(`Loaded GeoJSON into step: ${currentStep.label}`);
+                setCenterTrigger(prev => prev + 1); // Auto-center after load
+                alert(`Loaded data into step: ${currentStep.label}`);
             } catch (err) {
                 console.error(err);
-                alert('Error parsing GeoJSON');
+                alert('Error parsing file');
             }
         };
         reader.readAsText(file);
@@ -153,6 +169,13 @@ const Wizard = () => {
                             <Trash2 className="w-3 h-3" /> Clear All
                         </button>
                         <button
+                            onClick={handleCenterMap}
+                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors"
+                            title="Center map on data"
+                        >
+                            <Upload className="w-3 h-3 rotate-90" /> Center Map
+                        </button>
+                        <button
                             onClick={() => fileInputRef.current?.click()}
                             className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
                             title="Load GeoJSON"
@@ -163,7 +186,7 @@ const Wizard = () => {
                             type="file"
                             ref={fileInputRef}
                             onChange={handleLoadGeoJSON}
-                            accept=".geojson,.json"
+                            accept=".geojson,.json,.hol"
                             className="hidden"
                         />
                     </div>
@@ -179,10 +202,10 @@ const Wizard = () => {
                                 key={step.key}
                                 onClick={() => handleStepClick(index)}
                                 className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-md ${isActive
-                                        ? 'bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-200'
-                                        : hasData
-                                            ? 'bg-green-50/50 border-green-200'
-                                            : 'bg-white border-slate-100 opacity-70 hover:opacity-100'
+                                    ? 'bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-200'
+                                    : hasData
+                                        ? 'bg-green-50/50 border-green-200'
+                                        : 'bg-white border-slate-100 opacity-70 hover:opacity-100'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-2">
@@ -241,6 +264,7 @@ const Wizard = () => {
                         drawMode={currentStep.drawMode}
                         existingData={data}
                         onUpdate={handleMapUpdate}
+                        centerTrigger={centerTrigger}
                     />
                 </div>
 

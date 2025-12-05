@@ -27,6 +27,7 @@ interface MapComponentProps {
     drawMode: 'marker' | 'polygon' | 'polyline' | 'any';
     existingData: Record<string, any>;
     onUpdate: (geojson: any) => void;
+    centerTrigger: number;
 }
 
 interface EditControlProps {
@@ -50,19 +51,24 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
         featureGroupRef.current = editableLayers;
 
         // Load Initial Data
-        if (initialData) {
-            const geoJsonLayer = L.geoJSON(initialData, {
-                pointToLayer: (_feature, latlng) => {
-                    let icon = DefaultIcon;
-                    if (currentStepKey === 'objective') icon = ObjectiveIcon;
-                    if (currentStepKey === 'home') icon = HomeIcon;
-                    return L.marker(latlng, { icon: icon });
-                }
-            });
-            geoJsonLayer.eachLayer((layer) => {
-                editableLayers.addLayer(layer);
-            });
-        }
+        const loadData = () => {
+            editableLayers.clearLayers();
+            if (initialData) {
+                const geoJsonLayer = L.geoJSON(initialData, {
+                    pointToLayer: (_feature, latlng) => {
+                        let icon = DefaultIcon;
+                        if (currentStepKey === 'objective') icon = ObjectiveIcon;
+                        if (currentStepKey === 'home') icon = HomeIcon;
+                        return L.marker(latlng, { icon: icon });
+                    }
+                });
+                geoJsonLayer.eachLayer((layer) => {
+                    editableLayers.addLayer(layer);
+                });
+            }
+        };
+
+        loadData();
 
         // Determine icon based on step
         let markerIcon = DefaultIcon;
@@ -119,12 +125,12 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
             map.off(L.Draw.Event.DELETED, onDeleted);
             featureGroupRef.current = null;
         };
-    }, [map, drawMode, currentStepKey]); // Re-run when these change (which happens on step change)
+    }, [map, drawMode, currentStepKey, initialData]); // Re-run when these change
 
     return null;
 };
 
-const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, existingData, onUpdate }) => {
+const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, existingData, onUpdate, centerTrigger }) => {
     const [map, setMap] = useState<L.Map | null>(null);
     const featureGroupRef = useRef<L.FeatureGroup | null>(null);
 
@@ -136,6 +142,44 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
             }, 100);
         }
     }, [map, currentStepKey]);
+
+    // Auto-center when centerTrigger changes
+    useEffect(() => {
+        if (!map) return;
+
+        const layers: L.Layer[] = [];
+
+        // Collect all static layers
+        Object.values(existingData).forEach(data => {
+            if (data && data.features && data.features.length > 0) {
+                const layer = L.geoJSON(data);
+                layers.push(layer);
+            }
+        });
+
+        // Collect current editable layer if it has data
+        if (featureGroupRef.current) {
+            // We can't easily get the bounds of the FeatureGroup if it's empty, 
+            // but if it has layers, we can.
+            // However, featureGroupRef.current might not be fully populated with the *initialData* 
+            // if this runs before EditControl mounts/populates. 
+            // But existingData[currentStepKey] is passed to EditControl.
+            // So we can just use existingData[currentStepKey] to calculate bounds.
+            const currentData = existingData[currentStepKey];
+            if (currentData && currentData.features && currentData.features.length > 0) {
+                const layer = L.geoJSON(currentData);
+                layers.push(layer);
+            }
+        }
+
+        if (layers.length > 0) {
+            const group = L.featureGroup(layers);
+            const bounds = group.getBounds();
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 22 });
+            }
+        }
+    }, [map, existingData, currentStepKey, centerTrigger]);
 
     const handleChange = () => {
         if (featureGroupRef.current) {
@@ -168,6 +212,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                 zoom={15}
                 style={{ height: '100%', width: '100%' }}
                 ref={setMap}
+                maxZoom={22}
             >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
