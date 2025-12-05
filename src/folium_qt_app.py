@@ -4,11 +4,12 @@ import os
 import json
 from datetime import datetime
 import folium
+import traceback
 from folium.plugins import Draw
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
-from gps_converter import GPSConverter
+from gps_utm_converter import GpsUtmConverter
 
 class MapWindow(QMainWindow):
     def __init__(self, location, save_folder, resize):
@@ -111,7 +112,7 @@ class MapWindow(QMainWindow):
                     # Point: [lon, lat]
                     if len(coords) >= 2:
                         lon, lat = coords[0], coords[1]
-                        utm_coords = GPSConverter.to_utm(lat, lon)
+                        utm_coords = GpsUtmConverter.to_utm(lat, lon)
                         
                 elif geom_type == 'LineString':
                     # LineString: [[lon, lat], ...]
@@ -119,7 +120,7 @@ class MapWindow(QMainWindow):
                     for point in coords:
                         if len(point) >= 2:
                             lon, lat = point[0], point[1]
-                            utm = GPSConverter.to_utm(lat, lon)
+                            utm = GpsUtmConverter.to_utm(lat, lon)
                             if utm:
                                 utm_coords.append(utm)
                                 
@@ -131,7 +132,7 @@ class MapWindow(QMainWindow):
                         for point in ring:
                             if len(point) >= 2:
                                 lon, lat = point[0], point[1]
-                                utm = GPSConverter.to_utm(lat, lon)
+                                utm = GpsUtmConverter.to_utm(lat, lon)
                                 if utm:
                                     ring_utm.append(utm)
                         utm_coords.append(ring_utm)
@@ -155,6 +156,7 @@ class MapWindow(QMainWindow):
 
         except Exception as e:
             print(f"Error processing GeoJSON: {e}")
+            traceback.print_exc()
             QMessageBox.critical(self, "Error", f"Error saving: {str(e)}")
 
     def clear_map(self):

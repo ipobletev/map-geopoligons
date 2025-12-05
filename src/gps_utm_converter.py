@@ -1,22 +1,22 @@
 import utm
 
-class GPSConverter:
+class GpsUtmConverter:
     """
-    Clase para convertir coordenadas GPS (latitud, longitud) a UTM.
-    Utiliza la librería 'utm' para realizar la conversión automática de zona.
+    Class to convert GPS coordinates (latitude, longitude) to UTM.
+    Utilizes the 'utm' library to automatically handle zone conversion.
     """
     
     @staticmethod
     def to_utm(lat, lon):
         """
-        Convierte latitud y longitud a coordenadas UTM.
+        Convert latitude and longitude to UTM coordinates.
         
         Args:
-            lat (float): Latitud
-            lon (float): Longitud
+            lat (float): Latitude
+            lon (float): Longitude
             
         Returns:
-            dict: Diccionario con 'easting', 'northing', 'zone_number', 'zone_letter'
+            dict: Dictionary with 'easting', 'northing', 'zone_number', 'zone_letter'
         """
         try:
             easting, northing, zone_number, zone_letter = utm.from_latlon(lat, lon)
@@ -27,5 +27,5 @@ class GPSConverter:
                 'zone_letter': zone_letter
             }
         except Exception as e:
-            print(f"Error al convertir coordenadas: {e}")
+            print(f"Error converting coordinates: {e}")
             return None
