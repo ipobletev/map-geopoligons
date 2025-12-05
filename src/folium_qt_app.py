@@ -41,64 +41,15 @@ class MapWindow(QMainWindow):
         html_content = data.getvalue().decode()
 
         # More robust custom script
-        custom_js = """
-        <script>
-            // Define global variables immediately
-            window.myDrawnItems = new L.FeatureGroup();
-            
-            window.getGeoJSON = function() {
-                return JSON.stringify(window.myDrawnItems.toGeoJSON());
-            };
-
-            window.clearMap = function() {
-                window.myDrawnItems.clearLayers();
-                // Also try to clear map layers if they were added directly
-                // This depends on how the Draw plugin handles layers, but myDrawnItems is our tracker
-            };
-
-            // Initialization function
-            function initMapInteractions() {
-                var map = null;
-                // Find the map instance
-                for (var key in window) {
-                    if (window[key] instanceof L.Map) {
-                        map = window[key];
-                        break;
-                    }
-                }
-
-                if (map) {
-                    console.log("Map found, initializing interactions.");
-                    map.addLayer(window.myDrawnItems);
-
-                    // Listen for creation events
-                    map.on('draw:created', function(e) {
-                        var layer = e.layer;
-                        window.myDrawnItems.addLayer(layer);
-                        map.addLayer(layer); // Ensure it is visible if the plugin does not do it
-                    });
-                    
-                    // Handle deletion if the user uses the edit tool to delete
-                    map.on('draw:deleted', function(e) {
-                        var layers = e.layers;
-                        layers.eachLayer(function(layer) {
-                            window.myDrawnItems.removeLayer(layer);
-                        });
-                    });
-                } else {
-                    console.log("Map not found yet, retrying...");
-                    setTimeout(initMapInteractions, 500);
-                }
-            }
-
-            // Start when the document is ready
-            if (document.readyState === 'complete') {
-                initMapInteractions();
-            } else {
-                window.addEventListener('load', initMapInteractions);
-            }
-        </script>
-        """
+        # Load custom JS from external file
+        js_file_path = os.path.join(os.path.dirname(__file__), 'map_interactions.js')
+        try:
+            with open(js_file_path, 'r', encoding='utf-8') as f:
+                js_content = f.read()
+            custom_js = f"<script>{js_content}</script>"
+        except Exception as e:
+            print(f"Error loading external JS file: {e}")
+            custom_js = ""
 
         # Insert the script at the end of the body
         if '</body>' in html_content:
@@ -163,15 +114,4 @@ class MapWindow(QMainWindow):
     def clear_map(self):
         self.browser.page().runJavaScript("window.clearMap()")
         # Reloading the page might be a cleaner option if JS fails, but let's try JS first
-        # self.browser.setHtml(self.html_content, ...) 
-
-if __name__ == "__main__":
-
-    LOCATION = [-33.4489, -70.6693]
-    SAVE_FOLDER = "draws" 
-    RESIZE = (1000, 800)
-
-    app = QApplication(sys.argv)
-    window = MapWindow(LOCATION, SAVE_FOLDER, RESIZE)
-    window.show()
-    sys.exit(app.exec_())
+        # self.browser.setHtml(self.html_content, ...)

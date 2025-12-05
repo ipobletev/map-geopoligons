@@ -14,4 +14,4 @@ echo "Installing requirements..."
 pip install -r requirements.txt
 
 echo "Running application..."
-python src/folium_qt_app.py
+python src/main.py
