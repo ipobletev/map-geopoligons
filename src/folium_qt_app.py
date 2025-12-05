@@ -6,7 +6,7 @@ from datetime import datetime
 import folium
 import traceback
 from folium.plugins import Draw
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox, QFileDialog
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
 from gps_utm_converter import GpsUtmConverter
@@ -74,6 +74,10 @@ class MapWindow(QMainWindow):
         self.btn_clear = QPushButton("Clear Map")
         self.btn_clear.clicked.connect(self.clear_map)
         button_layout.addWidget(self.btn_clear)
+
+        self.btn_load = QPushButton("Load GeoJSON")
+        self.btn_load.clicked.connect(self.load_geojson_file)
+        button_layout.addWidget(self.btn_load)
 
         main_layout.addLayout(button_layout)
 
@@ -163,3 +167,32 @@ class MapWindow(QMainWindow):
         self.browser.page().runJavaScript("window.clearMap()")
         # Reloading the page might be a cleaner option if JS fails, but let's try JS first
         # self.browser.setHtml(self.html_content, ...)
+
+    def load_geojson_file(self):
+        options = QFileDialog.Options()
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open GeoJSON File", self.save_folder, "GeoJSON Files (*.geojson);;All Files (*)", options=options)
+        
+        if file_path:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    geojson_content = f.read()
+                
+                # Escape backslashes and quotes for JS string injection if passing as string, 
+                # but runJavaScript can handle arguments better if we pass the data directly?
+                # Actually, runJavaScript in PyQt5 takes a string script. 
+                # We need to be careful with the content. 
+                # A safer way is to use json.dumps to ensure it's a valid JS string literal.
+                
+                # Verify it's valid JSON first
+                json.loads(geojson_content) 
+                
+                # Pass it to JS
+                # We use a trick: create a JS variable with the content, then call the function
+                js_code = f"window.loadGeoJSON({geojson_content})"
+                self.browser.page().runJavaScript(js_code)
+                
+                QMessageBox.information(self, "Success", f"Loaded: {os.path.basename(file_path)}")
+                
+            except Exception as e:
+                print(f"Error loading file: {e}")
+                QMessageBox.critical(self, "Error", f"Failed to load file: {str(e)}")
