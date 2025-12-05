@@ -1,21 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMap, FeatureGroup } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
 
-// Fix Leaflet icon issues
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+// Custom Icons
+const createCustomIcon = (color: string, label?: string) => {
+    return L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${label || ''}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+};
 
-const DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
+const ObjectiveIcon = createCustomIcon('#ef4444', 'O'); // Red for Objective
+const HomeIcon = createCustomIcon('#3b82f6', 'H'); // Blue for Home
+const DefaultIcon = createCustomIcon('#64748b');
 
+// Override default marker icon for Leaflet Draw if needed
 L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapComponentProps {
@@ -25,26 +29,65 @@ interface MapComponentProps {
     onUpdate: (geojson: any) => void;
 }
 
-const EditControl = ({ drawMode, onCreated, onEdited, onDeleted }: any) => {
+interface EditControlProps {
+    drawMode: 'marker' | 'polygon' | 'polyline' | 'any';
+    currentStepKey: string;
+    initialData: any;
+    onCreated: () => void;
+    onEdited: () => void;
+    onDeleted: () => void;
+    featureGroupRef: React.MutableRefObject<L.FeatureGroup | null>;
+}
+
+const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdited, onDeleted, featureGroupRef }: EditControlProps) => {
     const map = useMap();
     const drawControlRef = useRef<L.Control.Draw | null>(null);
 
     useEffect(() => {
-        // @ts-ignore
+        // Create FeatureGroup
         const editableLayers = new L.FeatureGroup();
         map.addLayer(editableLayers);
+        featureGroupRef.current = editableLayers;
 
-        // @ts-ignore
-        window.editableLayers = editableLayers; // Hack to access from outside if needed, but better to use events
+        // Load Initial Data
+        if (initialData) {
+            const geoJsonLayer = L.geoJSON(initialData, {
+                pointToLayer: (_feature, latlng) => {
+                    let icon = DefaultIcon;
+                    if (currentStepKey === 'objective') icon = ObjectiveIcon;
+                    if (currentStepKey === 'home') icon = HomeIcon;
+                    return L.marker(latlng, { icon: icon });
+                }
+            });
+            geoJsonLayer.eachLayer((layer) => {
+                editableLayers.addLayer(layer);
+            });
+        }
+
+        // Determine icon based on step
+        let markerIcon = DefaultIcon;
+        if (currentStepKey === 'objective') markerIcon = ObjectiveIcon;
+        if (currentStepKey === 'home') markerIcon = HomeIcon;
 
         const options: L.Control.DrawConstructorOptions = {
             position: 'topleft',
             draw: {
-                polyline: (drawMode === 'polyline' || drawMode === 'any') ? {} : false,
-                polygon: (drawMode === 'polygon' || drawMode === 'any') ? {} : false,
-                rectangle: (drawMode === 'polygon' || drawMode === 'any') ? {} : false,
+                polyline: (drawMode === 'polyline' || drawMode === 'any') ? {
+                    shapeOptions: { color: '#3388ff', weight: 4 }
+                } : false,
+                polygon: (drawMode === 'polygon' || drawMode === 'any') ? {
+                    allowIntersection: true,
+                    showArea: true,
+                    shapeOptions: { color: '#3388ff' }
+                } : false,
+                rectangle: (drawMode === 'polygon' || drawMode === 'any') ? {
+                    showArea: false, // Disable area to prevent cursor issues
+                    shapeOptions: { color: '#3388ff' }
+                } : false,
                 circle: false,
-                marker: (drawMode === 'marker' || drawMode === 'any') ? {} : false,
+                marker: (drawMode === 'marker' || drawMode === 'any') ? {
+                    icon: markerIcon
+                } : false,
                 circlemarker: false,
             },
             edit: {
@@ -63,50 +106,40 @@ const EditControl = ({ drawMode, onCreated, onEdited, onDeleted }: any) => {
             onCreated();
         };
 
-        const handleEdited = () => {
-            onEdited();
-        };
-
-        const handleDeleted = () => {
-            onDeleted();
-        };
-
+        // Event handlers
         map.on(L.Draw.Event.CREATED, handleCreated);
-        map.on(L.Draw.Event.EDITED, handleEdited);
-        map.on(L.Draw.Event.DELETED, handleDeleted);
+        map.on(L.Draw.Event.EDITED, onEdited);
+        map.on(L.Draw.Event.DELETED, onDeleted);
 
         return () => {
             map.removeControl(drawControl);
             map.removeLayer(editableLayers);
             map.off(L.Draw.Event.CREATED, handleCreated);
-            map.off(L.Draw.Event.EDITED, handleEdited);
-            map.off(L.Draw.Event.DELETED, handleDeleted);
+            map.off(L.Draw.Event.EDITED, onEdited);
+            map.off(L.Draw.Event.DELETED, onDeleted);
+            featureGroupRef.current = null;
         };
-    }, [map, drawMode]);
+    }, [map, drawMode, currentStepKey]); // Re-run when these change (which happens on step change)
 
     return null;
 };
 
 const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, existingData, onUpdate }) => {
     const [map, setMap] = useState<L.Map | null>(null);
+    const featureGroupRef = useRef<L.FeatureGroup | null>(null);
 
-    // Clear editable layers when step changes
+    // Force map resize on mount/update to prevent rendering issues
     useEffect(() => {
         if (map) {
-            // @ts-ignore
-            const layers = window.editableLayers;
-            if (layers) {
-                layers.clearLayers();
-            }
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
         }
-    }, [currentStepKey, map]);
+    }, [map, currentStepKey]);
 
     const handleChange = () => {
-        if (!map) return;
-        // @ts-ignore
-        const layers = window.editableLayers;
-        if (layers) {
-            const geojson = layers.toGeoJSON();
+        if (featureGroupRef.current) {
+            const geojson = featureGroupRef.current.toGeoJSON();
             onUpdate(geojson);
         }
     };
@@ -123,7 +156,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
         return {
             color: color,
             weight: 3,
-            opacity: 0.8,
+            opacity: 0.6,
             fillOpacity: 0.2
         };
     };
@@ -141,35 +174,40 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                     url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
-                {/* Static Layers from previous steps */}
+                {/* Static Layers from other steps */}
                 {Object.entries(existingData).map(([key, data]) => {
                     if (key === currentStepKey) return null; // Don't show current as static
                     if (!data || !data.features || data.features.length === 0) return null;
 
                     return (
                         <GeoJSON
-                            key={key} // Keep key stable
+                            key={key}
                             data={data}
                             style={() => getStyle(key)}
-                            onEachFeature={(feature, layer) => {
-                                if (feature.properties && feature.properties.utm_coordinates) {
-                                    layer.bindPopup(`<b>${key}</b><br/>Saved step`);
-                                }
+                            pointToLayer={(_feature, latlng) => {
+                                let icon = DefaultIcon;
+                                if (key === 'objective') icon = ObjectiveIcon;
+                                if (key === 'home') icon = HomeIcon;
+                                return L.marker(latlng, { icon: icon });
+                            }}
+                            onEachFeature={(_feature, layer) => {
+                                layer.bindPopup(`<b>${key}</b><br/>Saved step`);
                             }}
                         />
                     );
                 })}
 
-                {/* Remount EditControl when drawMode or step changes to update tools and clear buffer */}
-                <FeatureGroup>
-                    <EditControl
-                        key={currentStepKey}
-                        drawMode={drawMode}
-                        onCreated={handleChange}
-                        onEdited={handleChange}
-                        onDeleted={handleChange}
-                    />
-                </FeatureGroup>
+                {/* Editable Layer for current step */}
+                <EditControl
+                    key={currentStepKey} // Force remount on step change
+                    drawMode={drawMode}
+                    currentStepKey={currentStepKey}
+                    initialData={existingData[currentStepKey]}
+                    onCreated={handleChange}
+                    onEdited={handleChange}
+                    onDeleted={handleChange}
+                    featureGroupRef={featureGroupRef}
+                />
             </MapContainer>
         </div>
     );

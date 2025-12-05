@@ -19,7 +19,7 @@ export const WIZARD_STEPS: Step[] = [
         key: 'objective',
         label: 'Objetivo',
         description: 'Lugares donde el objetivo tiene que alcanzar por medio de las calles.',
-        drawMode: 'any' // Points or Polygons
+        drawMode: 'marker' // Only Points
     },
     {
         key: 'geofence',
@@ -31,7 +31,7 @@ export const WIZARD_STEPS: Step[] = [
         key: 'home',
         label: 'Home',
         description: 'Inicio del robot.',
-        drawMode: 'marker'
+        drawMode: 'polyline'
     },
     {
         key: 'road',
