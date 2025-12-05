@@ -1,4 +1,11 @@
+# Temp files
 draws
+
+# Web version
+frontend/node_modules
+frontend/dist
+
+# Python
 .venv
 *.pyc
 *.pyo
