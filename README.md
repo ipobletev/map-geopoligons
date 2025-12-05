@@ -20,7 +20,7 @@ You can use the provided scripts to automatically set up the environment and run
 ### Windows
 Double-click `run.bat` or run in terminal:
 ```bash
-.\run.bat
+./run.bat
 ```
 
 ### Linux

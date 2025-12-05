@@ -8,6 +8,7 @@ from folium.plugins import Draw
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QMessageBox
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
+from gps_converter import GPSConverter
 
 class MapWindow(QMainWindow):
     def __init__(self, location, save_folder, resize):
@@ -94,6 +95,51 @@ class MapWindow(QMainWindow):
             if not data.get('features'):
                 QMessageBox.warning(self, "Warning", "No shapes to save.")
                 return
+
+            # Enrich features with UTM coordinates
+            for feature in data['features']:
+                geometry = feature.get('geometry')
+                if not geometry:
+                    continue
+                
+                coords = geometry.get('coordinates')
+                geom_type = geometry.get('type')
+                
+                utm_coords = None
+                
+                if geom_type == 'Point':
+                    # Point: [lon, lat]
+                    if len(coords) >= 2:
+                        lon, lat = coords[0], coords[1]
+                        utm_coords = GPSConverter.to_utm(lat, lon)
+                        
+                elif geom_type == 'LineString':
+                    # LineString: [[lon, lat], ...]
+                    utm_coords = []
+                    for point in coords:
+                        if len(point) >= 2:
+                            lon, lat = point[0], point[1]
+                            utm = GPSConverter.to_utm(lat, lon)
+                            if utm:
+                                utm_coords.append(utm)
+                                
+                elif geom_type == 'Polygon':
+                    # Polygon: [[[lon, lat], ...]] (list of rings)
+                    utm_coords = []
+                    for ring in coords:
+                        ring_utm = []
+                        for point in ring:
+                            if len(point) >= 2:
+                                lon, lat = point[0], point[1]
+                                utm = GPSConverter.to_utm(lat, lon)
+                                if utm:
+                                    ring_utm.append(utm)
+                        utm_coords.append(ring_utm)
+                
+                if utm_coords:
+                    if 'properties' not in feature:
+                        feature['properties'] = {}
+                    feature['properties']['utm_coordinates'] = utm_coords
 
             folder = self.save_folder
             if not os.path.exists(folder):
