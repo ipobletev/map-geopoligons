@@ -1,59 +1,101 @@
 # Web Map Wizard
 
-A modern web-based wizard for generating map geopolygons, based on the `qt-python-wizard` concept.
+A modern, interactive web application for generating and managing map geopolygons. This tool guides users through a structured workflow to define various map elements required for robot navigation, such as objectives, geofences, and obstacles.
 
-## Features
+## 🚀 Features
 
-- **Step-by-Step Wizard**: Guide through creating Objectives, Geofences, Home, Roads, Transit Roads, and Obstacles.
-- **Map Interface**: Interactive map using Leaflet and OpenStreetMap.
-- **Drawing Tools**: Draw Points, Lines, and Polygons.
-- **UTM Conversion**: Automatically converts drawn geometries to UTM coordinates.
-- **GeoJSON Export**: Save each step as a GeoJSON file.
-- **Rich UI**: Modern, responsive interface built with React and Tailwind CSS.
+- **Step-by-Step Workflow**: Structured wizard interface for creating:
+  - **Objetivo**: Target locations (Points).
+  - **Geofence**: Operational boundaries (Polygons).
+  - **Home**: Robot starting position (Points/Markers).
+  - **Calle**: Navigation paths (Polylines).
+  - **Calle de Tránsito**: Transit-only paths (Polylines).
+  - **Obstáculos**: Restricted areas (Polygons/Rectangles).
+  - **Obstáculos Altos**: High vertical obstacles (Polygons/Rectangles).
 
-## Prerequisites
+- **Advanced Map Interface**:
+  - Built with **Leaflet** and **React-Leaflet**.
+  - **Drawing Tools**: Intuitive tools for placing markers, drawing lines, polygons, and rectangles.
+  - **Editable Layers**: Modify existing geometries (edit/delete) before saving.
 
-- Node.js (v18+)
-- npm
+- **Data Management**:
+  - **GeoJSON Support**: Native import and export of GeoJSON data.
+  - **UTM Conversion**: Automatic enrichment of geographical coordinates (Lat/Lon) with UTM (Universal Transverse Mercator) data for robotic precision.
+  - **Bulk Export**: Download all generated steps as a single ZIP archive.
+  - **Load Existing Data**: Import previously saved GeoJSON files to view or edit.
 
-## Installation
+- **Modern UI/UX**:
+  - Responsive design using **Tailwind CSS**.
+  - Clear visual feedback and progress tracking.
 
-1. Navigate to the project directory:
+## 🛠️ Tech Stack
+
+- **Framework**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **Maps**: Leaflet, React-Leaflet, Leaflet-Draw
+- **Utilities**: Proj4 (Coordinate conversion), JSZip (Archiving), File-Saver
+
+## 📦 Installation
+
+1. **Prerequisites**: Ensure you have Node.js (v18 or higher) installed.
+
+2. **Navigate to the project**:
    ```bash
    cd web-wizard
    ```
 
-2. Install dependencies:
+3. **Install dependencies**:
    ```bash
    npm install
    ```
 
-## Usage
+## 🏃‍♂️ Usage
 
-1. Start the development server:
+1. **Start the development server**:
    ```bash
    npm run dev
    ```
 
-2. Open your browser at `http://localhost:5173`.
+2. **Open the application**:
+   Navigate to `http://localhost:5173` (or the port shown in your terminal).
 
-3. Follow the wizard steps:
-   - Draw the required elements on the map.
-   - Click "Next" to save the current step (downloads a .geojson file) and proceed.
-   - Use "Back" to review previous steps.
+3. **Using the Wizard**:
+   - Select a step from the sidebar or use the **Next/Back** buttons.
+   - Use the toolbar on the map to draw the required element for that step.
+   - **Markers**: Click to place.
+   - **Polygons**: Click to place points, click the first point to close.
+   - **Rectangles**: Click and drag to create.
+   - **Polylines**: Click to place points, click the last point again to finish.
+   - Click **Next** to save the current step's data locally in the session.
 
-## Project Structure
+4. **Exporting Data**:
+   - Click **Download All (ZIP)** at any time to download the complete set of generated GeoJSON files.
 
-- `src/components`: React components (Wizard, MapComponent).
-- `src/utils`: Utility functions (UTM conversion).
-- `src/types.ts`: Type definitions.
+5. **Importing Data**:
+   - Use the **Load JSON** button to import an existing GeoJSON file into the current view.
 
-## Technologies
+## 📁 Project Structure
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- Leaflet / React-Leaflet
-- Leaflet Draw
-- Proj4 (for UTM conversion)
+```
+web-wizard/
+├── src/
+│   ├── components/
+│   │   ├── MapComponent.tsx  # Map logic and drawing handlers
+│   │   └── Wizard.tsx        # Main application layout and state management
+│   ├── utils/
+│   │   └── utm.ts            # GPS to UTM coordinate conversion
+│   ├── types.ts              # TypeScript definitions
+│   ├── App.tsx               # Root component
+│   └── main.tsx              # Entry point
+├── public/
+└── package.json
+```
+
+## 🤝 Contributing
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Push to the branch.
+5. Open a Pull Request.
