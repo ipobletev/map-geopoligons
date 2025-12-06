@@ -4,7 +4,7 @@ import MapComponent from './MapComponent';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import { ArrowRight, ArrowLeft, Save, CheckCircle, Trash2, Upload, Download, Folder } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Save, CheckCircle, Trash2, Upload, Download, Folder, Play, X } from 'lucide-react';
 import { parseHolFile } from '../utils/holParser';
 
 const Wizard = () => {
@@ -14,6 +14,11 @@ const Wizard = () => {
     const [centerTrigger, setCenterTrigger] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const folderInputRef = useRef<HTMLInputElement>(null);
+
+    const [generating, setGenerating] = useState(false);
+    const [genProgress, setGenProgress] = useState(0);
+    const [genResult, setGenResult] = useState<any>(null);
+    const [showGenModal, setShowGenModal] = useState(false);
 
     const currentStep = WIZARD_STEPS[currentStepIndex];
     const isLastStep = currentStepIndex === WIZARD_STEPS.length - 1;
@@ -214,6 +219,95 @@ const Wizard = () => {
         saveAs(content, `map-geopoligons-${timestamp}.zip`);
     };
 
+    const handleGenerateRoute = async () => {
+        // Gather all data
+        const allData = { ...data };
+        if (currentStepData && currentStepData.features && currentStepData.features.length > 0) {
+            const enriched = enrichGeoJSONWithUTM(currentStepData);
+            allData[currentStep.key] = enriched;
+        }
+
+        // Check required
+        if (!allData['objective'] || !allData['geofence'] || !allData['road'] || !allData['home']) {
+            alert('Missing required data: Holes, Geofence, Streets, or Home Pose.');
+            return;
+        }
+
+        setGenerating(true);
+        setGenProgress(0);
+        setGenResult(null);
+
+        const formData = new FormData();
+
+        const appendFile = (key: string, fieldName: string, filename: string) => {
+            if (allData[key]) {
+                const blob = new Blob([JSON.stringify(allData[key])], { type: 'application/json' });
+                formData.append(fieldName, blob, filename);
+            }
+        };
+
+        appendFile('objective', 'holes', 'holes.geojson');
+        appendFile('geofence', 'geofence', 'geofence.geojson');
+        appendFile('road', 'streets', 'streets.geojson');
+        appendFile('home', 'home_pose', 'home_pose.geojson');
+        appendFile('obstacles', 'obstacles', 'obstacles.geojson');
+        appendFile('tall_obstacle', 'high_obstacles', 'high_obstacles.geojson');
+        appendFile('transit_road', 'transit_streets', 'transit_streets.geojson');
+
+        // Add default options
+        formData.append('fit_streets', 'true');
+        formData.append('fit_twice', 'true');
+        formData.append('wgs84', 'true'); // Backend handles GeoJSON by converting to UTM internally, so we treat the result as UTM (WGS84=True)
+
+        formData.append('use_obstacles', allData['obstacles'] ? 'true' : 'false');
+        formData.append('use_high_obstacles', allData['tall_obstacle'] ? 'true' : 'false');
+        formData.append('use_transit_streets', allData['transit_road'] ? 'true' : 'false');
+
+        try {
+            const response = await fetch('/api/generate-routes', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.body) throw new Error('No response body');
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    try {
+                        const message = JSON.parse(line);
+                        if (message.type === 'progress') {
+                            setGenProgress(message.value);
+                        } else if (message.type === 'result') {
+                            setGenResult(message.data);
+                            setShowGenModal(true);
+                        } else if (message.type === 'error') {
+                            alert('Error: ' + message.message);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing JSON:', e);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error generating route');
+        } finally {
+            setGenerating(false);
+        }
+    };
+
     return (
         <div className="flex h-screen w-full bg-slate-50">
             {/* Sidebar */}
@@ -328,9 +422,16 @@ const Wizard = () => {
                         </div>
                         <button
                             onClick={handleSaveAll}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-900 shadow-md hover:shadow-lg transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-900 shadow-md hover:shadow-lg transition-all"
                         >
                             <Download className="w-4 h-4" /> Download All (ZIP)
+                        </button>
+                        <button
+                            onClick={handleGenerateRoute}
+                            disabled={generating}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                        >
+                            {generating ? `Generating ${Math.round(genProgress)}%` : <><Play className="w-4 h-4" /> Generate Route</>}
                         </button>
                     </div>
                 </div>
@@ -357,7 +458,45 @@ const Wizard = () => {
                     </p>
                 </div>
             </div>
-        </div>
+            {/* Result Modal */}
+            {
+                showGenModal && genResult && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[2000] p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col">
+                            <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                                <h2 className="text-xl font-bold text-gray-800">Route Generation Result</h2>
+                                <button onClick={() => setShowGenModal(false)} className="p-1 hover:bg-gray-100 rounded-full">
+                                    <X className="w-6 h-6 text-gray-500" />
+                                </button>
+                            </div>
+                            <div className="p-6 space-y-6">
+                                <div className="border rounded-lg overflow-hidden shadow-sm">
+                                    <img src={genResult.map_image} alt="Generated Map" className="w-full h-auto" />
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <a href={genResult.download_links.csv} download className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group">
+                                        <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
+                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">Global Plan (CSV)</span>
+                                    </a>
+                                    <a href={genResult.download_links.map_png} download className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group">
+                                        <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
+                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">Map Image (PNG)</span>
+                                    </a>
+                                    <a href={genResult.download_links.map_yaml} download className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group">
+                                        <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
+                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">Map Config (YAML)</span>
+                                    </a>
+                                    <a href={genResult.download_links.latlon_yaml} download className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group">
+                                        <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
+                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">LatLon Config (YAML)</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

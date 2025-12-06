@@ -90,11 +90,15 @@ def generate_routes_logic(
     if progress_callback:
         progress_callback(10)
         
+    print(f"DEBUG: Finding closest streets. Holes: {len(holes_filtered)}, Streets: {len(streets_fitted)}")
+    if hasattr(holes_filtered, 'crs'): print(f"DEBUG: Holes CRS: {holes_filtered.crs}")
+    if hasattr(streets_fitted, 'crs'): print(f"DEBUG: Streets CRS: {streets_fitted.crs}")
+
     for i in range(0, len(holes_filtered)):
         distance = 10000.0
         closest_street = -1
         for j in range(0, len(streets_fitted)):
-            dist = holes_filtered['geometry'][i].distance(streets_fitted['geometry'][j])
+            dist = holes_filtered.geometry.iloc[i].distance(streets_fitted.geometry.iloc[j])
             if dist < distance:
                 distance = dist
                 closest_street = j

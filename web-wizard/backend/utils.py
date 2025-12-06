@@ -153,28 +153,35 @@ def generateLoadingPoses(streets, holes, blocked, prev_poses, obstacle_buffer_di
             print ('hole' , hole_num)
             # print (row)
             closest_street_idx = row['closest_street']
+            
+            if closest_street_idx == -1:
+                 print(f"Warning: No closest street found for hole {row['drillhole_id']}")
+                 # Do not continue, let it fall through to 'no poses found' check
+            
             max_ditance = 0
             min_length = 100000000
             blocked_without_pose = blocked.difference(row['geometry'].buffer(obstacle_buffer_distance+0.01) )
             min_length_pose = None
             min_idx = None
             min_length_idx = None
-            for pose_num ,  pose_street in enumerate(streets['poses'][closest_street_idx]):
-                # print ('pose')
-                pose_candidates , distance , length = generatePoseCandidate(pose_street, row['geometry'], blocked_without_pose, turning_radius, hole_distance)
-                # print('distance: ' , distance)
-                if pose_candidates != None :
-                    if distance > max_ditance:
-                        max_ditance = distance
-                        poses = pose_candidates
-                        min_idx = pose_num
-                    if distance > 2.0:
-                        if length < min_length:
-                            min_length = length
-                            min_length_pose = pose_candidates
-                            min_length_idx = pose_num
+            
+            if closest_street_idx != -1:
+                for pose_num ,  pose_street in enumerate(streets['poses'].iloc[closest_street_idx]):
+                    # print ('pose')
+                    pose_candidates , distance , length = generatePoseCandidate(pose_street, row['geometry'], blocked_without_pose, turning_radius, hole_distance)
+                    # print('distance: ' , distance)
+                    if pose_candidates != None :
+                        if distance > max_ditance:
+                            max_ditance = distance
+                            poses = pose_candidates
+                            min_idx = pose_num
+                        if distance > 2.0:
+                            if length < min_length:
+                                min_length = length
+                                min_length_pose = pose_candidates
+                                min_length_idx = pose_num
 
-                pass
+                    pass
             if min_length_pose != None:
                 poses = min_length_pose
                 min_idx = min_length_idx
@@ -636,6 +643,29 @@ def readHolFile(filename : str, WGS84):
         df['mesh'] = df['BENCH NIMBER']
         gdf = gpd.GeoDataFrame({'x':df['x'], 'y':df['y'], 'z':df['z'], 'z_hole': df['z_hole'], 'unkown0': df['unkown0'],
             'unkown1': df['unkown1'], 'unkown2': df['unkown2'], 'unkown3': df['unkown3'], 'drillhole_id': df['drillhole_id'], 'mesh': df['mesh']})
+    elif filename.endswith(".geojson") or filename.endswith(".json"):
+        gdf = gpd.read_file(filename)
+        # Ensure we have the necessary columns. If x/y are missing, try to get them from geometry (assuming UTM or converting)
+        if 'x' not in gdf.columns or 'y' not in gdf.columns:
+            # If CRS is missing, assume 4326 (common for GeoJSON)
+            if gdf.crs is None:
+                gdf.set_crs('EPSG:4326', inplace=True)
+            
+            # Convert to UTM 19S (EPSG:32719) to get metric coordinates
+            gdf_utm = gdf.to_crs('EPSG:32719')
+            gdf['x'] = gdf_utm.geometry.x
+            gdf['y'] = gdf_utm.geometry.y
+        
+        # Fill missing columns with defaults
+        if 'z' not in gdf.columns: gdf['z'] = 0.0
+        if 'z_hole' not in gdf.columns: gdf['z_hole'] = 0.0
+        if 'drillhole_id' not in gdf.columns: gdf['drillhole_id'] = range(len(gdf))
+        if 'mesh' not in gdf.columns: gdf['mesh'] = 'default'
+        
+        gdf['unkown0'] = 270
+        gdf['unkown1'] = 0.0
+        gdf['unkown2'] = 0
+        gdf['unkown3'] = -90
     else:
         print("Unsupported format");
 

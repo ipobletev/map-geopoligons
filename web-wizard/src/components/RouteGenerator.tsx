@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Upload, Map, Settings, Download } from 'lucide-react';
+import { Upload, Map, Settings, Download, Trash2 } from 'lucide-react';
 import MapComponent from './MapComponent';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 export default function RouteGenerator() {
     const [files, setFiles] = useState<Record<string, File | null>>({
@@ -110,6 +112,48 @@ export default function RouteGenerator() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleClearResults = () => {
+        if (confirm('Are you sure you want to clear the results?')) {
+            setResult(null);
+            setError(null);
+            setProgress(0);
+        }
+    };
+
+    const handleDownloadAll = async () => {
+        if (!result) return;
+
+        const zip = new JSZip();
+        const now = new Date();
+        const timestamp = now.toISOString().replace(/[:.]/g, '-').split('T')[0] + '_' + now.toTimeString().split(' ')[0].replace(/:/g, '');
+        const folderName = `route_results_${timestamp}`;
+        const folder = zip.folder(folderName);
+
+        if (!folder) return;
+
+        // Helper to fetch and add file to zip
+        const addFileToZip = async (url: string, filename: string) => {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                folder.file(filename, blob);
+            } catch (error) {
+                console.error(`Failed to download ${filename}`, error);
+            }
+        };
+
+        const promises = [];
+        if (result.download_links.csv) promises.push(addFileToZip(result.download_links.csv, 'global_plan.csv'));
+        if (result.download_links.map_png) promises.push(addFileToZip(result.download_links.map_png, 'map.png'));
+        if (result.download_links.map_yaml) promises.push(addFileToZip(result.download_links.map_yaml, 'maze_peld.yaml'));
+        if (result.download_links.latlon_yaml) promises.push(addFileToZip(result.download_links.latlon_yaml, 'latlon.yaml'));
+
+        await Promise.all(promises);
+
+        const content = await zip.generateAsync({ type: 'blob' });
+        saveAs(content, `route_results_${timestamp}.zip`);
     };
 
     return (
@@ -251,10 +295,6 @@ export default function RouteGenerator() {
 
             {result && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="border rounded-lg overflow-hidden shadow-sm">
-                        <img src={result.map_image} alt="Generated Map" className="w-full h-auto" />
-                    </div>
-
                     {result.arrow_geojson && (
                         <div className="h-[600px] border rounded-lg overflow-hidden shadow-sm">
                             <MapComponent
@@ -276,12 +316,22 @@ export default function RouteGenerator() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <DownloadLink href={result.download_links.csv} label="Global Plan (CSV)" />
-                        <DownloadLink href={result.download_links.map_png} label="Map Image (PNG)" />
-                        <DownloadLink href={result.download_links.map_yaml} label="Map Config (YAML)" />
-                        <DownloadLink href={result.download_links.latlon_yaml} label="LatLon Config (YAML)" />
+                    <div className="flex gap-4">
+                        <button
+                            onClick={handleDownloadAll}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-md"
+                        >
+                            <Download className="w-4 h-4" /> Download All (ZIP)
+                        </button>
+                        <button
+                            onClick={handleClearResults}
+                            className="flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-100 text-red-700 font-medium rounded-lg hover:bg-red-200 transition-colors border border-red-200"
+                        >
+                            <Trash2 className="w-4 h-4" /> Clear Results
+                        </button>
                     </div>
+
+
                 </div>
             )}
         </div>
@@ -354,15 +404,4 @@ function Checkbox({ name, label, defaultChecked }: { name: string; label: string
     )
 }
 
-function DownloadLink({ href, label }: { href: string; label: string }) {
-    return (
-        <a
-            href={href}
-            download
-            className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group"
-        >
-            <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
-            <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">{label}</span>
-        </a>
-    );
-}
+
