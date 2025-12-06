@@ -374,7 +374,7 @@ const Wizard = () => {
                     </h1>
                     <p className="text-sm text-slate-500 mt-1">{t('wizard.subtitle')}</p>
 
-                    <div className="flex gap-2 mt-4">
+                    <div className="grid grid-cols-2 gap-2 mt-4">
                         <button
                             onClick={handleClearAll}
                             className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded border border-red-200 transition-colors"

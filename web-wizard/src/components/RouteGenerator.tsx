@@ -190,12 +190,6 @@ export default function RouteGenerator() {
                 />
                 <div className="flex justify-center gap-4">
                     <label
-                        htmlFor="bulk-upload"
-                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
-                    >
-                        {t('routeGenerator.bulkUpload.selectFiles')}
-                    </label>
-                    <label
                         htmlFor="folder-upload"
                         className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 transition-colors"
                     >
