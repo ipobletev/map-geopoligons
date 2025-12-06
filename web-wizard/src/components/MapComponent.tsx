@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, useMap, ScaleControl, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
@@ -130,6 +130,34 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
     return null;
 };
 
+const MousePosition = () => {
+    const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null);
+    useMapEvents({
+        mousemove(e) {
+            setPosition(e.latlng);
+        },
+    });
+
+    if (!position) return null;
+
+    return (
+        <div className="leaflet-bottom leaflet-right">
+            <div className="leaflet-control leaflet-bar" style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                padding: '4px 8px',
+                margin: '0 10px 10px 0',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                color: '#333',
+                border: '2px solid rgba(0,0,0,0.2)',
+                borderRadius: '4px'
+            }}>
+                Lat: {position.lat.toFixed(5)}, Lng: {position.lng.toFixed(5)}
+            </div>
+        </div>
+    );
+};
+
 const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, existingData, onUpdate, centerTrigger }) => {
     const [map, setMap] = useState<L.Map | null>(null);
     const featureGroupRef = useRef<L.FeatureGroup | null>(null);
@@ -218,6 +246,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                <ScaleControl position="bottomleft" />
+                <MousePosition />
 
                 {/* Static Layers from other steps */}
                 {Object.entries(existingData).map(([key, data]) => {
