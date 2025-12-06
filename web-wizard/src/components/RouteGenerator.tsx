@@ -1,14 +1,53 @@
 import React, { useState } from 'react';
-import { Upload, FileText, Map, Settings, Download } from 'lucide-react';
+import { Upload, Map, Settings, Download } from 'lucide-react';
+import MapComponent from './MapComponent';
 
 export default function RouteGenerator() {
+    const [files, setFiles] = useState<Record<string, File | null>>({
+        holes: null,
+        geofence: null,
+        streets: null,
+        home_pose: null,
+        obstacles: null,
+        high_obstacles: null,
+        transit_streets: null,
+    });
     const [loading, setLoading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState<{
         map_image: string;
+        arrow_geojson?: any;
+        holes_geojson?: string;
+        geofence_geojson?: string;
+        streets_geojson?: string;
+        home_pose_geojson?: string;
+        obstacles_geojson?: string;
+        high_obstacles_geojson?: string;
+        transit_streets_geojson?: string;
         download_links: { [key: string]: string };
     } | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files) return;
+
+        const newFiles = { ...files };
+        Array.from(e.target.files).forEach(file => {
+            const name = file.name.toLowerCase();
+            if (name.includes('geofence')) newFiles.geofence = file;
+            else if (name.includes('home')) newFiles.home_pose = file;
+            else if (name.includes('transit')) newFiles.transit_streets = file;
+            else if (name.includes('streets')) newFiles.streets = file;
+            else if (name.includes('high') && name.includes('obstacle')) newFiles.high_obstacles = file;
+            else if (name.includes('obstacle')) newFiles.obstacles = file;
+            else if (name.endsWith('.hol') || name.endsWith('.csv')) newFiles.holes = file;
+        });
+        setFiles(newFiles);
+    };
+
+    const handleFileChange = (name: string, file: File | null) => {
+        setFiles(prev => ({ ...prev, [name]: file }));
+    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -18,6 +57,13 @@ export default function RouteGenerator() {
         setResult(null);
 
         const formData = new FormData(e.currentTarget);
+
+        // Append files from state if they exist (overriding form data if needed, though FileInput is now controlled)
+        Object.entries(files).forEach(([key, file]) => {
+            if (file) {
+                formData.set(key, file);
+            }
+        });
 
         try {
             const response = await fetch('/api/generate-routes', {
@@ -73,16 +119,94 @@ export default function RouteGenerator() {
                 Route Generator
             </h2>
 
+            <div className="p-6 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 text-center space-y-2 hover:bg-blue-100 transition-colors">
+                <Upload className="w-12 h-12 text-blue-500 mx-auto" />
+                <h3 className="text-lg font-semibold text-blue-700">Bulk Upload</h3>
+                <p className="text-sm text-blue-600">
+                    Select multiple files to automatically assign them based on name.
+                </p>
+                <input
+                    type="file"
+                    multiple
+                    onChange={handleBulkUpload}
+                    className="hidden"
+                    id="bulk-upload"
+                />
+                <input
+                    type="file"
+                    // @ts-ignore
+                    webkitdirectory=""
+                    directory=""
+                    multiple
+                    onChange={handleBulkUpload}
+                    className="hidden"
+                    id="folder-upload"
+                />
+                <div className="flex justify-center gap-4">
+                    <label
+                        htmlFor="bulk-upload"
+                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+                    >
+                        Select Files
+                    </label>
+                    <label
+                        htmlFor="folder-upload"
+                        className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 transition-colors"
+                    >
+                        Select Folder
+                    </label>
+                </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FileInput name="holes" label="Holes File (.hol/.csv)" required />
-                    <FileInput name="geofence" label="Geofence (.geojson)" required />
-                    <FileInput name="streets" label="Streets (.geojson)" required />
-                    <FileInput name="home_pose" label="Home Pose (.geojson)" required />
+                    <FileInput
+                        name="holes"
+                        label="Holes File (.hol/.csv)"
+                        required
+                        file={files.holes}
+                        onChange={(f) => handleFileChange('holes', f)}
+                    />
+                    <FileInput
+                        name="geofence"
+                        label="Geofence (.geojson)"
+                        required
+                        file={files.geofence}
+                        onChange={(f) => handleFileChange('geofence', f)}
+                    />
+                    <FileInput
+                        name="streets"
+                        label="Streets (.geojson)"
+                        required
+                        file={files.streets}
+                        onChange={(f) => handleFileChange('streets', f)}
+                    />
+                    <FileInput
+                        name="home_pose"
+                        label="Home Pose (.geojson)"
+                        required
+                        file={files.home_pose}
+                        onChange={(f) => handleFileChange('home_pose', f)}
+                    />
 
-                    <FileInput name="obstacles" label="Obstacles (.geojson)" />
-                    <FileInput name="high_obstacles" label="High Obstacles (.geojson)" />
-                    <FileInput name="transit_streets" label="Transit Streets (.geojson)" />
+                    <FileInput
+                        name="obstacles"
+                        label="Obstacles (.geojson)"
+                        file={files.obstacles}
+                        onChange={(f) => handleFileChange('obstacles', f)}
+                    />
+                    <FileInput
+                        name="high_obstacles"
+                        label="High Obstacles (.geojson)"
+                        file={files.high_obstacles}
+                        onChange={(f) => handleFileChange('high_obstacles', f)}
+                    />
+                    <FileInput
+                        name="transit_streets"
+                        label="Transit Streets (.geojson)"
+                        file={files.transit_streets}
+                        onChange={(f) => handleFileChange('transit_streets', f)}
+                    />
                 </div>
 
                 <div className="p-4 bg-gray-50 rounded-lg space-y-2">
@@ -131,6 +255,27 @@ export default function RouteGenerator() {
                         <img src={result.map_image} alt="Generated Map" className="w-full h-auto" />
                     </div>
 
+                    {result.arrow_geojson && (
+                        <div className="h-[600px] border rounded-lg overflow-hidden shadow-sm">
+                            <MapComponent
+                                currentStepKey="routes"
+                                drawMode="none"
+                                existingData={{
+                                    routes: result.arrow_geojson,
+                                    holes: parseGeoJSON(result.holes_geojson),
+                                    geofence: parseGeoJSON(result.geofence_geojson),
+                                    streets: parseGeoJSON(result.streets_geojson),
+                                    home: parseGeoJSON(result.home_pose_geojson),
+                                    obstacles: parseGeoJSON(result.obstacles_geojson),
+                                    high_obstacles: parseGeoJSON(result.high_obstacles_geojson),
+                                    transit_streets: parseGeoJSON(result.transit_streets_geojson),
+                                }}
+                                onUpdate={() => { }}
+                                centerTrigger={Date.now()}
+                            />
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <DownloadLink href={result.download_links.csv} label="Global Plan (CSV)" />
                         <DownloadLink href={result.download_links.map_png} label="Map Image (PNG)" />
@@ -143,24 +288,59 @@ export default function RouteGenerator() {
     );
 }
 
-function FileInput({ name, label, required }: { name: string; label: string; required?: boolean }) {
+function parseGeoJSON(jsonString: string | undefined | null) {
+    if (!jsonString) return null;
+    try {
+        return JSON.parse(jsonString);
+    } catch (e) {
+        console.error("Failed to parse GeoJSON", e);
+        return null;
+    }
+}
+
+function FileInput({
+    name,
+    label,
+    required,
+    file,
+    onChange
+}: {
+    name: string;
+    label: string;
+    required?: boolean;
+    file: File | null;
+    onChange: (file: File | null) => void;
+}) {
     return (
         <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
                 {label} {required && <span className="text-red-500">*</span>}
             </label>
-            <input
-                type="file"
-                name={name}
-                required={required}
-                className="block w-full text-sm text-gray-500
-          file:mr-4 file:py-2 file:px-4
-          file:rounded-full file:border-0
-          file:text-sm file:font-semibold
-          file:bg-blue-50 file:text-blue-700
-          hover:file:bg-blue-100
-          border border-gray-300 rounded-lg cursor-pointer"
-            />
+            <div className="relative">
+                <input
+                    type="file"
+                    name={name}
+                    required={required && !file} // Only required if no file is selected in state
+                    onChange={(e) => {
+                        const f = e.target.files ? e.target.files[0] : null;
+                        onChange(f);
+                    }}
+                    className="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100
+              border border-gray-300 rounded-lg cursor-pointer"
+                />
+                {file && (
+                    <div className="absolute top-0 right-0 h-full flex items-center pr-3 pointer-events-none">
+                        <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                            {file.name}
+                        </span>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

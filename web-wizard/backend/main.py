@@ -100,7 +100,9 @@ def run_route_generation(
         
         # Generate Outputs
         all_together = results['all_together']
+        all_together = results['all_together']
         holes_filtered = results['holes_filtered']
+        graph_dataframe = results['graph_dataframe']
         
         # Plotting
         matplotlib.use('agg')
@@ -166,11 +168,23 @@ def run_route_generation(
         with open(map_png_filename, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
             
+        # Generate Arrow GeoJSON
+        arrow_geojson = utils.generate_arrow_geojson(graph_dataframe, holes_df.crs)
+            
         progress_queue.put({
             "type": "result",
             "data": {
                 "status": "success",
+                "status": "success",
                 "map_image": f"data:image/png;base64,{encoded_string}",
+                "arrow_geojson": arrow_geojson,
+                "holes_geojson": holes_df.to_crs('EPSG:4326').to_json() if holes_df is not None else None,
+                "geofence_geojson": geofence_df.to_crs('EPSG:4326').to_json() if geofence_df is not None else None,
+                "streets_geojson": streets_df.drop(columns=['buffered_street'], errors='ignore').to_crs('EPSG:4326').to_json() if streets_df is not None else None,
+                "home_pose_geojson": home_pose_df.to_crs('EPSG:4326').to_json() if home_pose_df is not None else None,
+                "obstacles_geojson": obstacles_df.to_crs('EPSG:4326').to_json() if obstacles_df is not None else None,
+                "high_obstacles_geojson": high_obstacles_df.to_crs('EPSG:4326').to_json() if high_obstacles_df is not None else None,
+                "transit_streets_geojson": transit_streets_df.to_crs('EPSG:4326').to_json() if transit_streets_df is not None else None,
                 "download_links": {
                     "csv": "/generated/global_plan.csv",
                     "map_png": "/generated/map.png",
@@ -206,38 +220,38 @@ async def generate_routes(
     
     try:
         # Save uploaded files
-        holes_path = os.path.join(temp_dir, holes.filename)
+        holes_path = os.path.join(temp_dir, os.path.basename(holes.filename))
         with open(holes_path, "wb") as f:
             shutil.copyfileobj(holes.file, f)
         
-        geofence_path = os.path.join(temp_dir, geofence.filename)
+        geofence_path = os.path.join(temp_dir, os.path.basename(geofence.filename))
         with open(geofence_path, "wb") as f:
             shutil.copyfileobj(geofence.file, f)
             
-        streets_path = os.path.join(temp_dir, streets.filename)
+        streets_path = os.path.join(temp_dir, os.path.basename(streets.filename))
         with open(streets_path, "wb") as f:
             shutil.copyfileobj(streets.file, f)
             
-        home_pose_path = os.path.join(temp_dir, home_pose.filename)
+        home_pose_path = os.path.join(temp_dir, os.path.basename(home_pose.filename))
         with open(home_pose_path, "wb") as f:
             shutil.copyfileobj(home_pose.file, f)
 
         transit_streets_path = None
         if transit_streets:
-            transit_streets_path = os.path.join(temp_dir, transit_streets.filename)
+            transit_streets_path = os.path.join(temp_dir, os.path.basename(transit_streets.filename))
             with open(transit_streets_path, "wb") as f:
                 shutil.copyfileobj(transit_streets.file, f)
             use_transit_streets = True
             
         obstacles_path = None
         if obstacles and use_obstacles:
-            obstacles_path = os.path.join(temp_dir, obstacles.filename)
+            obstacles_path = os.path.join(temp_dir, os.path.basename(obstacles.filename))
             with open(obstacles_path, "wb") as f:
                 shutil.copyfileobj(obstacles.file, f)
             
         high_obstacles_path = None
         if high_obstacles and use_high_obstacles:
-            high_obstacles_path = os.path.join(temp_dir, high_obstacles.filename)
+            high_obstacles_path = os.path.join(temp_dir, os.path.basename(high_obstacles.filename))
             with open(high_obstacles_path, "wb") as f:
                 shutil.copyfileobj(high_obstacles.file, f)
 
@@ -275,6 +289,8 @@ async def generate_routes(
         return StreamingResponse(event_generator(), media_type="application/x-ndjson")
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         shutil.rmtree(temp_dir)
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
 

@@ -24,14 +24,14 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapComponentProps {
     currentStepKey: string;
-    drawMode: 'marker' | 'polygon' | 'polyline' | 'any';
+    drawMode: 'marker' | 'polygon' | 'polyline' | 'any' | 'none';
     existingData: Record<string, any>;
     onUpdate: (geojson: any) => void;
     centerTrigger: number;
 }
 
 interface EditControlProps {
-    drawMode: 'marker' | 'polygon' | 'polyline' | 'any';
+    drawMode: 'marker' | 'polygon' | 'polyline' | 'any' | 'none';
     currentStepKey: string;
     initialData: any;
     onCreated: () => void;
@@ -53,7 +53,7 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
         // Load Initial Data
         const loadData = () => {
             editableLayers.clearLayers();
-            if (initialData) {
+            if (initialData && initialData.type) {
                 const geoJsonLayer = L.geoJSON(initialData, {
                     pointToLayer: (_feature, latlng) => {
                         let icon = DefaultIcon;
@@ -96,7 +96,7 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
                 } : false,
                 circlemarker: false,
             },
-            edit: {
+            edit: (drawMode === 'none') ? undefined : {
                 featureGroup: editableLayers,
                 remove: true,
             },
@@ -217,13 +217,24 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
     };
 
     const getStyle = (key: string) => {
-        // Generate a consistent color based on the key string
-        let hash = 0;
-        for (let i = 0; i < key.length; i++) {
-            hash = key.charCodeAt(i) + ((hash << 5) - hash);
+        let color = '#3388ff';
+        if (key === 'holes') color = '#000000';
+        else if (key === 'geofence') color = '#22c55e';
+        else if (key === 'home') color = '#3b82f6';
+        else if (key === 'streets') color = '#3b82f6';
+        else if (key === 'transit_streets') color = '#f97316';
+        else if (key === 'obstacles') color = '#ef4444';
+        else if (key === 'high_obstacles') color = '#000000';
+        else if (key === 'routes') color = '#eab308';
+        else {
+            // Generate a consistent color based on the key string
+            let hash = 0;
+            for (let i = 0; i < key.length; i++) {
+                hash = key.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+            color = '#' + '00000'.substring(0, 6 - c.length) + c;
         }
-        const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-        const color = '#' + '00000'.substring(0, 6 - c.length) + c;
 
         return {
             color: color,
@@ -252,7 +263,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                 {/* Static Layers from other steps */}
                 {Object.entries(existingData).map(([key, data]) => {
                     if (key === currentStepKey) return null; // Don't show current as static
-                    if (!data || !data.features || data.features.length === 0) return null;
+                    if (!data || !data.type || !data.features || data.features.length === 0) return null;
 
                     return (
                         <GeoJSON

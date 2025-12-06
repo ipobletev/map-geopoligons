@@ -4,7 +4,7 @@ import MapComponent from './MapComponent';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import { ArrowRight, ArrowLeft, Save, CheckCircle, Trash2, Upload, Download } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Save, CheckCircle, Trash2, Upload, Download, Folder } from 'lucide-react';
 import { parseHolFile } from '../utils/holParser';
 
 const Wizard = () => {
@@ -13,6 +13,7 @@ const Wizard = () => {
     const [currentStepData, setCurrentStepData] = useState<any>(null);
     const [centerTrigger, setCenterTrigger] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const folderInputRef = useRef<HTMLInputElement>(null);
 
     const currentStep = WIZARD_STEPS[currentStepIndex];
     const isLastStep = currentStepIndex === WIZARD_STEPS.length - 1;
@@ -90,21 +91,8 @@ const Wizard = () => {
                     parsed = JSON.parse(content);
                 }
 
-                // We assume loading into current step
-                // But maybe we want to load a full project?
-                // Request says "un boton para cargar geojson".
-                // Let's assume loading into current step for now, or maybe smart detection?
-                // If it's a single feature collection, load into current step.
-
                 // Check if it has UTM, if not, it will be enriched on save.
                 setCurrentStepData(parsed);
-
-                // We need to tell the map to display this as editable.
-                // Currently MapComponent doesn't accept "initialEditableData".
-                // We can pass it via a new prop or just let the user draw.
-                // Wait, if we want to load it into the map, we need to pass it to MapComponent.
-                // Let's update MapComponent to accept `initialData` for the editable layer.
-                // Let's update MapComponent to accept `initialData` for the editable layer.
 
                 // Actually, a better way for "Load GeoJSON" in this context might be to load it as the *saved* data for this step.
                 const enriched = enrichGeoJSONWithUTM(parsed);
@@ -119,6 +107,70 @@ const Wizard = () => {
         };
         reader.readAsText(file);
         if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleLoadFolder = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        const promises: Promise<{ key: string, data: any } | null>[] = [];
+
+        Array.from(files).forEach(file => {
+            const name = file.name.toLowerCase();
+            let key: string | null = null;
+
+            if (name.includes('geofence')) key = 'geofence';
+            else if (name.includes('home')) key = 'home';
+            else if (name.includes('transit')) key = 'transit_road';
+            else if (name.includes('streets') || name.includes('road')) key = 'road';
+            else if (name.includes('high') && name.includes('obstacle')) key = 'tall_obstacle';
+            else if (name.includes('obstacle')) key = 'obstacles';
+            else if (name.endsWith('.hol') || name.includes('objective') || name.includes('holes')) key = 'objective';
+
+            if (key) {
+                const promise = new Promise<{ key: string, data: any } | null>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const content = e.target?.result as string;
+                            let parsed;
+                            if (file.name.toLowerCase().endsWith('.hol')) {
+                                parsed = parseHolFile(content);
+                            } else {
+                                parsed = JSON.parse(content);
+                            }
+                            const enriched = enrichGeoJSONWithUTM(parsed);
+                            resolve({ key: key!, data: enriched });
+                        } catch (err) {
+                            console.error(`Error parsing ${file.name}`, err);
+                            resolve(null);
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+                promises.push(promise);
+            }
+        });
+
+        Promise.all(promises).then(results => {
+            const newData = { ...data };
+            let loadedCount = 0;
+            results.forEach(result => {
+                if (result) {
+                    newData[result.key] = result.data;
+                    loadedCount++;
+                }
+            });
+            setData(newData);
+            if (loadedCount > 0) {
+                setCenterTrigger(prev => prev + 1);
+                alert(`Loaded ${loadedCount} files from folder.`);
+            } else {
+                alert('No matching files found in folder.');
+            }
+        });
+
+        if (folderInputRef.current) folderInputRef.current.value = '';
     };
 
     const handleSaveAll = async () => {
@@ -199,6 +251,23 @@ const Wizard = () => {
                             ref={fileInputRef}
                             onChange={handleLoadGeoJSON}
                             accept=".geojson,.json,.hol"
+                            className="hidden"
+                        />
+                        <button
+                            onClick={() => folderInputRef.current?.click()}
+                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
+                            title="Load Folder"
+                        >
+                            <Folder className="w-3 h-3" /> Load Folder
+                        </button>
+                        <input
+                            type="file"
+                            ref={folderInputRef}
+                            onChange={handleLoadFolder}
+                            // @ts-ignore
+                            webkitdirectory=""
+                            directory=""
+                            multiple
                             className="hidden"
                         />
                     </div>

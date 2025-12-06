@@ -732,3 +732,41 @@ def split_ring(ring, split):
     popped_part = parts.pop(fuse[1])
     parts[fuse[0]] = linemerge([parts[fuse[0]], popped_part])
     return parts
+
+def generate_arrow_geojson(graph_dataframe, crs):
+    """
+    Generates a GeoJSON-compatible dictionary of arrow geometries from the graph dataframe.
+    """
+    if graph_dataframe is None or graph_dataframe.empty:
+        return None
+
+    geometries = []
+
+    for idx, row in graph_dataframe.iterrows():
+        pose = row['graph_pose']
+        x0 = pose[0]
+        y0 = pose[1]
+        theta = pose[2]
+        
+        # Arrow head calculation
+        x1 = x0 + 0.3 * math.cos(20 * math.pi / 180) * math.cos(theta) * 0.5
+        y1 = y0 + 0.3 * math.cos(20 * math.pi / 180) * math.sin(theta) * 0.5
+        
+        x2_left = x1 - 0.3 * math.cos(theta + 20 * math.pi / 180)
+        y2_left = y1 - 0.3 * math.sin(theta + 20 * math.pi / 180)
+        
+        x2_right = x1 - 0.3 * math.cos(theta - 20 * math.pi / 180)
+        y2_right = y1 - 0.3 * math.sin(theta - 20 * math.pi / 180)
+        
+        # Add left wing
+        geometries.append(LineString([(x1, y1), (x2_left, y2_left)]))
+        # Add right wing
+        geometries.append(LineString([(x1, y1), (x2_right, y2_right)]))
+
+    graph_draw = gpd.GeoDataFrame(geometry=geometries)
+    graph_draw.crs = crs
+
+    if graph_draw.crs != 'EPSG:4326':
+        graph_draw = graph_draw.to_crs('EPSG:4326')
+
+    return graph_draw.to_json()
