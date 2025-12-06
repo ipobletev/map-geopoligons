@@ -8,6 +8,7 @@ frontend/dist
 
 # Python
 .venv
+generated/*
 *.pyc
 *.pyo
 **__pycache__**
