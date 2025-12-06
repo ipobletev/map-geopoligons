@@ -2,13 +2,33 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Wizard from './components/Wizard';
 import RouteGenerator from './components/RouteGenerator';
-import TabNavigation from './components/TabNavigation';
+import Supervision from './components/Supervision';
+import Status from './components/Status';
+import Autonomous from './components/Autonomous';
+import TabNavigation, { type TabType } from './components/TabNavigation';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import './styles/App.css';
 
 function App() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'wizard' | 'route-generator'>('wizard');
+  const [activeTab, setActiveTab] = useState<TabType>('wizard');
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'supervision':
+        return <Supervision />;
+      case 'status':
+        return <Status />;
+      case 'autonomous':
+        return <Autonomous />;
+      case 'wizard':
+        return <Wizard />;
+      case 'route-generator':
+        return <RouteGenerator />;
+      default:
+        return <Wizard />;
+    }
+  };
 
   return (
     <div className="app-container">
@@ -28,15 +48,9 @@ function App() {
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="content-transition">
-          {activeTab === 'wizard' ? (
-            <div className="fade-in-wrapper">
-              <Wizard />
-            </div>
-          ) : (
-            <div className="fade-in-wrapper">
-              <RouteGenerator />
-            </div>
-          )}
+          <div className="fade-in-wrapper">
+            {renderContent()}
+          </div>
         </div>
       </div>
     </div>

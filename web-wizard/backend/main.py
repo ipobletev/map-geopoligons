@@ -1,7 +1,8 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import BaseModel
 import uvicorn
 import os
 import shutil
@@ -22,6 +23,7 @@ import time
 # Import local modules
 import route_gen_logic
 import utils
+from ros_manager import ros_manager
 
 app = FastAPI()
 
@@ -41,6 +43,56 @@ os.makedirs(GENERATED_DIR, exist_ok=True)
 
 # Mount static files for downloads
 app.mount("/generated", StaticFiles(directory=GENERATED_DIR), name="generated")
+
+# Pydantic Models
+class MachineState(BaseModel):
+    state: bool
+
+class Command(BaseModel):
+    command: str
+
+class Answer(BaseModel):
+    answerIndex: int
+
+# --- ROS Endpoints ---
+
+@app.get("/api/supervision/data")
+async def get_supervision_data():
+    return ros_manager.get_supervision_data()
+
+@app.get("/api/supervision/logs")
+async def get_supervision_logs():
+    return ros_manager.get_logs()
+
+@app.post("/api/supervision/machine-on")
+async def set_machine_on(command: dict):
+    ros_manager.set_machine_on(command.get("state", False))
+    return {"status": "ok"}
+
+@app.post("/api/supervision/machine-operative")
+async def set_machine_operative(data: MachineState):
+    ros_manager.set_machine_operative(data.state)
+    return {"status": "success"}
+
+@app.get("/api/status/data")
+async def get_status_data():
+    return ros_manager.get_status_data()
+
+@app.get("/api/autonomous/data")
+async def get_autonomous_data():
+    return ros_manager.get_autonomous_data()
+
+@app.post("/api/autonomous/command")
+async def send_command(data: Command):
+    ros_manager.send_mission_command(data.command)
+    return {"status": "success"}
+
+@app.post("/api/autonomous/answer")
+async def send_answer(data: Answer):
+    ros_manager.set_operator_answer(data.answerIndex)
+    return {"status": "success"}
+
+# --- Existing Route Generation Logic ---
 
 def run_route_generation(
     progress_queue,
