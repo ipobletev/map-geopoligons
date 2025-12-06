@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { WIZARD_STEPS } from '../types';
 import MapComponent from './MapComponent';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
@@ -8,6 +9,7 @@ import { ArrowRight, ArrowLeft, Save, CheckCircle, Trash2, Upload, Download, Fol
 import { parseHolFile } from '../utils/holParser';
 
 const Wizard = () => {
+    const { t } = useTranslation();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [data, setData] = useState<Record<string, any>>({});
     const [currentStepData, setCurrentStepData] = useState<any>(null);
@@ -20,8 +22,15 @@ const Wizard = () => {
     const [genResult, setGenResult] = useState<any>(null);
     const [showGenModal, setShowGenModal] = useState(false);
 
-    const currentStep = WIZARD_STEPS[currentStepIndex];
-    const isLastStep = currentStepIndex === WIZARD_STEPS.length - 1;
+    // Translate steps dynamically
+    const steps = WIZARD_STEPS.map(step => ({
+        ...step,
+        label: t(`wizard.steps.${step.key === 'transit_road' ? 'transitStreets' : step.key === 'tall_obstacle' ? 'highObstacles' : step.key === 'objective' ? 'holes' : step.key === 'road' ? 'streets' : step.key === 'home' ? 'home' : step.key === 'obstacles' ? 'obstacles' : 'geofence'}.label`),
+        description: t(`wizard.steps.${step.key === 'transit_road' ? 'transitStreets' : step.key === 'tall_obstacle' ? 'highObstacles' : step.key === 'objective' ? 'holes' : step.key === 'road' ? 'streets' : step.key === 'home' ? 'home' : step.key === 'obstacles' ? 'obstacles' : 'geofence'}.description`)
+    }));
+
+    const currentStep = steps[currentStepIndex];
+    const isLastStep = currentStepIndex === steps.length - 1;
 
     const handleMapUpdate = (geojson: any) => {
         setCurrentStepData(geojson);
@@ -63,21 +72,16 @@ const Wizard = () => {
     };
 
     const handleClearAll = () => {
-        if (confirm('Are you sure you want to delete all generated figures? This cannot be undone.')) {
+        if (confirm(t('wizard.confirmClearAll'))) {
             setData({});
             setCurrentStepData(null);
-            // Force map refresh by key change or similar if needed, but data prop change should suffice for static layers.
-            // For editable layer, we might need to clear it.
-            // The MapComponent clears editable layer on step change, but here we are on same step.
-            // We can force a remount or pass a "clear signal".
-            // Simplest is to just reload the page or reset state completely.
             window.location.reload();
         }
     };
 
     const handleClearStep = (stepKey: string, e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent step selection
-        if (confirm(`Are you sure you want to clear data for this step?`)) {
+        if (confirm(t('wizard.confirmClearStep'))) {
             const newData = { ...data };
             delete newData[stepKey];
             setData(newData);
@@ -243,7 +247,7 @@ const Wizard = () => {
 
         // Check required
         if (!allData['objective'] || !allData['geofence'] || !allData['road'] || !allData['home']) {
-            alert('Missing required data: Holes, Geofence, Streets, or Home Pose.');
+            alert(t('wizard.missingData'));
             return;
         }
 
@@ -306,9 +310,9 @@ const Wizard = () => {
                         } else if (message.type === 'result') {
                             setGenResult(message.data);
                             // setShowGenModal(true); // Disabled as per user request
-                            alert('Route generated successfully!');
+                            alert(t('wizard.successRoute'));
                         } else if (message.type === 'error') {
-                            alert('Error: ' + message.message);
+                            alert(t('wizard.errorRoute') + ': ' + message.message);
                         }
                     } catch (e) {
                         console.error('Error parsing JSON:', e);
@@ -317,13 +321,11 @@ const Wizard = () => {
             }
         } catch (e) {
             console.error(e);
-            alert('Error generating route');
+            alert(t('wizard.errorRoute'));
         } finally {
             setGenerating(false);
         }
     };
-
-
 
     const handleDownloadGenerated = async () => {
         if (!genResult || !genResult.download_links) return;
@@ -368,9 +370,9 @@ const Wizard = () => {
             <div className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-lg z-10">
                 <div className="p-6 border-b border-slate-100">
                     <h1 className="text-2xl font-bold text-slate-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        Map Wizard
+                        {t('wizard.title')}
                     </h1>
-                    <p className="text-sm text-slate-500 mt-1">Generate map geopolygons</p>
+                    <p className="text-sm text-slate-500 mt-1">{t('wizard.subtitle')}</p>
 
                     <div className="flex gap-2 mt-4">
                         <button
@@ -378,21 +380,21 @@ const Wizard = () => {
                             className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded border border-red-200 transition-colors"
                             title="Delete all figures"
                         >
-                            <Trash2 className="w-3 h-3" /> Clear All
+                            <Trash2 className="w-3 h-3" /> {t('wizard.clearAll')}
                         </button>
                         <button
                             onClick={handleCenterMap}
                             className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors"
                             title="Center map on data"
                         >
-                            <Upload className="w-3 h-3 rotate-90" /> Center Map
+                            <Upload className="w-3 h-3 rotate-90" /> {t('wizard.centerMap')}
                         </button>
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
                             title="Load GeoJSON"
                         >
-                            <Upload className="w-3 h-3" /> Load JSON
+                            <Upload className="w-3 h-3" /> {t('wizard.loadJson')}
                         </button>
                         <input
                             type="file"
@@ -406,7 +408,7 @@ const Wizard = () => {
                             className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
                             title="Load Folder"
                         >
-                            <Folder className="w-3 h-3" /> Load Folder
+                            <Folder className="w-3 h-3" /> {t('wizard.loadFolder')}
                         </button>
                         <input
                             type="file"
@@ -422,7 +424,7 @@ const Wizard = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {WIZARD_STEPS.map((step, index) => {
+                    {steps.map((step, index) => {
                         const isActive = index === currentStepIndex;
                         const hasData = !!data[step.key];
 
@@ -440,7 +442,7 @@ const Wizard = () => {
                                 <div className="flex items-center justify-between mb-2">
                                     <span className={`text-sm font-bold uppercase tracking-wider ${isActive ? 'text-blue-600' : 'text-slate-500'
                                         }`}>
-                                        Step {index + 1}
+                                        {t('wizard.step')} {index + 1}
                                     </span>
                                     {hasData && (
                                         <div className="flex items-center gap-2">
@@ -475,14 +477,14 @@ const Wizard = () => {
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-white hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
                                 <ArrowLeft className="w-4 h-4" />
-                                Back
+                                {t('wizard.back')}
                             </button>
                             <button
                                 onClick={handleNext}
                                 disabled={isLastStep}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
-                                Next
+                                {t('wizard.next')}
                                 <ArrowRight className="w-4 h-4" />
                             </button>
                         </div>
@@ -490,14 +492,14 @@ const Wizard = () => {
                             onClick={handleSaveAll}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-900 shadow-md hover:shadow-lg transition-all"
                         >
-                            <Download className="w-4 h-4" /> Download GeoJsons (ZIP)
+                            <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
                         </button>
                         <button
                             onClick={handleGenerateRoute}
                             disabled={generating}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
                         >
-                            {generating ? `Generating ${Math.round(genProgress)}%` : <><Play className="w-4 h-4" /> Generate Route</>}
+                            {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="w-4 h-4" /> {t('wizard.generateRoute')}</>}
                         </button>
                         <button
                             onClick={handleDownloadGenerated}
@@ -505,7 +507,7 @@ const Wizard = () => {
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Download generated route files"
                         >
-                            <Download className="w-4 h-4" /> Download Routes (ZIP)
+                            <Download className="w-4 h-4" /> {t('wizard.downloadRoutes')}
                         </button>
                     </div>
                 </div>

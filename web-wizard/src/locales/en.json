@@ -1,0 +1,95 @@
+{
+    "app": {
+        "title": "Web Wizard",
+        "subtitle": "Advanced map processing and route generation tools"
+    },
+    "tabs": {
+        "mapWizard": "Map Wizard",
+        "routeGenerator": "Route Generator"
+    },
+    "wizard": {
+        "title": "Map Wizard",
+        "subtitle": "Generate map geopolygons",
+        "clearAll": "Clear All",
+        "centerMap": "Center Map",
+        "loadJson": "Load JSON",
+        "loadFolder": "Load Folder",
+        "step": "Step",
+        "back": "Back",
+        "next": "Next",
+        "finish": "Finish",
+        "downloadAll": "Download GeoJsons (ZIP)",
+        "downloadRoutes": "Download Routes (ZIP)",
+        "generateRoute": "Generate Route",
+        "generating": "Generating {{progress}}%",
+        "confirmClearAll": "Are you sure you want to delete all generated figures? This cannot be undone.",
+        "confirmClearStep": "Are you sure you want to clear data for this step?",
+        "successRoute": "Route generated successfully!",
+        "errorRoute": "Error generating route",
+        "missingData": "Missing required data: Holes, Geofence, Streets, or Home Pose.",
+        "steps": {
+            "holes": {
+                "label": "Holes",
+                "description": "Mark the holes on the map."
+            },
+            "geofence": {
+                "label": "Geofence",
+                "description": "Define the operational area boundaries."
+            },
+            "streets": {
+                "label": "Streets",
+                "description": "Draw the main streets for navigation."
+            },
+            "home": {
+                "label": "Home Pose",
+                "description": "Set the starting position for the vehicle."
+            },
+            "obstacles": {
+                "label": "Obstacles",
+                "description": "Mark areas to avoid."
+            },
+            "highObstacles": {
+                "label": "High Obstacles",
+                "description": "Mark tall obstacles that affect visibility."
+            },
+            "transitStreets": {
+                "label": "Transit Streets",
+                "description": "Additional streets for transit."
+            }
+        }
+    },
+    "routeGenerator": {
+        "title": "Route Generator",
+        "bulkUpload": {
+            "title": "Bulk Upload",
+            "description": "Select multiple files to automatically assign them based on name.",
+            "selectFiles": "Select Files",
+            "selectFolder": "Select Folder"
+        },
+        "files": {
+            "holes": "Holes File (.hol/.csv)",
+            "geofence": "Geofence (.geojson)",
+            "streets": "Streets (.geojson)",
+            "home": "Home Pose (.geojson)",
+            "obstacles": "Obstacles (.geojson)",
+            "highObstacles": "High Obstacles (.geojson)",
+            "transitStreets": "Transit Streets (.geojson)"
+        },
+        "options": {
+            "title": "Options",
+            "fitStreets": "Fit Streets",
+            "fitTwice": "Fit Twice",
+            "wgs84": "WGS84 Coordinates",
+            "useObstacles": "Use Obstacles",
+            "useHighObstacles": "Use High Obstacles",
+            "useTransitStreets": "Use Transit Streets"
+        },
+        "generate": "Generate Routes",
+        "generating": "Generating... {{progress}}%",
+        "downloadAll": "Download All (ZIP)",
+        "clearResults": "Clear Results",
+        "confirmClear": "Are you sure you want to clear the results?",
+        "error": "Error",
+        "connectionError": "Failed to connect to server"
+    }
+}

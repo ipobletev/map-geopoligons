@@ -1,0 +1,95 @@
+{
+    "app": {
+        "title": "Web Wizard",
+        "subtitle": "Herramientas avanzadas de procesamiento de mapas y generación de rutas"
+    },
+    "tabs": {
+        "mapWizard": "Asistente de Mapa",
+        "routeGenerator": "Generador de Rutas"
+    },
+    "wizard": {
+        "title": "Asistente de Mapa",
+        "subtitle": "Generar geopolígonos del mapa",
+        "clearAll": "Borrar Todo",
+        "centerMap": "Centrar Mapa",
+        "loadJson": "Cargar JSON",
+        "loadFolder": "Cargar Carpeta",
+        "step": "Paso",
+        "back": "Atrás",
+        "next": "Siguiente",
+        "finish": "Finalizar",
+        "downloadAll": "Descargar GeoJsons (ZIP)",
+        "downloadRoutes": "Descargar Rutas (ZIP)",
+        "generateRoute": "Generar Ruta",
+        "generating": "Generando {{progress}}%",
+        "confirmClearAll": "¿Estás seguro de que quieres borrar todas las figuras generadas? Esto no se puede deshacer.",
+        "confirmClearStep": "¿Estás seguro de que quieres borrar los datos de este paso?",
+        "successRoute": "¡Ruta generada con éxito!",
+        "errorRoute": "Error al generar la ruta",
+        "missingData": "Faltan datos requeridos: Pozos, Geocerca, Calles o Posición de Inicio.",
+        "steps": {
+            "holes": {
+                "label": "Pozos",
+                "description": "Marque los pozos en el mapa."
+            },
+            "geofence": {
+                "label": "Geocerca",
+                "description": "Defina los límites del área operativa."
+            },
+            "streets": {
+                "label": "Calles",
+                "description": "Dibuje las calles principales para la navegación."
+            },
+            "home": {
+                "label": "Posición de Inicio",
+                "description": "Establezca la posición inicial del vehículo."
+            },
+            "obstacles": {
+                "label": "Obstáculos",
+                "description": "Marque las áreas a evitar."
+            },
+            "highObstacles": {
+                "label": "Obstáculos Altos",
+                "description": "Marque los obstáculos altos que afectan la visibilidad."
+            },
+            "transitStreets": {
+                "label": "Calles de Tránsito",
+                "description": "Calles adicionales para el tránsito."
+            }
+        }
+    },
+    "routeGenerator": {
+        "title": "Generador de Rutas",
+        "bulkUpload": {
+            "title": "Carga Masiva",
+            "description": "Seleccione múltiples archivos para asignarlos automáticamente según el nombre.",
+            "selectFiles": "Seleccionar Archivos",
+            "selectFolder": "Seleccionar Carpeta"
+        },
+        "files": {
+            "holes": "Archivo de Pozos (.hol/.csv)",
+            "geofence": "Geocerca (.geojson)",
+            "streets": "Calles (.geojson)",
+            "home": "Posición de Inicio (.geojson)",
+            "obstacles": "Obstáculos (.geojson)",
+            "highObstacles": "Obstáculos Altos (.geojson)",
+            "transitStreets": "Calles de Tránsito (.geojson)"
+        },
+        "options": {
+            "title": "Opciones",
+            "fitStreets": "Ajustar Calles",
+            "fitTwice": "Ajustar Dos Veces",
+            "wgs84": "Coordenadas WGS84",
+            "useObstacles": "Usar Obstáculos",
+            "useHighObstacles": "Usar Obstáculos Altos",
+            "useTransitStreets": "Usar Calles de Tránsito"
+        },
+        "generate": "Generar Rutas",
+        "generating": "Generando... {{progress}}%",
+        "downloadAll": "Descargar Todo (ZIP)",
+        "clearResults": "Limpiar Resultados",
+        "confirmClear": "¿Estás seguro de que quieres limpiar los resultados?",
+        "error": "Error",
+        "connectionError": "Error al conectar con el servidor"
+    }
+}

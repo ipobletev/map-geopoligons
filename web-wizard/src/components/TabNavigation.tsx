@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TabNavigationProps {
     activeTab: 'wizard' | 'route-generator';
@@ -6,6 +7,8 @@ interface TabNavigationProps {
 }
 
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
+    const { t } = useTranslation();
+
     return (
         <div className="flex justify-center mb-8">
             <div className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 inline-flex">
@@ -19,7 +22,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
                         }
           `}
                 >
-                    Map Wizard
+                    {t('tabs.mapWizard')}
                 </button>
                 <button
                     onClick={() => onTabChange('route-generator')}
@@ -31,7 +34,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
                         }
           `}
                 >
-                    Route Generator
+                    {t('tabs.routeGenerator')}
                 </button>
             </div>
         </div>

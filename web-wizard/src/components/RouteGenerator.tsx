@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, Map, Settings, Download, Trash2 } from 'lucide-react';
 import MapComponent from './MapComponent';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 export default function RouteGenerator() {
+    const { t } = useTranslation();
     const [files, setFiles] = useState<Record<string, File | null>>({
         holes: null,
         geofence: null,
@@ -107,7 +109,7 @@ export default function RouteGenerator() {
             }
 
         } catch (err) {
-            setError('Failed to connect to server');
+            setError(t('routeGenerator.connectionError'));
             console.error(err);
         } finally {
             setLoading(false);
@@ -115,7 +117,7 @@ export default function RouteGenerator() {
     };
 
     const handleClearResults = () => {
-        if (confirm('Are you sure you want to clear the results?')) {
+        if (confirm(t('routeGenerator.confirmClear'))) {
             setResult(null);
             setError(null);
             setProgress(0);
@@ -160,14 +162,14 @@ export default function RouteGenerator() {
         <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-6">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <Map className="w-6 h-6" />
-                Route Generator
+                {t('routeGenerator.title')}
             </h2>
 
             <div className="p-6 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 text-center space-y-2 hover:bg-blue-100 transition-colors">
                 <Upload className="w-12 h-12 text-blue-500 mx-auto" />
-                <h3 className="text-lg font-semibold text-blue-700">Bulk Upload</h3>
+                <h3 className="text-lg font-semibold text-blue-700">{t('routeGenerator.bulkUpload.title')}</h3>
                 <p className="text-sm text-blue-600">
-                    Select multiple files to automatically assign them based on name.
+                    {t('routeGenerator.bulkUpload.description')}
                 </p>
                 <input
                     type="file"
@@ -191,13 +193,13 @@ export default function RouteGenerator() {
                         htmlFor="bulk-upload"
                         className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
                     >
-                        Select Files
+                        {t('routeGenerator.bulkUpload.selectFiles')}
                     </label>
                     <label
                         htmlFor="folder-upload"
                         className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 transition-colors"
                     >
-                        Select Folder
+                        {t('routeGenerator.bulkUpload.selectFolder')}
                     </label>
                 </div>
             </div>
@@ -206,28 +208,28 @@ export default function RouteGenerator() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FileInput
                         name="holes"
-                        label="Holes File (.hol/.csv)"
+                        label={t('routeGenerator.files.holes')}
                         required
                         file={files.holes}
                         onChange={(f) => handleFileChange('holes', f)}
                     />
                     <FileInput
                         name="geofence"
-                        label="Geofence (.geojson)"
+                        label={t('routeGenerator.files.geofence')}
                         required
                         file={files.geofence}
                         onChange={(f) => handleFileChange('geofence', f)}
                     />
                     <FileInput
                         name="streets"
-                        label="Streets (.geojson)"
+                        label={t('routeGenerator.files.streets')}
                         required
                         file={files.streets}
                         onChange={(f) => handleFileChange('streets', f)}
                     />
                     <FileInput
                         name="home_pose"
-                        label="Home Pose (.geojson)"
+                        label={t('routeGenerator.files.home')}
                         required
                         file={files.home_pose}
                         onChange={(f) => handleFileChange('home_pose', f)}
@@ -235,19 +237,19 @@ export default function RouteGenerator() {
 
                     <FileInput
                         name="obstacles"
-                        label="Obstacles (.geojson)"
+                        label={t('routeGenerator.files.obstacles')}
                         file={files.obstacles}
                         onChange={(f) => handleFileChange('obstacles', f)}
                     />
                     <FileInput
                         name="high_obstacles"
-                        label="High Obstacles (.geojson)"
+                        label={t('routeGenerator.files.highObstacles')}
                         file={files.high_obstacles}
                         onChange={(f) => handleFileChange('high_obstacles', f)}
                     />
                     <FileInput
                         name="transit_streets"
-                        label="Transit Streets (.geojson)"
+                        label={t('routeGenerator.files.transitStreets')}
                         file={files.transit_streets}
                         onChange={(f) => handleFileChange('transit_streets', f)}
                     />
@@ -255,15 +257,15 @@ export default function RouteGenerator() {
 
                 <div className="p-4 bg-gray-50 rounded-lg space-y-2">
                     <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                        <Settings className="w-4 h-4" /> Options
+                        <Settings className="w-4 h-4" /> {t('routeGenerator.options.title')}
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
-                        <Checkbox name="fit_streets" label="Fit Streets" defaultChecked />
-                        <Checkbox name="fit_twice" label="Fit Twice" defaultChecked />
-                        <Checkbox name="wgs84" label="WGS84 Coordinates" defaultChecked />
-                        <Checkbox name="use_obstacles" label="Use Obstacles" />
-                        <Checkbox name="use_high_obstacles" label="Use High Obstacles" />
-                        <Checkbox name="use_transit_streets" label="Use Transit Streets" />
+                        <Checkbox name="fit_streets" label={t('routeGenerator.options.fitStreets')} defaultChecked />
+                        <Checkbox name="fit_twice" label={t('routeGenerator.options.fitTwice')} defaultChecked />
+                        <Checkbox name="wgs84" label={t('routeGenerator.options.wgs84')} defaultChecked />
+                        <Checkbox name="use_obstacles" label={t('routeGenerator.options.useObstacles')} />
+                        <Checkbox name="use_high_obstacles" label={t('routeGenerator.options.useHighObstacles')} />
+                        <Checkbox name="use_transit_streets" label={t('routeGenerator.options.useTransitStreets')} />
                     </div>
                 </div>
 
@@ -282,14 +284,14 @@ export default function RouteGenerator() {
                         disabled={loading}
                         className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                     >
-                        {loading ? `Generating... ${Math.round(progress)}%` : 'Generate Routes'}
+                        {loading ? t('routeGenerator.generating', { progress: Math.round(progress) }) : t('routeGenerator.generate')}
                     </button>
                 </div>
             </form>
 
             {error && (
                 <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
-                    <strong>Error:</strong> {error}
+                    <strong>{t('routeGenerator.error')}:</strong> {error}
                 </div>
             )}
 
@@ -321,13 +323,13 @@ export default function RouteGenerator() {
                             onClick={handleDownloadAll}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-md"
                         >
-                            <Download className="w-4 h-4" /> Download All (ZIP)
+                            <Download className="w-4 h-4" /> {t('routeGenerator.downloadAll')}
                         </button>
                         <button
                             onClick={handleClearResults}
                             className="flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-100 text-red-700 font-medium rounded-lg hover:bg-red-200 transition-colors border border-red-200"
                         >
-                            <Trash2 className="w-4 h-4" /> Clear Results
+                            <Trash2 className="w-4 h-4" /> {t('routeGenerator.clearResults')}
                         </button>
                     </div>
 
