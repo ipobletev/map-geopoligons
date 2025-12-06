@@ -75,6 +75,20 @@ const Wizard = () => {
         }
     };
 
+    const handleClearStep = (stepKey: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent step selection
+        if (confirm(`Are you sure you want to clear data for this step?`)) {
+            const newData = { ...data };
+            delete newData[stepKey];
+            setData(newData);
+
+            // If clearing current step, also clear currentStepData
+            if (currentStep.key === stepKey) {
+                setCurrentStepData(null);
+            }
+        }
+    };
+
     const handleCenterMap = () => {
         setCenterTrigger(prev => prev + 1);
     };
@@ -427,7 +441,18 @@ const Wizard = () => {
                                         }`}>
                                         Step {index + 1}
                                     </span>
-                                    {hasData && <CheckCircle className="w-4 h-4 text-green-500" />}
+                                    {hasData && (
+                                        <div className="flex items-center gap-2">
+                                            <CheckCircle className="w-4 h-4 text-green-500" />
+                                            <button
+                                                onClick={(e) => handleClearStep(step.key, e)}
+                                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                                title="Clear step data"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                                 <h3 className={`font-semibold text-lg ${isActive ? 'text-slate-800' : 'text-slate-600'}`}>
                                     {step.label}
