@@ -308,6 +308,45 @@ const Wizard = () => {
         }
     };
 
+
+
+    const handleDownloadGenerated = async () => {
+        if (!genResult || !genResult.download_links) return;
+
+        const zip = new JSZip();
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const folderName = `generated_routes_${timestamp}`;
+        const folder = zip.folder(folderName);
+
+        if (!folder) return;
+
+        try {
+            const links = genResult.download_links;
+            const filesToDownload = [
+                { name: 'global_plan.csv', url: links.csv },
+                { name: 'map.png', url: links.map_png },
+                { name: 'map.yaml', url: links.map_yaml },
+                { name: 'latlon.yaml', url: links.latlon_yaml }
+            ];
+
+            await Promise.all(filesToDownload.map(async (file) => {
+                try {
+                    const response = await fetch(file.url);
+                    const blob = await response.blob();
+                    folder.file(file.name, blob);
+                } catch (e) {
+                    console.error(`Error downloading ${file.name}:`, e);
+                }
+            }));
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            saveAs(content, `routes-${timestamp}.zip`);
+        } catch (e) {
+            console.error('Error creating zip:', e);
+            alert('Error creating zip file');
+        }
+    };
+
     return (
         <div className="flex h-screen w-full bg-slate-50">
             {/* Sidebar */}
@@ -414,17 +453,18 @@ const Wizard = () => {
                             </button>
                             <button
                                 onClick={handleNext}
+                                disabled={isLastStep}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
-                                {isLastStep ? 'Finish' : 'Next'}
-                                {isLastStep ? <Save className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                                Next
+                                <ArrowRight className="w-4 h-4" />
                             </button>
                         </div>
                         <button
                             onClick={handleSaveAll}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-900 shadow-md hover:shadow-lg transition-all"
                         >
-                            <Download className="w-4 h-4" /> Download All (ZIP)
+                            <Download className="w-4 h-4" /> Download GeoJsons (ZIP)
                         </button>
                         <button
                             onClick={handleGenerateRoute}
@@ -432,6 +472,14 @@ const Wizard = () => {
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
                         >
                             {generating ? `Generating ${Math.round(genProgress)}%` : <><Play className="w-4 h-4" /> Generate Route</>}
+                        </button>
+                        <button
+                            onClick={handleDownloadGenerated}
+                            disabled={!genResult}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Download generated route files"
+                        >
+                            <Download className="w-4 h-4" /> Download Routes (ZIP)
                         </button>
                     </div>
                 </div>
