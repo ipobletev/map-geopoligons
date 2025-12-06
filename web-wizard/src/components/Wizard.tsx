@@ -305,7 +305,8 @@ const Wizard = () => {
                             setGenProgress(message.value);
                         } else if (message.type === 'result') {
                             setGenResult(message.data);
-                            setShowGenModal(true);
+                            // setShowGenModal(true); // Disabled as per user request
+                            alert('Route generated successfully!');
                         } else if (message.type === 'error') {
                             alert('Error: ' + message.message);
                         }
