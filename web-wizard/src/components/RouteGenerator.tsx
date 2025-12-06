@@ -4,7 +4,9 @@ import { Upload, Map, Settings, Download, Trash2 } from 'lucide-react';
 import MapComponent from './MapComponent';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import '../../styles/components/RouteGenerator.css';
+import { enrichGeoJSONWithUTM } from '../utils/utm';
+import { parseHolFile } from '../utils/holParser';
+import '../styles/components/RouteGenerator.css';
 
 export default function RouteGenerator() {
     const { t } = useTranslation();
@@ -29,9 +31,43 @@ export default function RouteGenerator() {
         obstacles_geojson?: string;
         high_obstacles_geojson?: string;
         transit_streets_geojson?: string;
+        fitted_streets_geojson?: string;
+        fitted_transit_streets_geojson?: string;
         download_links: { [key: string]: string };
     } | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // Map Preview State
+    const [previewData, setPreviewData] = useState<Record<string, any>>({});
+    const [viewMode, setViewMode] = useState<'raw' | 'generated'>('raw');
+    const [centerTrigger, setCenterTrigger] = useState(0);
+
+    const readFile = (file: File, key: string) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                let parsed;
+                if (file.name.toLowerCase().endsWith('.hol')) {
+                    parsed = parseHolFile(content);
+                } else {
+                    parsed = JSON.parse(content);
+                }
+                const enriched = enrichGeoJSONWithUTM(parsed);
+
+                // Map keys to match MapComponent expectations
+                let mapKey = key;
+                if (key === 'holes') mapKey = 'objective';
+                if (key === 'home_pose') mapKey = 'home';
+
+                setPreviewData(prev => ({ ...prev, [mapKey]: enriched }));
+                setCenterTrigger(prev => prev + 1);
+            } catch (err) {
+                console.error(`Error parsing ${file.name}`, err);
+            }
+        };
+        reader.readAsText(file);
+    };
 
     const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
@@ -39,19 +75,39 @@ export default function RouteGenerator() {
         const newFiles = { ...files };
         Array.from(e.target.files).forEach(file => {
             const name = file.name.toLowerCase();
-            if (name.includes('geofence')) newFiles.geofence = file;
-            else if (name.includes('home')) newFiles.home_pose = file;
-            else if (name.includes('transit')) newFiles.transit_streets = file;
-            else if (name.includes('streets')) newFiles.streets = file;
-            else if (name.includes('high') && name.includes('obstacle')) newFiles.high_obstacles = file;
-            else if (name.includes('obstacle')) newFiles.obstacles = file;
-            else if (name.endsWith('.hol') || name.endsWith('.csv')) newFiles.holes = file;
+            let key: keyof typeof files | null = null;
+
+            if (name.includes('geofence')) key = 'geofence';
+            else if (name.includes('home')) key = 'home_pose';
+            else if (name.includes('transit')) key = 'transit_streets';
+            else if (name.includes('streets')) key = 'streets';
+            else if (name.includes('high') && name.includes('obstacle')) key = 'high_obstacles';
+            else if (name.includes('obstacle')) key = 'obstacles';
+            else if (name.endsWith('.hol') || name.endsWith('.csv')) key = 'holes';
+
+            if (key) {
+                newFiles[key] = file;
+                readFile(file, key);
+            }
         });
         setFiles(newFiles);
     };
 
     const handleFileChange = (name: string, file: File | null) => {
         setFiles(prev => ({ ...prev, [name]: file }));
+        if (file) {
+            readFile(file, name);
+        } else {
+            setPreviewData(prev => {
+                const newData = { ...prev };
+                // Remove the corresponding map key
+                let mapKey = name;
+                if (name === 'holes') mapKey = 'objective';
+                if (name === 'home_pose') mapKey = 'home';
+                delete newData[mapKey];
+                return newData;
+            });
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -100,6 +156,7 @@ export default function RouteGenerator() {
                             setProgress(message.value);
                         } else if (message.type === 'result') {
                             setResult(message.data);
+                            setViewMode('generated');
                         } else if (message.type === 'error') {
                             setError(message.message);
                         }
@@ -205,6 +262,11 @@ export default function RouteGenerator() {
                 </div>
             </div>
 
+            {/* Map Preview Section */}
+            <div className="mb-6 space-y-2">
+                <h3 className="text-lg font-semibold text-slate-700">Map Preview</h3>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="file-inputs-grid">
                     <FileInput
@@ -277,6 +339,50 @@ export default function RouteGenerator() {
                     </div>
                 </div>
 
+
+                <div className="h-[400px] w-full rounded-lg overflow-hidden border border-slate-200 shadow-sm relative">
+                    {result && (
+                        <div className="absolute top-4 right-4 z-[1000] bg-white/90 backdrop-blur-sm shadow-md rounded-lg p-1 flex">
+                            <button
+                                onClick={() => setViewMode('raw')}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'raw'
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                {t('wizard.rawMode') || 'Raw Input'}
+                            </button>
+                            <button
+                                onClick={() => setViewMode('generated')}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'generated'
+                                    ? 'bg-white text-green-600 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                {t('wizard.generatedMode') || 'Generated'}
+                            </button>
+                        </div>
+                    )}
+                    <MapComponent
+                        currentStepKey="preview"
+                        drawMode="none"
+                        existingData={viewMode === 'generated' && result ? {
+                            routes: result.arrow_geojson,
+                            fitted_streets: result.fitted_streets_geojson ? JSON.parse(result.fitted_streets_geojson) : null,
+                            fitted_transit_streets: result.fitted_transit_streets_geojson ? JSON.parse(result.fitted_transit_streets_geojson) : null,
+                            objective: previewData['objective'],
+                            geofence: previewData['geofence'],
+                            streets: previewData['streets'],
+                            home: previewData['home'],
+                            obstacles: previewData['obstacles'],
+                            high_obstacles: previewData['high_obstacles'],
+                            transit_streets: previewData['transit_streets'],
+                        } : previewData}
+                        onUpdate={() => { }}
+                        centerTrigger={centerTrigger}
+                    />
+                </div>
+
                 <div className="space-y-2">
                     {loading && (
                         <div className="progress-bar-container">
@@ -305,26 +411,7 @@ export default function RouteGenerator() {
 
             {result && (
                 <div className="result-container">
-                    {result.arrow_geojson && (
-                        <div className="map-wrapper">
-                            <MapComponent
-                                currentStepKey="routes"
-                                drawMode="none"
-                                existingData={{
-                                    routes: result.arrow_geojson,
-                                    holes: parseGeoJSON(result.holes_geojson),
-                                    geofence: parseGeoJSON(result.geofence_geojson),
-                                    streets: parseGeoJSON(result.streets_geojson),
-                                    home: parseGeoJSON(result.home_pose_geojson),
-                                    obstacles: parseGeoJSON(result.obstacles_geojson),
-                                    high_obstacles: parseGeoJSON(result.high_obstacles_geojson),
-                                    transit_streets: parseGeoJSON(result.transit_streets_geojson),
-                                }}
-                                onUpdate={() => { }}
-                                centerTrigger={Date.now()}
-                            />
-                        </div>
-                    )}
+                    {/* Map removed from here, now displayed above */}
 
                     <div className="action-buttons">
                         <button

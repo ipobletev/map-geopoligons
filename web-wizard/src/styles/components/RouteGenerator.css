@@ -63,7 +63,7 @@
 }
 
 .result-container {
-    @apply space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500;
+    @apply space-y-6;
 }
 
 .map-wrapper {
@@ -92,7 +92,15 @@
 }
 
 .file-input-field {
-    @apply block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg cursor-pointer;
+    @apply block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer;
+}
+
+.file-input-field::file-selector-button {
+    @apply mr-4 py-2 px-4 rounded-full border-0 text-sm font-semibold bg-blue-50 text-blue-700;
+}
+
+.file-input-field:hover::file-selector-button {
+    @apply bg-blue-100;
 }
 
 .file-status-wrapper {

@@ -5,9 +5,9 @@ import MapComponent from './MapComponent';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, Play, X } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, Play, X, Settings } from 'lucide-react';
 import { parseHolFile } from '../utils/holParser';
-import '../../styles/components/Wizard.css';
+import '../styles/components/Wizard.css';
 
 const Wizard = () => {
     const { t } = useTranslation();
@@ -22,6 +22,19 @@ const Wizard = () => {
     const [genProgress, setGenProgress] = useState(0);
     const [genResult, setGenResult] = useState<any>(null);
     const [showGenModal, setShowGenModal] = useState(false);
+
+    // View mode state
+    const [viewMode, setViewMode] = useState<'raw' | 'generated'>('raw');
+
+    // Options State
+    const [options, setOptions] = useState({
+        fit_streets: true,
+        fit_twice: true,
+        wgs84: true,
+        use_obstacles: false,
+        use_high_obstacles: false,
+        use_transit_streets: false
+    });
 
     // Translate steps dynamically
     const steps = WIZARD_STEPS.map(step => ({
@@ -274,13 +287,14 @@ const Wizard = () => {
         appendFile('transit_road', 'transit_streets', 'transit_streets.geojson');
 
         // Add default options
-        formData.append('fit_streets', 'true');
-        formData.append('fit_twice', 'true');
-        formData.append('wgs84', 'true'); // Backend handles GeoJSON by converting to UTM internally, so we treat the result as UTM (WGS84=True)
+        // Add options from state
+        formData.append('fit_streets', options.fit_streets.toString());
+        formData.append('fit_twice', options.fit_twice.toString());
+        formData.append('wgs84', options.wgs84.toString());
 
-        formData.append('use_obstacles', allData['obstacles'] ? 'true' : 'false');
-        formData.append('use_high_obstacles', allData['tall_obstacle'] ? 'true' : 'false');
-        formData.append('use_transit_streets', allData['transit_road'] ? 'true' : 'false');
+        formData.append('use_obstacles', options.use_obstacles.toString());
+        formData.append('use_high_obstacles', options.use_high_obstacles.toString());
+        formData.append('use_transit_streets', options.use_transit_streets.toString());
 
         try {
             const response = await fetch('/api/generate-routes', {
@@ -310,7 +324,7 @@ const Wizard = () => {
                             setGenProgress(message.value);
                         } else if (message.type === 'result') {
                             setGenResult(message.data);
-                            // setShowGenModal(true); // Disabled as per user request
+                            setViewMode('generated'); // Switch to generated view automatically
                             alert(t('wizard.successRoute'));
                         } else if (message.type === 'error') {
                             alert(t('wizard.errorRoute') + ': ' + message.message);
@@ -364,6 +378,29 @@ const Wizard = () => {
             alert('Error creating zip file');
         }
     };
+
+    // Prepare data for MapComponent based on viewMode
+    const getMapData = () => {
+        if (viewMode === 'generated' && genResult) {
+            return {
+                // Show generated routes
+                'routes': genResult.arrow_geojson,
+                // Show fitted streets if available
+                'fitted_streets': genResult.fitted_streets_geojson ? JSON.parse(genResult.fitted_streets_geojson) : null,
+                'fitted_transit_streets': genResult.fitted_transit_streets_geojson ? JSON.parse(genResult.fitted_transit_streets_geojson) : null,
+                // Show original context layers if they exist in genResult or data
+                'objective': data['objective'],
+                'geofence': data['geofence'],
+                'home': data['home'],
+                'obstacles': data['obstacles'],
+                'high_obstacles': data['tall_obstacle'],
+                // Add any other generated layers if available
+            };
+        }
+        return data;
+    };
+
+    const currentMapData = getMapData();
 
     return (
         <div className="wizard-container">
@@ -423,6 +460,9 @@ const Wizard = () => {
                         />
                     </div>
                 </div>
+
+                {/* View Mode Toggle */}
+                {/* View Mode Toggle removed from here */}
 
                 <div className="steps-container">
                     {steps.map((step, index) => {
@@ -490,51 +530,124 @@ const Wizard = () => {
                             </button>
                         </div>
                         <button
-                            onClick={handleSaveAll}
-                            className="btn-download-all"
-                        >
-                            <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
-                        </button>
-                        <button
                             onClick={handleGenerateRoute}
                             disabled={generating}
                             className="btn-generate-route"
                         >
                             {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="w-4 h-4" /> {t('wizard.generateRoute')}</>}
                         </button>
-                        <button
-                            onClick={handleDownloadGenerated}
-                            disabled={!genResult}
-                            className="btn-download-routes"
-                            title="Download generated route files"
-                        >
-                            <Download className="w-4 h-4" /> {t('wizard.downloadRoutes')}
-                        </button>
+                        <div className="nav-buttons-row">
+                            <button
+                                onClick={handleDownloadGenerated}
+                                disabled={!genResult}
+                                className="btn-download-routes"
+                                title="Download generated route files"
+                            >
+                                <Download className="w-4 h-4" /> {t('wizard.downloadRoutes')}
+                            </button>
+                            <button
+                                onClick={handleSaveAll}
+                                className="btn-download-all"
+                            >
+                                <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
             <div className="main-content">
-                <div className="map-container">
+                <div className="map-container relative">
+                    {/* Map Overlay Toggle */}
+                    <div className="absolute top-4 right-4 z-[1000] bg-white/90 backdrop-blur-sm shadow-md rounded-lg p-1 flex">
+                        <button
+                            onClick={() => setViewMode('raw')}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'raw'
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            {t('Raw Input')}
+                        </button>
+                        <button
+                            onClick={() => setViewMode('generated')}
+                            disabled={!genResult}
+                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'generated'
+                                ? 'bg-white text-green-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                                }`}
+                        >
+                            {t('Generated')}
+                        </button>
+                    </div>
                     <MapComponent
-                        // key={currentStep.key} // REMOVED: Do not remount map on step change
-                        currentStepKey={currentStep.key}
-                        drawMode={currentStep.drawMode}
-                        existingData={data}
+                        currentStepKey={viewMode === 'raw' ? currentStep.key : 'preview'} // 'preview' or similar to avoid editing in generated mode
+                        drawMode={viewMode === 'raw' ? currentStep.drawMode : 'none'} // Disable drawing in generated mode
+                        existingData={currentMapData}
                         onUpdate={handleMapUpdate}
                         centerTrigger={centerTrigger}
                     />
                 </div>
 
                 {/* Floating Info */}
-                <div className="floating-info">
-                    <p className="floating-info-text">
-                        <span className="pulse-dot"></span>
-                        Drawing: <span className="drawing-label">{currentStep.label}</span>
-                    </p>
+                {viewMode === 'raw' && (
+                    <div className="floating-info">
+                        <p className="floating-info-text">
+                            <span className="pulse-dot"></span>
+                            Drawing: <span className="drawing-label">{currentStep.label}</span>
+                        </p>
+                    </div>
+                )}
+                {viewMode === 'generated' && (
+                    <div className="floating-info border-green-200 bg-green-50/90">
+                        <p className="floating-info-text text-green-800">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            Viewing: <span className="drawing-label text-green-900">Generated Route</span>
+                        </p>
+                    </div>
+                )}
+
+                {/* Options Section */}
+                <div className="mt-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm shrink-0">
+                    <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                        <Settings className="w-4 h-4" /> {t('routeGenerator.options.title')}
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <Checkbox
+                            label={t('routeGenerator.options.fitStreets')}
+                            checked={options.fit_streets}
+                            onChange={(c) => setOptions(prev => ({ ...prev, fit_streets: c }))}
+                        />
+                        <Checkbox
+                            label={t('routeGenerator.options.fitTwice')}
+                            checked={options.fit_twice}
+                            onChange={(c) => setOptions(prev => ({ ...prev, fit_twice: c }))}
+                        />
+                        <Checkbox
+                            label={t('routeGenerator.options.wgs84')}
+                            checked={options.wgs84}
+                            onChange={(c) => setOptions(prev => ({ ...prev, wgs84: c }))}
+                        />
+                        <Checkbox
+                            label={t('routeGenerator.options.useObstacles')}
+                            checked={options.use_obstacles}
+                            onChange={(c) => setOptions(prev => ({ ...prev, use_obstacles: c }))}
+                        />
+                        <Checkbox
+                            label={t('routeGenerator.options.useHighObstacles')}
+                            checked={options.use_high_obstacles}
+                            onChange={(c) => setOptions(prev => ({ ...prev, use_high_obstacles: c }))}
+                        />
+                        <Checkbox
+                            label={t('routeGenerator.options.useTransitStreets')}
+                            checked={options.use_transit_streets}
+                            onChange={(c) => setOptions(prev => ({ ...prev, use_transit_streets: c }))}
+                        />
+                    </div>
                 </div>
             </div>
+
             {/* Result Modal */}
             {
                 showGenModal && genResult && (
@@ -551,19 +664,19 @@ const Wizard = () => {
                                     <img src={genResult.map_image} alt="Generated Map" className="w-full h-auto" />
                                 </div>
                                 <div className="modal-downloads-grid">
-                                    <a href={genResult.download_links.csv} download className="download-card">
+                                    <a href={genResult.download_links.csv} download className="download-card group">
                                         <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
                                         <span className="download-card-text">Global Plan (CSV)</span>
                                     </a>
-                                    <a href={genResult.download_links.map_png} download className="download-card">
+                                    <a href={genResult.download_links.map_png} download className="download-card group">
                                         <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
                                         <span className="download-card-text">Map Image (PNG)</span>
                                     </a>
-                                    <a href={genResult.download_links.map_yaml} download className="download-card">
+                                    <a href={genResult.download_links.map_yaml} download className="download-card group">
                                         <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
                                         <span className="download-card-text">Map Config (YAML)</span>
                                     </a>
-                                    <a href={genResult.download_links.latlon_yaml} download className="download-card">
+                                    <a href={genResult.download_links.latlon_yaml} download className="download-card group">
                                         <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
                                         <span className="download-card-text">LatLon Config (YAML)</span>
                                     </a>
@@ -578,3 +691,17 @@ const Wizard = () => {
 };
 
 export default Wizard;
+
+function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+    return (
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => onChange(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+            />
+            <span className="text-sm text-slate-600">{label}</span>
+        </label>
+    )
+}

@@ -222,7 +222,9 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
         else if (key === 'geofence') color = '#22c55e';
         else if (key === 'home') color = '#3b82f6';
         else if (key === 'streets') color = '#3b82f6';
-        else if (key === 'transit_streets') color = '#f97316';
+        else if (key === 'fitted_streets') color = '#2563eb'; // Darker blue for fitted
+        else if (key === 'transit_streets') color = '#22c55e'; // Green for transit (matching notebook)
+        else if (key === 'fitted_transit_streets') color = '#16a34a'; // Darker green for fitted transit
         else if (key === 'obstacles') color = '#ef4444';
         else if (key === 'high_obstacles') color = '#000000';
         else if (key === 'routes') color = '#eab308';

@@ -170,6 +170,10 @@ def run_route_generation(
             
         # Generate Arrow GeoJSON
         arrow_geojson = utils.generate_arrow_geojson(graph_dataframe, holes_df.crs)
+        
+        # Extract fitted streets and transit streets
+        streets_fitted = results.get('streets_fitted')
+        transit_streets_fitted = results.get('transit_streets_fitted')
             
         progress_queue.put({
             "type": "result",
@@ -181,10 +185,12 @@ def run_route_generation(
                 "holes_geojson": holes_df.to_crs('EPSG:4326').to_json() if holes_df is not None else None,
                 "geofence_geojson": geofence_df.to_crs('EPSG:4326').to_json() if geofence_df is not None else None,
                 "streets_geojson": streets_df.drop(columns=['buffered_street'], errors='ignore').to_crs('EPSG:4326').to_json() if streets_df is not None else None,
+                "fitted_streets_geojson": streets_fitted.drop(columns=['buffered_street'], errors='ignore').to_crs('EPSG:4326').to_json() if streets_fitted is not None else None,
                 "home_pose_geojson": home_pose_df.to_crs('EPSG:4326').to_json() if home_pose_df is not None else None,
                 "obstacles_geojson": obstacles_df.to_crs('EPSG:4326').to_json() if obstacles_df is not None else None,
                 "high_obstacles_geojson": high_obstacles_df.to_crs('EPSG:4326').to_json() if high_obstacles_df is not None else None,
                 "transit_streets_geojson": transit_streets_df.to_crs('EPSG:4326').to_json() if transit_streets_df is not None else None,
+                "fitted_transit_streets_geojson": transit_streets_fitted.to_crs('EPSG:4326').to_json() if transit_streets_fitted is not None else None,
                 "download_links": {
                     "csv": "/generated/global_plan.csv",
                     "map_png": "/generated/map.png",
