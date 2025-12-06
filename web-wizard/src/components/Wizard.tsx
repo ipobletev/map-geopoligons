@@ -5,8 +5,9 @@ import MapComponent from './MapComponent';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import { ArrowRight, ArrowLeft, Save, CheckCircle, Trash2, Upload, Download, Folder, Play, X } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, Play, X } from 'lucide-react';
 import { parseHolFile } from '../utils/holParser';
+import '../../styles/components/Wizard.css';
 
 const Wizard = () => {
     const { t } = useTranslation();
@@ -365,33 +366,33 @@ const Wizard = () => {
     };
 
     return (
-        <div className="flex h-screen w-full bg-slate-50">
+        <div className="wizard-container">
             {/* Sidebar */}
-            <div className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-lg z-10">
-                <div className="p-6 border-b border-slate-100">
-                    <h1 className="text-2xl font-bold text-slate-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <div className="sidebar">
+                <div className="sidebar-header">
+                    <h1 className="wizard-title">
                         {t('wizard.title')}
                     </h1>
-                    <p className="text-sm text-slate-500 mt-1">{t('wizard.subtitle')}</p>
+                    <p className="wizard-subtitle">{t('wizard.subtitle')}</p>
 
-                    <div className="grid grid-cols-2 gap-2 mt-4">
+                    <div className="sidebar-actions-grid">
                         <button
                             onClick={handleClearAll}
-                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded border border-red-200 transition-colors"
+                            className="btn-action-red"
                             title="Delete all figures"
                         >
                             <Trash2 className="w-3 h-3" /> {t('wizard.clearAll')}
                         </button>
                         <button
                             onClick={handleCenterMap}
-                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors"
+                            className="btn-action-blue"
                             title="Center map on data"
                         >
                             <Upload className="w-3 h-3 rotate-90" /> {t('wizard.centerMap')}
                         </button>
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
+                            className="btn-action-slate"
                             title="Load GeoJSON"
                         >
                             <Upload className="w-3 h-3" /> {t('wizard.loadJson')}
@@ -405,7 +406,7 @@ const Wizard = () => {
                         />
                         <button
                             onClick={() => folderInputRef.current?.click()}
-                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
+                            className="btn-action-slate"
                             title="Load Folder"
                         >
                             <Folder className="w-3 h-3" /> {t('wizard.loadFolder')}
@@ -423,7 +424,7 @@ const Wizard = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="steps-container">
                     {steps.map((step, index) => {
                         const isActive = index === currentStepIndex;
                         const hasData = !!data[step.key];
@@ -432,24 +433,24 @@ const Wizard = () => {
                             <div
                                 key={step.key}
                                 onClick={() => handleStepClick(index)}
-                                className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-md ${isActive
-                                    ? 'bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-200'
+                                className={`step-item ${isActive
+                                    ? 'step-item-active'
                                     : hasData
-                                        ? 'bg-green-50/50 border-green-200'
-                                        : 'bg-white border-slate-100 opacity-70 hover:opacity-100'
+                                        ? 'step-item-completed'
+                                        : 'step-item-inactive'
                                     }`}
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className={`text-sm font-bold uppercase tracking-wider ${isActive ? 'text-blue-600' : 'text-slate-500'
+                                <div className="step-header">
+                                    <span className={`step-number ${isActive ? 'step-number-active' : 'step-number-inactive'
                                         }`}>
                                         {t('wizard.step')} {index + 1}
                                     </span>
                                     {hasData && (
-                                        <div className="flex items-center gap-2">
+                                        <div className="step-status-wrapper">
                                             <CheckCircle className="w-4 h-4 text-green-500" />
                                             <button
                                                 onClick={(e) => handleClearStep(step.key, e)}
-                                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                                className="btn-clear-step"
                                                 title="Clear step data"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -457,10 +458,10 @@ const Wizard = () => {
                                         </div>
                                     )}
                                 </div>
-                                <h3 className={`font-semibold text-lg ${isActive ? 'text-slate-800' : 'text-slate-600'}`}>
+                                <h3 className={`step-label ${isActive ? 'step-label-active' : 'step-label-inactive'}`}>
                                     {step.label}
                                 </h3>
-                                <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+                                <p className="step-desc">
                                     {step.description}
                                 </p>
                             </div>
@@ -468,13 +469,13 @@ const Wizard = () => {
                     })}
                 </div>
 
-                <div className="p-6 border-t border-slate-100 bg-slate-50">
-                    <div className="flex flex-col gap-3">
-                        <div className="flex gap-3">
+                <div className="sidebar-footer">
+                    <div className="footer-actions">
+                        <div className="nav-buttons-row">
                             <button
                                 onClick={handlePrev}
                                 disabled={currentStepIndex === 0}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-white hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="btn-nav-back"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 {t('wizard.back')}
@@ -482,7 +483,7 @@ const Wizard = () => {
                             <button
                                 onClick={handleNext}
                                 disabled={isLastStep}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="btn-nav-next"
                             >
                                 {t('wizard.next')}
                                 <ArrowRight className="w-4 h-4" />
@@ -490,21 +491,21 @@ const Wizard = () => {
                         </div>
                         <button
                             onClick={handleSaveAll}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-900 shadow-md hover:shadow-lg transition-all"
+                            className="btn-download-all"
                         >
                             <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
                         </button>
                         <button
                             onClick={handleGenerateRoute}
                             disabled={generating}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                            className="btn-generate-route"
                         >
                             {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="w-4 h-4" /> {t('wizard.generateRoute')}</>}
                         </button>
                         <button
                             onClick={handleDownloadGenerated}
                             disabled={!genResult}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="btn-download-routes"
                             title="Download generated route files"
                         >
                             <Download className="w-4 h-4" /> {t('wizard.downloadRoutes')}
@@ -514,8 +515,8 @@ const Wizard = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 relative">
-                <div className="absolute inset-0 p-4">
+            <div className="main-content">
+                <div className="map-container">
                     <MapComponent
                         // key={currentStep.key} // REMOVED: Do not remount map on step change
                         currentStepKey={currentStep.key}
@@ -527,44 +528,44 @@ const Wizard = () => {
                 </div>
 
                 {/* Floating Info */}
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-slate-200 z-[1000] pointer-events-none">
-                    <p className="text-slate-700 font-medium flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                        Drawing: <span className="font-bold text-slate-900">{currentStep.label}</span>
+                <div className="floating-info">
+                    <p className="floating-info-text">
+                        <span className="pulse-dot"></span>
+                        Drawing: <span className="drawing-label">{currentStep.label}</span>
                     </p>
                 </div>
             </div>
             {/* Result Modal */}
             {
                 showGenModal && genResult && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[2000] p-4">
-                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col">
-                            <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-white z-10">
-                                <h2 className="text-xl font-bold text-gray-800">Route Generation Result</h2>
-                                <button onClick={() => setShowGenModal(false)} className="p-1 hover:bg-gray-100 rounded-full">
+                    <div className="modal-overlay">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h2 className="modal-title">Route Generation Result</h2>
+                                <button onClick={() => setShowGenModal(false)} className="btn-close-modal">
                                     <X className="w-6 h-6 text-gray-500" />
                                 </button>
                             </div>
-                            <div className="p-6 space-y-6">
-                                <div className="border rounded-lg overflow-hidden shadow-sm">
+                            <div className="modal-body">
+                                <div className="modal-map-wrapper">
                                     <img src={genResult.map_image} alt="Generated Map" className="w-full h-auto" />
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <a href={genResult.download_links.csv} download className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group">
+                                <div className="modal-downloads-grid">
+                                    <a href={genResult.download_links.csv} download className="download-card">
                                         <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
-                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">Global Plan (CSV)</span>
+                                        <span className="download-card-text">Global Plan (CSV)</span>
                                     </a>
-                                    <a href={genResult.download_links.map_png} download className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group">
+                                    <a href={genResult.download_links.map_png} download className="download-card">
                                         <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
-                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">Map Image (PNG)</span>
+                                        <span className="download-card-text">Map Image (PNG)</span>
                                     </a>
-                                    <a href={genResult.download_links.map_yaml} download className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group">
+                                    <a href={genResult.download_links.map_yaml} download className="download-card">
                                         <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
-                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">Map Config (YAML)</span>
+                                        <span className="download-card-text">Map Config (YAML)</span>
                                     </a>
-                                    <a href={genResult.download_links.latlon_yaml} download className="flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group">
+                                    <a href={genResult.download_links.latlon_yaml} download className="download-card">
                                         <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
-                                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">LatLon Config (YAML)</span>
+                                        <span className="download-card-text">LatLon Config (YAML)</span>
                                     </a>
                                 </div>
                             </div>

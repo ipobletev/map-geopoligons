@@ -1,0 +1,23 @@
+.tab-nav-container {
+    @apply flex justify-center mb-8;
+}
+
+.tab-nav-wrapper {
+    @apply bg-white p-1 rounded-xl shadow-sm border border-slate-200 inline-flex;
+}
+
+.tab-button {
+    @apply px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ease-in-out;
+}
+
+.tab-button.active {
+    @apply bg-blue-600 text-white shadow-md transform scale-105;
+}
+
+.tab-button.inactive {
+    @apply text-slate-600 hover:text-slate-900 hover:bg-slate-50;
+}
+
+.tab-button-margin {
+    @apply ml-1;
+}

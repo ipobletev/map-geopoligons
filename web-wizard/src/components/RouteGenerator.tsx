@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, Map, Settings, Download, Trash2, X } from 'lucide-react';
+import { Upload, Map, Settings, Download, Trash2 } from 'lucide-react';
 import MapComponent from './MapComponent';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import '../../styles/components/RouteGenerator.css';
 
 export default function RouteGenerator() {
     const { t } = useTranslation();
@@ -159,16 +160,16 @@ export default function RouteGenerator() {
     };
 
     return (
-        <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <div className="route-gen-container">
+            <h2 className="route-gen-title">
                 <Map className="w-6 h-6" />
                 {t('routeGenerator.title')}
             </h2>
 
-            <div className="p-6 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 text-center space-y-2 hover:bg-blue-100 transition-colors">
+            <div className="bulk-upload-area">
                 <Upload className="w-12 h-12 text-blue-500 mx-auto" />
-                <h3 className="text-lg font-semibold text-blue-700">{t('routeGenerator.bulkUpload.title')}</h3>
-                <p className="text-sm text-blue-600">
+                <h3 className="bulk-upload-title">{t('routeGenerator.bulkUpload.title')}</h3>
+                <p className="bulk-upload-desc">
                     {t('routeGenerator.bulkUpload.description')}
                 </p>
                 <input
@@ -188,16 +189,16 @@ export default function RouteGenerator() {
                     className="hidden"
                     id="folder-upload"
                 />
-                <div className="flex justify-center gap-4">
+                <div className="bulk-upload-buttons">
                     <label
                         htmlFor="bulk-upload"
-                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+                        className="btn-select-files"
                     >
                         {t('routeGenerator.bulkUpload.selectFiles')}
                     </label>
                     <label
                         htmlFor="folder-upload"
-                        className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 transition-colors"
+                        className="btn-select-folder"
                     >
                         {t('routeGenerator.bulkUpload.selectFolder')}
                     </label>
@@ -205,7 +206,7 @@ export default function RouteGenerator() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="file-inputs-grid">
                     <FileInput
                         name="holes"
                         label={t('routeGenerator.files.holes')}
@@ -262,11 +263,11 @@ export default function RouteGenerator() {
                     />
                 </div>
 
-                <div className="p-4 bg-gray-50 rounded-lg space-y-2">
-                    <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+                <div className="options-section">
+                    <h3 className="options-title">
                         <Settings className="w-4 h-4" /> {t('routeGenerator.options.title')}
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="options-grid">
                         <Checkbox name="fit_streets" label={t('routeGenerator.options.fitStreets')} defaultChecked />
                         <Checkbox name="fit_twice" label={t('routeGenerator.options.fitTwice')} defaultChecked />
                         <Checkbox name="wgs84" label={t('routeGenerator.options.wgs84')} defaultChecked />
@@ -278,9 +279,9 @@ export default function RouteGenerator() {
 
                 <div className="space-y-2">
                     {loading && (
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div className="progress-bar-container">
                             <div
-                                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                                className="progress-bar-fill"
                                 style={{ width: `${progress}%` }}
                             ></div>
                         </div>
@@ -289,7 +290,7 @@ export default function RouteGenerator() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                        className="btn-generate"
                     >
                         {loading ? t('routeGenerator.generating', { progress: Math.round(progress) }) : t('routeGenerator.generate')}
                     </button>
@@ -297,15 +298,15 @@ export default function RouteGenerator() {
             </form>
 
             {error && (
-                <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
+                <div className="error-box">
                     <strong>{t('routeGenerator.error')}:</strong> {error}
                 </div>
             )}
 
             {result && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="result-container">
                     {result.arrow_geojson && (
-                        <div className="h-[600px] border rounded-lg overflow-hidden shadow-sm">
+                        <div className="map-wrapper">
                             <MapComponent
                                 currentStepKey="routes"
                                 drawMode="none"
@@ -325,16 +326,16 @@ export default function RouteGenerator() {
                         </div>
                     )}
 
-                    <div className="flex gap-4">
+                    <div className="action-buttons">
                         <button
                             onClick={handleDownloadAll}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-md"
+                            className="btn-download"
                         >
                             <Download className="w-4 h-4" /> {t('routeGenerator.downloadAll')}
                         </button>
                         <button
                             onClick={handleClearResults}
-                            className="flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-100 text-red-700 font-medium rounded-lg hover:bg-red-200 transition-colors border border-red-200"
+                            className="btn-clear"
                         >
                             <Trash2 className="w-4 h-4" /> {t('routeGenerator.clearResults')}
                         </button>
@@ -384,8 +385,8 @@ function FileInput({
     };
 
     return (
-        <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
+        <div className="file-input-wrapper">
+            <label className="file-input-label">
                 {label} {required && <span className="text-red-500">*</span>}
             </label>
             <div className="relative">
@@ -398,22 +399,16 @@ function FileInput({
                         const f = e.target.files ? e.target.files[0] : null;
                         onChange(f);
                     }}
-                    className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100
-              border border-gray-300 rounded-lg cursor-pointer"
+                    className="file-input-field"
                 />
                 {file && (
-                    <div className="absolute top-0 right-0 h-full flex items-center pr-2">
-                        <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-200 mr-2">
+                    <div className="file-status-wrapper">
+                        <span className="file-name-badge">
                             {file.name}
                         </span>
                         <button
                             onClick={handleClear}
-                            className="pointer-events-auto p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                            className="btn-clear-file"
                             title="Clear file"
                         >
                             <Trash2 className="w-4 h-4" />
@@ -427,11 +422,9 @@ function FileInput({
 
 function Checkbox({ name, label, defaultChecked }: { name: string; label: string; defaultChecked?: boolean }) {
     return (
-        <label className="flex items-center space-x-2 cursor-pointer">
-            <input type="checkbox" name={name} value="true" defaultChecked={defaultChecked} className="rounded text-blue-600 focus:ring-blue-500" />
-            <span className="text-sm text-gray-700">{label}</span>
+        <label className="checkbox-label">
+            <input type="checkbox" name={name} value="true" defaultChecked={defaultChecked} className="checkbox-input" />
+            <span className="checkbox-text">{label}</span>
         </label>
     )
 }
-
-

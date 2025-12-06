@@ -1,0 +1,191 @@
+.wizard-container {
+    @apply flex h-screen w-full bg-slate-50;
+}
+
+.sidebar {
+    @apply w-80 bg-white border-r border-slate-200 flex flex-col shadow-lg z-10;
+}
+
+.sidebar-header {
+    @apply p-6 border-b border-slate-100;
+}
+
+.wizard-title {
+    @apply text-2xl font-bold text-slate-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent;
+}
+
+.wizard-subtitle {
+    @apply text-sm text-slate-500 mt-1;
+}
+
+.sidebar-actions-grid {
+    @apply grid grid-cols-2 gap-2 mt-4;
+}
+
+.btn-action-red {
+    @apply flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded border border-red-200 transition-colors;
+}
+
+.btn-action-blue {
+    @apply flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors;
+}
+
+.btn-action-slate {
+    @apply flex-1 flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition-colors;
+}
+
+.steps-container {
+    @apply flex-1 overflow-y-auto p-4 space-y-4;
+}
+
+.step-item {
+    @apply p-4 rounded-lg border transition-all duration-200 cursor-pointer hover:shadow-md;
+}
+
+.step-item-active {
+    @apply bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-200;
+}
+
+.step-item-completed {
+    @apply bg-green-50/50 border-green-200;
+}
+
+.step-item-inactive {
+    @apply bg-white border-slate-100 opacity-70 hover:opacity-100;
+}
+
+.step-header {
+    @apply flex items-center justify-between mb-2;
+}
+
+.step-number {
+    @apply text-sm font-bold uppercase tracking-wider;
+}
+
+.step-number-active {
+    @apply text-blue-600;
+}
+
+.step-number-inactive {
+    @apply text-slate-500;
+}
+
+.step-status-wrapper {
+    @apply flex items-center gap-2;
+}
+
+.btn-clear-step {
+    @apply p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors;
+}
+
+.step-label {
+    @apply font-semibold text-lg;
+}
+
+.step-label-active {
+    @apply text-slate-800;
+}
+
+.step-label-inactive {
+    @apply text-slate-600;
+}
+
+.step-desc {
+    @apply text-sm text-slate-500 mt-1 leading-relaxed;
+}
+
+.sidebar-footer {
+    @apply p-6 border-t border-slate-100 bg-slate-50;
+}
+
+.footer-actions {
+    @apply flex flex-col gap-3;
+}
+
+.nav-buttons-row {
+    @apply flex gap-3;
+}
+
+.btn-nav-back {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-white hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all;
+}
+
+.btn-nav-next {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all;
+}
+
+.btn-download-all {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-900 shadow-md hover:shadow-lg transition-all;
+}
+
+.btn-generate-route {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50;
+}
+
+.btn-download-routes {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.main-content {
+    @apply flex-1 relative;
+}
+
+.map-container {
+    @apply absolute inset-0 p-4;
+}
+
+.floating-info {
+    @apply absolute top-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-slate-200 z-[1000] pointer-events-none;
+}
+
+.floating-info-text {
+    @apply text-slate-700 font-medium flex items-center gap-2;
+}
+
+.pulse-dot {
+    @apply w-2 h-2 rounded-full bg-blue-500 animate-pulse;
+}
+
+.drawing-label {
+    @apply font-bold text-slate-900;
+}
+
+.modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-[2000] p-4;
+}
+
+.modal-content {
+    @apply bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col;
+}
+
+.modal-header {
+    @apply p-4 border-b flex justify-between items-center sticky top-0 bg-white z-10;
+}
+
+.modal-title {
+    @apply text-xl font-bold text-gray-800;
+}
+
+.btn-close-modal {
+    @apply p-1 hover:bg-gray-100 rounded-full;
+}
+
+.modal-body {
+    @apply p-6 space-y-6;
+}
+
+.modal-map-wrapper {
+    @apply border rounded-lg overflow-hidden shadow-sm;
+}
+
+.modal-downloads-grid {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+}
+
+.download-card {
+    @apply flex flex-col items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors text-center gap-2 group;
+}
+
+.download-card-text {
+    @apply text-sm font-medium text-gray-700 group-hover:text-blue-700;
+}

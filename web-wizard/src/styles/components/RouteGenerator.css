@@ -1,0 +1,121 @@
+.route-gen-container {
+    @apply p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-6;
+}
+
+.route-gen-title {
+    @apply text-2xl font-bold text-gray-800 flex items-center gap-2;
+}
+
+.bulk-upload-area {
+    @apply p-6 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 text-center space-y-2 hover:bg-blue-100 transition-colors;
+}
+
+.bulk-upload-title {
+    @apply text-lg font-semibold text-blue-700;
+}
+
+.bulk-upload-desc {
+    @apply text-sm text-blue-600;
+}
+
+.bulk-upload-buttons {
+    @apply flex justify-center gap-4;
+}
+
+.btn-select-files {
+    @apply inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors;
+}
+
+.btn-select-folder {
+    @apply inline-block px-4 py-2 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 transition-colors;
+}
+
+.file-inputs-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.options-section {
+    @apply p-4 bg-gray-50 rounded-lg space-y-2;
+}
+
+.options-title {
+    @apply font-semibold text-gray-700 flex items-center gap-2;
+}
+
+.options-grid {
+    @apply grid grid-cols-2 gap-4;
+}
+
+.progress-bar-container {
+    @apply w-full bg-gray-200 rounded-full h-2.5;
+}
+
+.progress-bar-fill {
+    @apply bg-blue-600 h-2.5 rounded-full transition-all duration-300;
+}
+
+.btn-generate {
+    @apply w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2;
+}
+
+.error-box {
+    @apply p-4 bg-red-50 text-red-700 rounded-lg border border-red-200;
+}
+
+.result-container {
+    @apply space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500;
+}
+
+.map-wrapper {
+    @apply h-[600px] border rounded-lg overflow-hidden shadow-sm;
+}
+
+.action-buttons {
+    @apply flex gap-4;
+}
+
+.btn-download {
+    @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-md;
+}
+
+.btn-clear {
+    @apply flex-none flex items-center justify-center gap-2 px-4 py-2 bg-red-100 text-red-700 font-medium rounded-lg hover:bg-red-200 transition-colors border border-red-200;
+}
+
+/* FileInput */
+.file-input-wrapper {
+    @apply space-y-1;
+}
+
+.file-input-label {
+    @apply block text-sm font-medium text-gray-700;
+}
+
+.file-input-field {
+    @apply block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg cursor-pointer;
+}
+
+.file-status-wrapper {
+    @apply absolute top-0 right-0 h-full flex items-center pr-2;
+}
+
+.file-name-badge {
+    @apply text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-200 mr-2;
+}
+
+.btn-clear-file {
+    @apply pointer-events-auto p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors;
+}
+
+/* Checkbox */
+.checkbox-label {
+    @apply flex items-center space-x-2 cursor-pointer;
+}
+
+.checkbox-input {
+    @apply rounded text-blue-600 focus:ring-blue-500;
+}
+
+.checkbox-text {
+    @apply text-sm text-gray-700;
+}
