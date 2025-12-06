@@ -127,23 +127,35 @@ const Wizard = () => {
         // Create folder structure: map-geopoligons/geojson/{datetime}/
         const now = new Date();
         const timestamp = now.toISOString().replace(/[:.]/g, '-').split('T')[0] + '_' + now.toTimeString().split(' ')[0].replace(/:/g, '');
-        const folderName = `map-geopoligons/geojson/${timestamp}`;
+        const folderName = `${timestamp}`;
         const folder = zip.folder(folderName);
 
         if (!folder) return;
+
+        const FILE_NAME_MAPPING: Record<string, string> = {
+            'objective': 'holes.geojson',
+            'geofence': 'geofence.geojson',
+            'home': 'home_pose.geojson',
+            'road': 'streets.geojson',
+            'transit_road': 'transit_streets.geojson',
+            'obstacles': 'obstacles.geojson',
+            'tall_obstacle': 'tall_obstacles.geojson'
+        };
 
         // Add all steps to zip
         WIZARD_STEPS.forEach(step => {
             const stepData = data[step.key];
             if (stepData) {
-                folder.file(`${step.key}.geojson`, JSON.stringify(stepData, null, 4));
+                const filename = FILE_NAME_MAPPING[step.key] || `${step.key}.geojson`;
+                folder.file(filename, JSON.stringify(stepData, null, 4));
             }
         });
 
         // Also add current step data if not saved yet
         if (currentStepData && currentStepData.features && currentStepData.features.length > 0) {
             const enriched = enrichGeoJSONWithUTM(currentStepData);
-            folder.file(`${currentStep.key}.geojson`, JSON.stringify(enriched, null, 4));
+            const filename = FILE_NAME_MAPPING[currentStep.key] || `${currentStep.key}.geojson`;
+            folder.file(filename, JSON.stringify(enriched, null, 4));
         }
 
         const content = await zip.generateAsync({ type: 'blob' });
