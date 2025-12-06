@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, Map, Settings, Download, Trash2 } from 'lucide-react';
+import { Upload, Map, Settings, Download, Trash2, X } from 'lucide-react';
 import MapComponent from './MapComponent';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -190,6 +190,12 @@ export default function RouteGenerator() {
                 />
                 <div className="flex justify-center gap-4">
                     <label
+                        htmlFor="bulk-upload"
+                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
+                    >
+                        {t('routeGenerator.bulkUpload.selectFiles')}
+                    </label>
+                    <label
                         htmlFor="folder-upload"
                         className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 transition-colors"
                     >
@@ -206,6 +212,7 @@ export default function RouteGenerator() {
                         required
                         file={files.holes}
                         onChange={(f) => handleFileChange('holes', f)}
+                        onClear={() => handleFileChange('holes', null)}
                     />
                     <FileInput
                         name="geofence"
@@ -213,6 +220,7 @@ export default function RouteGenerator() {
                         required
                         file={files.geofence}
                         onChange={(f) => handleFileChange('geofence', f)}
+                        onClear={() => handleFileChange('geofence', null)}
                     />
                     <FileInput
                         name="streets"
@@ -220,6 +228,7 @@ export default function RouteGenerator() {
                         required
                         file={files.streets}
                         onChange={(f) => handleFileChange('streets', f)}
+                        onClear={() => handleFileChange('streets', null)}
                     />
                     <FileInput
                         name="home_pose"
@@ -227,6 +236,7 @@ export default function RouteGenerator() {
                         required
                         file={files.home_pose}
                         onChange={(f) => handleFileChange('home_pose', f)}
+                        onClear={() => handleFileChange('home_pose', null)}
                     />
 
                     <FileInput
@@ -234,18 +244,21 @@ export default function RouteGenerator() {
                         label={t('routeGenerator.files.obstacles')}
                         file={files.obstacles}
                         onChange={(f) => handleFileChange('obstacles', f)}
+                        onClear={() => handleFileChange('obstacles', null)}
                     />
                     <FileInput
                         name="high_obstacles"
                         label={t('routeGenerator.files.highObstacles')}
                         file={files.high_obstacles}
                         onChange={(f) => handleFileChange('high_obstacles', f)}
+                        onClear={() => handleFileChange('high_obstacles', null)}
                     />
                     <FileInput
                         name="transit_streets"
                         label={t('routeGenerator.files.transitStreets')}
                         file={files.transit_streets}
                         onChange={(f) => handleFileChange('transit_streets', f)}
+                        onClear={() => handleFileChange('transit_streets', null)}
                     />
                 </div>
 
@@ -349,14 +362,27 @@ function FileInput({
     label,
     required,
     file,
-    onChange
+    onChange,
+    onClear
 }: {
     name: string;
     label: string;
     required?: boolean;
     file: File | null;
     onChange: (file: File | null) => void;
+    onClear: () => void;
 }) {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleClear = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
+        onClear();
+    };
+
     return (
         <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
@@ -364,6 +390,7 @@ function FileInput({
             </label>
             <div className="relative">
                 <input
+                    ref={inputRef}
                     type="file"
                     name={name}
                     required={required && !file} // Only required if no file is selected in state
@@ -380,10 +407,17 @@ function FileInput({
               border border-gray-300 rounded-lg cursor-pointer"
                 />
                 {file && (
-                    <div className="absolute top-0 right-0 h-full flex items-center pr-3 pointer-events-none">
-                        <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                    <div className="absolute top-0 right-0 h-full flex items-center pr-2">
+                        <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full border border-green-200 mr-2">
                             {file.name}
                         </span>
+                        <button
+                            onClick={handleClear}
+                            className="pointer-events-auto p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                            title="Clear file"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
                     </div>
                 )}
             </div>
