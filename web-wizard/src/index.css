@@ -19,6 +19,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -27,4 +28,18 @@
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+.drillhole-tooltip-square {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+  border: 1px solid white !important;
+  border-radius: 0 !important;
+  font-weight: bold;
+  font-size: 10px;
+  box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.3);
+}
+
+.drillhole-tooltip-square::before {
+  border-top-color: rgba(0, 0, 0, 0.5) !important;
 }

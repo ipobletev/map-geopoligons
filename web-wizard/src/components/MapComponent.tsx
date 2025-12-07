@@ -57,8 +57,19 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
             if (initialData && initialData.type) {
                 const geoJsonLayer = L.geoJSON(initialData, {
                     pointToLayer: (_feature, latlng) => {
+                        // Use transparent black circles for objective (holes)
+                        if (currentStepKey === 'objective') {
+                            return L.circleMarker(latlng, {
+                                radius: 8,
+                                fillColor: '#000000',
+                                color: '#0077ffff',
+                                weight: 2,
+                                opacity: 0.5,
+                                fillOpacity: 0.3
+                            });
+                        }
+                        // Use icons for other types
                         let icon = DefaultIcon;
-                        if (currentStepKey === 'objective') icon = ObjectiveIcon;
                         if (currentStepKey === 'home') icon = HomeIcon;
                         return L.marker(latlng, { icon: icon });
                     }
@@ -271,18 +282,32 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                             pointToLayer={(_feature, latlng) => {
                                 let icon = DefaultIcon;
                                 if (key === 'objective') {
-                                    return L.circleMarker(latlng, {
-                                        radius: 6,
+                                    // Get drillhole_id from feature properties
+                                    const drillholeId = _feature.properties?.drillhole_id;
+                                    const marker = L.circleMarker(latlng, {
+                                        radius: 8,
                                         fillColor: '#000000',
                                         color: '#000000',
-                                        weight: 1,
+                                        weight: 2,
                                         opacity: 0.5,
                                         fillOpacity: 0.3
                                     });
+
+                                    // Add label if drillhole_id exists
+                                    if (drillholeId !== undefined && drillholeId !== null) {
+                                        marker.bindTooltip(String(drillholeId), {
+                                            permanent: true,
+                                            direction: 'top',
+                                            className: 'drillhole-tooltip-square',
+                                            offset: [0, -10],
+                                        });
+                                    }
+
+                                    return marker;
                                 }
                                 if (key === 'home') icon = HomeIcon;
                                 if (key === 'global_plan_points') {
-                                    const poseType = _feature.properties?.pose_type;
+                                    const poseType = _feature.properties?.pose_type; // Use pose_type instead of type
                                     const graphPose = _feature.properties?.graph_pose;
                                     let rotation = 0;
 
@@ -301,11 +326,11 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                         }
                                     }
 
-                                    // Custom Icons based on pose_type
+                                    // Custom Icons based on pose_type from global_plan.csv
                                     if (poseType === 'hole') {
-                                        // Convert rotation to degrees for CSS
+                                        // Use yellow arrow for holes
                                         const degrees = (rotation * 180) / Math.PI;
-                                        return L.marker(latlng, {
+                                        const marker = L.marker(latlng, {
                                             icon: L.divIcon({
                                                 className: 'custom-icon-arrow',
                                                 html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
@@ -313,6 +338,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                 iconAnchor: [10, 10]
                                             })
                                         });
+
+                                        return marker;
                                     } else if (poseType === 'transit_street') {
                                         return L.marker(latlng, {
                                             icon: L.divIcon({
@@ -349,7 +376,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                     // Fallback for unknown types
                                     return L.circleMarker(latlng, {
                                         radius: 4,
-                                        fillColor: '#eab308',
+                                        fillColor: '#ea0808ff',
                                         color: '#fff',
                                         weight: 1,
                                         opacity: 1,
