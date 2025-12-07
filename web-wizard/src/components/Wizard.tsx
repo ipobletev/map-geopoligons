@@ -33,9 +33,9 @@ const Wizard = () => {
         fit_streets: true,
         fit_twice: true,
         wgs84: true,
-        use_obstacles: false,
-        use_high_obstacles: false,
-        use_transit_streets: false
+        use_obstacles: true,
+        use_high_obstacles: true,
+        use_transit_streets: true
     });
 
     // Translate steps dynamically
