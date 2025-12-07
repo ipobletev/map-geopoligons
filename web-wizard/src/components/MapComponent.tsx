@@ -59,7 +59,7 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
                     pointToLayer: (_feature, latlng) => {
                         // Use transparent black circles for objective (holes)
                         if (currentStepKey === 'objective') {
-                            return L.circleMarker(latlng, {
+                            const marker = L.circleMarker(latlng, {
                                 radius: 8,
                                 fillColor: '#000000',
                                 color: '#0077ffff',
@@ -67,6 +67,17 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
                                 opacity: 0.5,
                                 fillOpacity: 0.3
                             });
+
+                            const drillholeId = _feature.properties?.drillhole_id;
+                            if (drillholeId !== undefined && drillholeId !== null) {
+                                marker.bindTooltip(String(drillholeId), {
+                                    permanent: true,
+                                    direction: 'top',
+                                    className: 'drillhole-tooltip-square',
+                                    offset: [0, -10]
+                                });
+                            }
+                            return marker;
                         }
                         // Use icons for other types
                         let icon = DefaultIcon;
