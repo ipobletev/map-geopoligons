@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, Map, Settings, Download, Trash2 } from 'lucide-react';
+import { Upload, Settings, CheckCircle, AlertCircle, Download, Play, Trash2, Map } from 'lucide-react';
 import MapComponent from './MapComponent';
+import proj4 from 'proj4';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
-import { parseHolFile } from '../utils/holParser';
+import { parseHolFile, UTM_ZONE_19S, WGS84 } from '../utils/holParser';
 import '../styles/components/RouteGenerator.css';
 
 export default function RouteGenerator() {
@@ -33,6 +34,7 @@ export default function RouteGenerator() {
         transit_streets_geojson?: string;
         fitted_streets_geojson?: string;
         fitted_transit_streets_geojson?: string;
+        global_plan_data?: any[];
         download_links: { [key: string]: string };
     } | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export default function RouteGenerator() {
     const [previewData, setPreviewData] = useState<Record<string, any>>({});
     const [viewMode, setViewMode] = useState<'raw' | 'generated'>('raw');
     const [centerTrigger, setCenterTrigger] = useState(0);
+    const [showTable, setShowTable] = useState(false);
 
     const readFile = (file: File, key: string) => {
         const reader = new FileReader();
@@ -91,6 +94,143 @@ export default function RouteGenerator() {
             }
         });
         setFiles(newFiles);
+    };
+
+    const handleLoadResultFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const content = event.target?.result as string;
+                if (file.name.endsWith('.csv')) {
+                    // Parse CSV
+                    const lines = content.split('\n');
+                    const headers = lines[0].split(',');
+                    const data = [];
+
+                    // Helper to safely parse CSV line respecting quotes
+                    const parseLine = (line: string) => {
+                        const result = [];
+                        let current = '';
+                        let inQuotes = false;
+                        for (let i = 0; i < line.length; i++) {
+                            const char = line[i];
+                            if (char === '"') {
+                                inQuotes = !inQuotes;
+                            } else if (char === ',' && !inQuotes) {
+                                result.push(current);
+                                current = '';
+                            } else {
+                                current += char;
+                            }
+                        }
+                        result.push(current);
+                        return result;
+                    };
+
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        const values = parseLine(lines[i]);
+                        const row: any = {};
+                        headers.forEach((header, index) => {
+                            row[header.trim()] = values[index]?.trim();
+                        });
+                        data.push(row);
+                    }
+
+                    // Extract Points (Graph Nodes)
+                    const nodes: Record<string, [number, number]> = {};
+                    const pointsFeatures = data
+                        .filter((row: any) => row.type === 'graph_pose')
+                        .map((row: any) => {
+                            try {
+                                let coordsStr = row.graph_pose;
+                                let isGlobal = true;
+                                if (!coordsStr || coordsStr === 'nan') {
+                                    coordsStr = row.graph_pose_local;
+                                    isGlobal = false;
+                                }
+                                if (coordsStr) {
+                                    // Clean up string: remove quotes if present, handle [x, y, z]
+                                    coordsStr = coordsStr.replace(/^"|"$/g, '').replace(/'/g, '"');
+                                    const coords = JSON.parse(coordsStr);
+                                    if (Array.isArray(coords) && coords.length >= 2) {
+                                        let [lon, lat] = [coords[0], coords[1]];
+                                        if (isGlobal) {
+                                            [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [coords[0], coords[1]]);
+                                        }
+                                        nodes[row.graph_id] = [lon, lat];
+                                        return {
+                                            type: 'Feature',
+                                            geometry: {
+                                                type: 'Point',
+                                                coordinates: [lon, lat]
+                                            },
+                                            properties: row
+                                        };
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('Failed to parse pose', row);
+                            }
+                            return null;
+                        })
+                        .filter(Boolean);
+
+                    // Extract Lines (Routes)
+                    const lineFeatures: any[] = [];
+                    for (const row of data) {
+                        if (row.type === 'graph_pose' && row.connections && nodes[row.graph_id]) {
+                            try {
+                                let connsStr = row.connections.replace(/^"|"$/g, '').replace(/'/g, '"');
+                                // Handle potential "nan" or empty
+                                if (connsStr && connsStr !== 'nan' && connsStr !== '[]') {
+                                    // Simple array parse might fail if it's not valid JSON, e.g. [1, 2]
+                                    // Let's try to parse it as JSON
+                                    const conns = JSON.parse(connsStr);
+                                    if (Array.isArray(conns)) {
+                                        conns.forEach((targetId: any) => {
+                                            if (nodes[targetId]) {
+                                                lineFeatures.push({
+                                                    type: 'Feature',
+                                                    geometry: {
+                                                        type: 'LineString',
+                                                        coordinates: [nodes[row.graph_id], nodes[targetId]]
+                                                    },
+                                                    properties: { source: row.graph_id, target: targetId }
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                            } catch (e) {
+                                // console.warn('Failed to parse connections', row);
+                            }
+                        }
+                    }
+
+                    setPreviewData(prev => ({
+                        ...prev,
+                        global_plan_points: { type: 'FeatureCollection', features: pointsFeatures },
+                        routes: { type: 'FeatureCollection', features: lineFeatures }
+                    }));
+                    setCenterTrigger(prev => prev + 1);
+
+                } else if (file.name.endsWith('.json') || file.name.endsWith('.geojson')) {
+                    const parsed = JSON.parse(content);
+                    // Assume it's a feature collection, try to guess type or just put it as 'routes' for now if generic
+                    // Or ask user? For now, let's assume it might be the arrow_geojson or similar
+                    setPreviewData(prev => ({ ...prev, routes: parsed }));
+                    setCenterTrigger(prev => prev + 1);
+                }
+            } catch (err) {
+                console.error('Error parsing file', err);
+                alert('Error parsing file');
+            }
+        };
+        reader.readAsText(file);
     };
 
     const handleFileChange = (name: string, file: File | null) => {
@@ -263,8 +403,23 @@ export default function RouteGenerator() {
             </div>
 
             {/* Map Preview Section */}
-            <div className="mb-6 space-y-2">
+            <div className="mb-6 flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-slate-700">Map Preview</h3>
+                <div className="flex gap-2">
+                    <input
+                        type="file"
+                        accept=".csv,.json,.geojson"
+                        onChange={handleLoadResultFile}
+                        className="hidden"
+                        id="load-result-file"
+                    />
+                    <label
+                        htmlFor="load-result-file"
+                        className="px-3 py-1.5 text-sm font-medium rounded-md bg-white text-blue-600 border border-blue-200 shadow-sm hover:bg-blue-50 cursor-pointer flex items-center gap-2 transition-all"
+                    >
+                        <Upload className="w-4 h-4" /> Load Result File
+                    </label>
+                </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -377,6 +532,45 @@ export default function RouteGenerator() {
                             obstacles: previewData['obstacles'],
                             high_obstacles: previewData['high_obstacles'],
                             transit_streets: previewData['transit_streets'],
+                            global_plan_points: (() => {
+                                if (!result.global_plan_data) return null;
+                                const features = result.global_plan_data
+                                    .filter((row: any) => row.type === 'graph_pose')
+                                    .map((row: any) => {
+                                        try {
+                                            let coords = row.graph_pose;
+                                            let isGlobal = true;
+                                            if (!coords || coords === 'nan') {
+                                                coords = row.graph_pose_local;
+                                                isGlobal = false;
+                                            }
+
+                                            if (typeof coords === 'string') {
+                                                // Handle string representation of list "[x, y, z]"
+                                                coords = JSON.parse(coords.replace(/'/g, '"'));
+                                            }
+                                            if (Array.isArray(coords) && coords.length >= 2) {
+                                                let [lon, lat] = [coords[0], coords[1]];
+                                                if (isGlobal) {
+                                                    [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [coords[0], coords[1]]);
+                                                }
+                                                return {
+                                                    type: 'Feature',
+                                                    geometry: {
+                                                        type: 'Point',
+                                                        coordinates: [lon, lat]
+                                                    },
+                                                    properties: row
+                                                };
+                                            }
+                                        } catch (e) {
+                                            console.warn('Failed to parse pose', row);
+                                        }
+                                        return null;
+                                    })
+                                    .filter(Boolean);
+                                return { type: 'FeatureCollection', features };
+                            })()
                         } : previewData}
                         onUpdate={() => { }}
                         centerTrigger={centerTrigger}
@@ -415,6 +609,25 @@ export default function RouteGenerator() {
 
                     <div className="action-buttons">
                         <button
+                            onClick={() => setShowTable(!showTable)}
+                            className="btn-view-data"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                padding: '0.5rem 1rem',
+                                backgroundColor: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '0.375rem',
+                                color: '#475569',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <Settings className="w-4 h-4" /> {showTable ? 'Hide Data' : 'View Data'}
+                        </button>
+                        <button
                             onClick={handleDownloadAll}
                             className="btn-download"
                         >
@@ -428,7 +641,44 @@ export default function RouteGenerator() {
                         </button>
                     </div>
 
-
+                    {showTable && result.global_plan_data && (
+                        <div className="mt-6 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                            <div className="overflow-x-auto max-h-[500px]">
+                                <table className="min-w-full divide-y divide-slate-200">
+                                    <thead className="bg-slate-50 sticky top-0 z-10">
+                                        <tr>
+                                            {Object.keys(result.global_plan_data[0] || {}).map((key) => (
+                                                <th
+                                                    key={key}
+                                                    scope="col"
+                                                    className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap bg-slate-50"
+                                                >
+                                                    {key}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-slate-200">
+                                        {result.global_plan_data.map((row: any, idx: number) => (
+                                            <tr key={idx} className="hover:bg-slate-50">
+                                                {Object.values(row).map((val: any, i: number) => (
+                                                    <td
+                                                        key={i}
+                                                        className="px-6 py-4 whitespace-nowrap text-sm text-slate-500"
+                                                    >
+                                                        {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 text-sm text-slate-500">
+                                Showing {result.global_plan_data.length} records
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

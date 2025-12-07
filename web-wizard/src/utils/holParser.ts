@@ -2,8 +2,8 @@ import proj4 from 'proj4';
 
 // Define the projection for UTM Zone 19S (EPSG:32719)
 // This is what the Python code uses.
-const UTM_ZONE_19S = '+proj=utm +zone=19 +south +datum=WGS84 +units=m +no_defs';
-const WGS84 = 'EPSG:4326';
+export const UTM_ZONE_19S = '+proj=utm +zone=19 +south +datum=WGS84 +units=m +no_defs';
+export const WGS84 = 'EPSG:4326';
 
 export interface HolData {
     x: number;

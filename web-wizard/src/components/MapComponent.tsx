@@ -18,6 +18,7 @@ const createCustomIcon = (color: string, label?: string) => {
 const ObjectiveIcon = createCustomIcon('#ef4444', 'O'); // Red for Objective
 const HomeIcon = createCustomIcon('#3b82f6', 'H'); // Blue for Home
 const DefaultIcon = createCustomIcon('#64748b');
+const GlobalPlanIcon = createCustomIcon('#eab308', 'P'); // Yellow for Points
 
 // Override default marker icon for Leaflet Draw if needed
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -187,12 +188,6 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
 
         // Collect current editable layer if it has data
         if (featureGroupRef.current) {
-            // We can't easily get the bounds of the FeatureGroup if it's empty, 
-            // but if it has layers, we can.
-            // However, featureGroupRef.current might not be fully populated with the *initialData* 
-            // if this runs before EditControl mounts/populates. 
-            // But existingData[currentStepKey] is passed to EditControl.
-            // So we can just use existingData[currentStepKey] to calculate bounds.
             const currentData = existingData[currentStepKey];
             if (currentData && currentData.features && currentData.features.length > 0) {
                 const layer = L.geoJSON(currentData);
@@ -228,6 +223,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
         else if (key === 'obstacles') color = '#ef4444';
         else if (key === 'high_obstacles') color = '#000000';
         else if (key === 'routes') color = '#eab308';
+        else if (key === 'global_plan_points') color = '#eab308';
         else {
             // Generate a consistent color based on the key string
             let hash = 0;
@@ -274,8 +270,92 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                             style={() => getStyle(key)}
                             pointToLayer={(_feature, latlng) => {
                                 let icon = DefaultIcon;
-                                if (key === 'objective') icon = ObjectiveIcon;
+                                if (key === 'objective') {
+                                    return L.circleMarker(latlng, {
+                                        radius: 6,
+                                        fillColor: '#000000',
+                                        color: '#000000',
+                                        weight: 1,
+                                        opacity: 0.5,
+                                        fillOpacity: 0.3
+                                    });
+                                }
                                 if (key === 'home') icon = HomeIcon;
+                                if (key === 'global_plan_points') {
+                                    const poseType = _feature.properties?.pose_type;
+                                    const graphPose = _feature.properties?.graph_pose;
+                                    let rotation = 0;
+
+                                    // Parse rotation from graph_pose if available
+                                    if (graphPose) {
+                                        try {
+                                            let pose = graphPose;
+                                            if (typeof pose === 'string') {
+                                                pose = JSON.parse(pose.replace(/'/g, '"'));
+                                            }
+                                            if (Array.isArray(pose) && pose.length > 2) {
+                                                rotation = pose[2]; // Assuming theta is at index 2
+                                            }
+                                        } catch (e) {
+                                            console.warn('Error parsing graph_pose for rotation', e);
+                                        }
+                                    }
+
+                                    // Custom Icons based on pose_type
+                                    if (poseType === 'hole') {
+                                        // Convert rotation to degrees for CSS
+                                        const degrees = (rotation * 180) / Math.PI;
+                                        return L.marker(latlng, {
+                                            icon: L.divIcon({
+                                                className: 'custom-icon-arrow',
+                                                html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
+                                                iconSize: [20, 20],
+                                                iconAnchor: [10, 10]
+                                            })
+                                        });
+                                    } else if (poseType === 'transit_street') {
+                                        return L.marker(latlng, {
+                                            icon: L.divIcon({
+                                                className: 'custom-icon-transit',
+                                                html: `<div style="font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">z</div>`,
+                                                iconSize: [20, 20],
+                                                iconAnchor: [10, 10]
+                                            })
+                                        });
+                                    } else if (poseType === 'street') {
+                                        // Convert rotation to degrees for CSS
+                                        const degrees = (rotation * 180) / Math.PI;
+                                        return L.marker(latlng, {
+                                            icon: L.divIcon({
+                                                className: 'custom-icon-arrow',
+                                                html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
+                                                iconSize: [20, 20],
+                                                iconAnchor: [10, 10]
+                                            })
+                                        });
+                                    } else if (poseType === 'home_pose') {
+                                        // Convert rotation to degrees for CSS
+                                        const degrees = (rotation * 180) / Math.PI;
+                                        return L.marker(latlng, {
+                                            icon: L.divIcon({
+                                                className: 'custom-icon-arrow',
+                                                html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: blue; text-align: center; line-height: 1;">&gt;</div>`,
+                                                iconSize: [20, 20],
+                                                iconAnchor: [10, 10]
+                                            })
+                                        });
+                                    }
+
+                                    // Fallback for unknown types
+                                    return L.circleMarker(latlng, {
+                                        radius: 4,
+                                        fillColor: '#eab308',
+                                        color: '#fff',
+                                        weight: 1,
+                                        opacity: 1,
+                                        fillOpacity: 0.8
+                                    });
+                                }
                                 return L.marker(latlng, { icon: icon });
                             }}
                             onEachFeature={(_feature, layer) => {

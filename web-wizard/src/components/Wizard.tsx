@@ -6,7 +6,8 @@ import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, Play, X, Settings } from 'lucide-react';
-import { parseHolFile } from '../utils/holParser';
+import { parseHolFile, UTM_ZONE_19S, WGS84 } from '../utils/holParser';
+import proj4 from 'proj4';
 import '../styles/components/Wizard.css';
 
 const Wizard = () => {
@@ -17,6 +18,7 @@ const Wizard = () => {
     const [centerTrigger, setCenterTrigger] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const folderInputRef = useRef<HTMLInputElement>(null);
+    const resultInputRef = useRef<HTMLInputElement>(null);
 
     const [generating, setGenerating] = useState(false);
     const [genProgress, setGenProgress] = useState(0);
@@ -210,6 +212,154 @@ const Wizard = () => {
         if (folderInputRef.current) folderInputRef.current.value = '';
     };
 
+    const handleLoadResultFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                if (file.name.endsWith('.csv')) {
+                    // Parse CSV
+                    const lines = content.split('\n');
+                    const headers = lines[0].split(',');
+                    const data = [];
+
+                    // Helper to safely parse CSV line respecting quotes
+                    const parseLine = (line: string) => {
+                        const result = [];
+                        let current = '';
+                        let inQuotes = false;
+                        for (let i = 0; i < line.length; i++) {
+                            const char = line[i];
+                            if (char === '"') {
+                                inQuotes = !inQuotes;
+                            } else if (char === ',' && !inQuotes) {
+                                result.push(current);
+                                current = '';
+                            } else {
+                                current += char;
+                            }
+                        }
+                        result.push(current);
+                        return result;
+                    };
+
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        const values = parseLine(lines[i]);
+                        const row: any = {};
+                        headers.forEach((header, index) => {
+                            row[header.trim()] = values[index]?.trim();
+                        });
+                        data.push(row);
+                    }
+
+                    // Extract Points (Graph Nodes)
+                    const nodes: Record<string, [number, number]> = {};
+                    const pointsFeatures = data
+                        .filter((row: any) => row.type === 'graph_pose')
+                        .map((row: any) => {
+                            try {
+                                // Try to use global coordinates first (UTM)
+                                // The CSV column is 'graph_pose' for global UTM coordinates
+                                let coordsStr = row.graph_pose;
+                                let isGlobal = true;
+
+                                if (!coordsStr || coordsStr === 'nan') {
+                                    // Fallback to local if global is missing (though global is preferred for map)
+                                    coordsStr = row.graph_pose_local;
+                                    isGlobal = false;
+                                }
+
+                                if (coordsStr) {
+                                    coordsStr = coordsStr.replace(/^"|"$/g, '').replace(/'/g, '"');
+                                    const coords = JSON.parse(coordsStr);
+                                    if (Array.isArray(coords) && coords.length >= 2) {
+                                        let lon = coords[0];
+                                        let lat = coords[1];
+
+                                        // Convert UTM to WGS84 if using global coordinates
+                                        if (isGlobal) {
+                                            [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [coords[0], coords[1]]);
+                                        }
+
+                                        nodes[row.graph_id] = [lon, lat];
+                                        return {
+                                            type: 'Feature',
+                                            geometry: {
+                                                type: 'Point',
+                                                coordinates: [lon, lat]
+                                            },
+                                            properties: row
+                                        };
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('Failed to parse pose', row);
+                            }
+                            return null;
+                        })
+                        .filter(Boolean);
+
+                    // Extract Lines (Routes)
+                    const lineFeatures: any[] = [];
+                    for (const row of data) {
+                        if (row.type === 'graph_pose' && row.connections && nodes[row.graph_id]) {
+                            try {
+                                let connsStr = row.connections.replace(/^"|"$/g, '').replace(/'/g, '"');
+                                if (connsStr && connsStr !== 'nan' && connsStr !== '[]') {
+                                    const conns = JSON.parse(connsStr);
+                                    if (Array.isArray(conns)) {
+                                        conns.forEach((targetId: any) => {
+                                            if (nodes[targetId]) {
+                                                lineFeatures.push({
+                                                    type: 'Feature',
+                                                    geometry: {
+                                                        type: 'LineString',
+                                                        coordinates: [nodes[row.graph_id], nodes[targetId]]
+                                                    },
+                                                    properties: { source: row.graph_id, target: targetId }
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                            } catch (e) {
+                                // console.warn('Failed to parse connections', row);
+                            }
+                        }
+                    }
+
+                    setGenResult({
+                        arrow_geojson: { type: 'FeatureCollection', features: lineFeatures },
+                        global_plan_points: { type: 'FeatureCollection', features: pointsFeatures },
+                        download_links: {} // Empty links as we just loaded a file
+                    });
+                    setViewMode('generated');
+                    setCenterTrigger(prev => prev + 1);
+                    alert('Loaded result file successfully.');
+
+                } else if (file.name.endsWith('.json') || file.name.endsWith('.geojson')) {
+                    const parsed = JSON.parse(content);
+                    setGenResult({
+                        arrow_geojson: parsed,
+                        download_links: {}
+                    });
+                    setViewMode('generated');
+                    setCenterTrigger(prev => prev + 1);
+                    alert('Loaded GeoJSON result successfully.');
+                }
+            } catch (err) {
+                console.error('Error parsing file', err);
+                alert('Error parsing file');
+            }
+        };
+        reader.readAsText(file);
+        if (resultInputRef.current) resultInputRef.current.value = '';
+    };
+
     const handleSaveAll = async () => {
         const zip = new JSZip();
 
@@ -395,6 +545,44 @@ const Wizard = () => {
                 'obstacles': data['obstacles'],
                 'high_obstacles': data['tall_obstacle'],
                 // Add any other generated layers if available
+                'global_plan_points': genResult.global_plan_points ? genResult.global_plan_points : (() => {
+                    // If global_plan_points is not pre-calculated (e.g. from fresh generation), calculate it here
+                    if (genResult.global_plan_data) {
+                        const features = genResult.global_plan_data
+                            .filter((row: any) => row.type === 'graph_pose')
+                            .map((row: any) => {
+                                try {
+                                    // The CSV column is 'graph_pose' for global UTM coordinates
+                                    let coordsStr = row.graph_pose;
+                                    let isGlobal = true;
+                                    if (!coordsStr || coordsStr === 'nan') {
+                                        coordsStr = row.graph_pose_local;
+                                        isGlobal = false;
+                                    }
+                                    if (coordsStr) {
+                                        if (typeof coordsStr === 'string') {
+                                            coordsStr = coordsStr.replace(/^"|"$/g, '').replace(/'/g, '"');
+                                            const coords = JSON.parse(coordsStr);
+                                            if (Array.isArray(coords) && coords.length >= 2) {
+                                                let [lon, lat] = [coords[0], coords[1]];
+                                                if (isGlobal) {
+                                                    [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [coords[0], coords[1]]);
+                                                }
+                                                return {
+                                                    type: 'Feature',
+                                                    geometry: { type: 'Point', coordinates: [lon, lat] },
+                                                    properties: row
+                                                };
+                                            }
+                                        }
+                                    }
+                                } catch (e) { }
+                                return null;
+                            }).filter(Boolean);
+                        return { type: 'FeatureCollection', features };
+                    }
+                    return null;
+                })(),
             };
         }
         return data;
@@ -456,6 +644,20 @@ const Wizard = () => {
                             webkitdirectory=""
                             directory=""
                             multiple
+                            className="hidden"
+                        />
+                        <button
+                            onClick={() => resultInputRef.current?.click()}
+                            className="btn-action-slate"
+                            title="Load Result File"
+                        >
+                            <Upload className="w-3 h-3" /> {t('Load Result')}
+                        </button>
+                        <input
+                            type="file"
+                            ref={resultInputRef}
+                            onChange={handleLoadResultFile}
+                            accept=".csv,.json,.geojson"
                             className="hidden"
                         />
                     </div>

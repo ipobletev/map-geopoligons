@@ -179,7 +179,6 @@ def run_route_generation(
             "type": "result",
             "data": {
                 "status": "success",
-                "status": "success",
                 "map_image": f"data:image/png;base64,{encoded_string}",
                 "arrow_geojson": arrow_geojson,
                 "holes_geojson": holes_df.to_crs('EPSG:4326').to_json() if holes_df is not None else None,
@@ -191,6 +190,8 @@ def run_route_generation(
                 "high_obstacles_geojson": high_obstacles_df.to_crs('EPSG:4326').to_json() if high_obstacles_df is not None else None,
                 "transit_streets_geojson": transit_streets_df.to_crs('EPSG:4326').to_json() if transit_streets_df is not None else None,
                 "fitted_transit_streets_geojson": transit_streets_fitted.to_crs('EPSG:4326').to_json() if transit_streets_fitted is not None else None,
+                "fitted_transit_streets_geojson": transit_streets_fitted.to_crs('EPSG:4326').to_json() if transit_streets_fitted is not None else None,
+                "global_plan_data": pd.read_csv(csv_filename).fillna("").to_dict(orient='records'),
                 "download_links": {
                     "csv": "/generated/global_plan.csv",
                     "map_png": "/generated/map.png",
