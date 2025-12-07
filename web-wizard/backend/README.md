@@ -35,8 +35,7 @@ Para ver la lista completa de dependencias, consulta `requirements.txt`.
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # En Linux/macOS
-# .venv\Scripts\activate   # En Windows
+source .venv/Scripts/activate
 ```
 
 3.  Instala las dependencias:
