@@ -1,45 +1,58 @@
 # Map Geopoligons
 
-This repository contains tools for mapping, drawing, and managing geographical polygons, with automatic conversion between GPS (Latitude/Longitude) and UTM coordinates.
+Este repositorio contiene herramientas para el mapeo, dibujo y gestión de polígonos geográficos, con conversión automática entre coordenadas GPS (Latitud/Longitud) y UTM.
 
-It includes two different implementations of the application:
+## Inicio Rápido
 
-## 1. Frontend (Web Version)
-A modern, browser-based implementation built with **React**, **TypeScript**, and **Leaflet**.
+Para iniciar tanto el backend como el frontend automáticamente, utiliza el script incluido:
 
--   **Location**: [`frontend/`](./frontend)
--   **Tech Stack**: React, Vite, TypeScript, Leaflet, Proj4.
--   **Features**:
-    -   Full interactive map in the browser.
-    -   Draw and edit shapes (Polygons, Lines, Points).
-    -   Save/Load GeoJSON files.
-    -   Fast and responsive.
--   **Quick Start**:
-    ```bash
-    cd frontend
-    npm install
-    npm run dev
-    ```
+```bash
+./start.sh
+```
 
-## 2. Qt-Python (Desktop Version)
-The original desktop application built with **Python**, **PyQt5**, and **Folium**.
+Este script levantará:
+- **Backend**: En `http://localhost:8000`
+- **Frontend**: En `http://localhost:5173` (o el puerto que asigne Vite)
 
--   **Location**: [`qt-python/`](./qt-python)
--   **Tech Stack**: Python 3, PyQt5, Folium, Jinja2.
--   **Features**:
-    -   Desktop window wrapper around a Leaflet map.
-    -   Python-based logic for coordinate conversion.
-    -   Generates HTML maps dynamically.
--   **Quick Start**:
-    ```bash
-    cd qt-python
-    # Ensure you have the dependencies installed (see qt-python/README.md)
-    python src/main.py
-    or
-    ./run.bat
-    ```
+## Estructura del Proyecto
 
-## Shared Features
-Both versions share the core functionality:
--   **GeoJSON Export**: Saving drawings produces standard GeoJSON files.
--   **UTM Enrichment**: Both tools calculate and embed UTM coordinates (Easting, Northing, Zone) into the saved GeoJSON properties, useful for engineering and surveying applications.
+### 1. Web Wizard (Frontend)
+Una implementación moderna basada en navegador construida con **React**, **TypeScript** y **Leaflet**.
+
+-   **Ubicación**: [`web-wizard/`](./web-wizard)
+-   **Tecnologías**: React, Vite, TypeScript, Leaflet, Proj4.
+-   **Características**:
+    -   Mapa interactivo completo en el navegador.
+    -   Dibujo y edición de formas (Polígonos, Líneas, Puntos).
+    -   Guardado/Carga de archivos GeoJSON.
+    -   Generación de rutas para minería.
+
+### 2. Backend
+Servidor API construido con **FastAPI** para el procesamiento de datos geoespaciales.
+
+-   **Ubicación**: [`backend/`](./backend)
+-   **Tecnologías**: Python, FastAPI, GeoPandas, NetworkX.
+-   **Funcionalidades**:
+    -   Procesamiento de archivos `.hol` y GeoJSON.
+    -   Generación de rutas optimizadas.
+    -   Conversión de coordenadas.
+
+## Ejecución Manual
+
+Si prefieres ejecutar los servicios manualmente:
+
+### Backend
+```bash
+cd backend
+# Activar entorno virtual si existe
+source .venv/bin/activate
+# Iniciar servidor
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Frontend
+```bash
+cd web-wizard
+npm install
+npm run dev
+```
