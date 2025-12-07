@@ -10,6 +10,12 @@ Para iniciar tanto el backend como el frontend automáticamente, utiliza el scri
 ./start.sh
 ```
 
+En **Windows**, simplemente ejecuta:
+
+```cmd
+start.bat
+```
+
 Este script levantará:
 - **Backend**: En `http://localhost:8000`
 - **Frontend**: En `http://localhost:5173` (o el puerto que asigne Vite)
