@@ -12,3 +12,6 @@ web-wizard/backend/generated/*
 *.pyc
 *.pyo
 **__pycache__**
+
+# Docs
+.ipynb_checkpoints
