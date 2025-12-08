@@ -23,12 +23,12 @@ source .venv/bin/activate
 
 echo "Installing requirements..."
 pip install -r requirements.txt
-if [ -f ".venv/Scripts/uvicorn.exe" ]; then
-    ./.venv/Scripts/uvicorn.exe main:app --reload --host 0.0.0.0 --port 8000 &
-elif [ -f ".venv/Scripts/uvicorn" ]; then
-    ./.venv/Scripts/uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
-elif [ -f ".venv/bin/uvicorn" ]; then
-    ./.venv/bin/uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+if [ -f "./backend/.venv/Scripts/uvicorn.exe" ]; then
+    ./backend/.venv/Scripts/uvicorn.exe main:app --reload --host 0.0.0.0 --port 8000 &
+elif [ -f "./backend/.venv/Scripts/uvicorn" ]; then
+    ./backend/.venv/Scripts/uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+elif [ -f "./backend/.venv/bin/uvicorn" ]; then
+    ./backend/.venv/bin/uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
 else
     uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
 fi
