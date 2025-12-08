@@ -4,12 +4,16 @@ echo Starting Map Geopoligons Services...
 :: Start Backend
 echo Starting Backend...
 cd backend
-if exist .venv\Scripts\activate.bat (
-    start "Backend" cmd /k "call .venv\Scripts\activate.bat && uvicorn main:app --reload --host 0.0.0.0 --port 8000"
-) else (
-    echo Virtual environment not found in backend\.venv. Attempting to run without activation...
-    start "Backend" cmd /k "uvicorn main:app --reload --host 0.0.0.0 --port 8000"
+if not exist .venv (
+    echo Creating virtual environment...
+    python -m venv .venv
 )
+
+call .venv\Scripts\activate.bat
+echo Installing requirements...
+pip install -r requirements.txt
+
+start "Backend" cmd /k "call .venv\Scripts\activate.bat && uvicorn main:app --reload --host 0.0.0.0 --port 8000"
 cd ..
 
 :: Start Frontend

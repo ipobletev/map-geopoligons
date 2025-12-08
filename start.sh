@@ -13,10 +13,25 @@ trap cleanup SIGINT
 echo "Starting Backend..."
 cd backend
 # Check if venv exists and activate it
-if [ -d ".venv" ]; then
-    source .venv/bin/activate
+# Check if venv exists, create if not
+if [ ! -d ".venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv .venv
 fi
-uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+
+source .venv/bin/activate
+
+echo "Installing requirements..."
+pip install -r requirements.txt
+if [ -f ".venv/Scripts/uvicorn.exe" ]; then
+    ./.venv/Scripts/uvicorn.exe main:app --reload --host 0.0.0.0 --port 8000 &
+elif [ -f ".venv/Scripts/uvicorn" ]; then
+    ./.venv/Scripts/uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+elif [ -f ".venv/bin/uvicorn" ]; then
+    ./.venv/bin/uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+else
+    uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+fi
 cd ..
 
 # Start Frontend
