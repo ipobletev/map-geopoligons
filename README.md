@@ -43,6 +43,12 @@ Servidor API construido con **FastAPI** para el procesamiento de datos geoespaci
     -   Generación de rutas optimizadas.
     -   Conversión de coordenadas.
 
+## Documentación y Notebooks
+
+Para entender mejor los algoritmos y herramientas utilizados, consulta la documentación detallada y los notebooks interactivos en el directorio `docs`:
+
+- [**Ver Documentación de Notebooks**](./docs/README.md)
+
 ## Ejecución Manual
 
 Si prefieres ejecutar los servicios manualmente:
