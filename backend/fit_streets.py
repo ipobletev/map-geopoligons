@@ -170,6 +170,8 @@ class CurveModel(torch.nn.Module):
 
 
 def fit_street(orig_x, orig_y, holes_x, holes_y, low_x, low_y, high_x, high_y):
+    if len(orig_x) < 2:
+        return orig_x, orig_y
     tx, ty, angle = get_pca_transform(orig_x,orig_y)
 
     orig_x, orig_y = translate(orig_x, orig_y, -tx, -ty)
@@ -227,6 +229,10 @@ def fit_street(orig_x, orig_y, holes_x, holes_y, low_x, low_y, high_x, high_y):
     curve_x = orig_x
     curve_y = predictions.detach().cpu().numpy()
 
+    if np.isnan(curve_y).any():
+        print("NAN IN OPTIMIZATION - Reverting to original")
+        curve_y = np.array(orig_y)
+
     curve_x, curve_y = rotate(curve_x, curve_y, angle)
     curve_x, curve_y = translate(curve_x, curve_y, tx, ty)
 
@@ -270,6 +276,8 @@ def gen_footprint_high_obstacle(x,y,angle):
 
 
 def del_colliding(orig_x, orig_y, holes_x, holes_y, low_x, low_y, high_x, high_y):
+    if len(orig_x) < 2:
+        return orig_x, orig_y
     tx, ty, angle = get_pca_transform(orig_x,orig_y)
 
     orig_x, orig_y = translate(orig_x, orig_y, -tx, -ty)
