@@ -2,6 +2,45 @@
 
 Este directorio contiene Jupyter Notebooks diseñados para explicar, probar y visualizar los algoritmos de generación de rutas y optimización de trayectorias.
 
+## Configuración del Entorno
+
+Para ejecutar estos notebooks de manera aislada y correcta, se recomienda utilizar un entorno virtual de Python. Sigue estos pasos:
+
+1.  **Crear el entorno virtual:**
+    Navega a la raíz de este directorio (/docs) de notebooks y ejecuta:
+    ```bash
+    python -m venv .venv
+    ```
+
+2.  **Activar el entorno virtual:**
+    *   **Windows:**
+        ```bash
+        #CMD
+        .venv\Scripts\activate
+        #Gitbash
+        source .venv/Scripts/activate
+        ```
+    *   **macOS/Linux:**
+        ```bash
+        source .venv/bin/activate
+        ```
+
+3.  **Instalar dependencias:**
+    Instala las dependencias del proyecto y Jupyter Lab. Asegúrate de que el archivo `requirements.txt` del backend esté accesible (ajusta la ruta si es necesario).
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## Ejecución
+
+Una vez configurado el entorno, puedes iniciar Jupyter Lab para explorar los notebooks:
+
+```bash
+jupyter-lab
+```
+
+Esto abrirá la interfaz de Jupyter Lab en tu navegador, donde podrás seleccionar y ejecutar cualquiera de los notebooks listados anteriormente.
+
 ## Notebooks Disponibles
 
 ### 1. Optimización de Trayectorias (Street Fitting)
@@ -41,21 +80,3 @@ Este notebook demuestra cómo interactuar programáticamente con el backend, sim
 - **Visualización de Resultados:** Generación de gráficos con `matplotlib` para inspeccionar el plan global, incluyendo la orientación de los diferentes tipos de puntos (pozos, calles, home).
 - **Exportación:** Guarda el resultado en un archivo `global_plan.csv`.
 
-## Requisitos
-
-Para ejecutar estos notebooks, asegúrate de tener instalado el entorno del proyecto (ver `backend/README.md` o el `README.md` principal). Las dependencias principales incluyen:
-- `jupyter`
-- `pandas`
-- `geopandas`
-- `shapely`
-- `matplotlib`
-- `torch` (para el optimizador)
-- `ipywidgets`
-
-## Ejecución
-
-```bash
-jupyter-lab 1_path_optimizer_street_fitting.ipynb
-jupyter-lab 2_algorithm_explanation.ipynb
-jupyter-lab 3_backend_interaction.ipynb
-```
