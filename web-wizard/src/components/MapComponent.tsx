@@ -15,10 +15,7 @@ const createCustomIcon = (color: string, label?: string) => {
     });
 };
 
-
-const HomeIcon = createCustomIcon('#3b82f6', 'H'); // Blue for Home
 const DefaultIcon = createCustomIcon('#64748b');
-const GlobalPlanIcon = createCustomIcon('#eab308', 'P'); // Yellow for Points
 
 // Custom Icon for drawing holes (matches CircleMarker style)
 const ObjectiveDrawIcon = L.divIcon({
@@ -91,7 +88,6 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
                         }
                         // Use icons for other types
                         let icon = DefaultIcon;
-                        if (currentStepKey === 'home') icon = HomeIcon;
                         return L.marker(latlng, { icon: icon });
                     }
                 });
@@ -106,22 +102,28 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
         // Determine icon based on step
         let markerIcon = DefaultIcon;
         if (currentStepKey === 'objective') markerIcon = ObjectiveDrawIcon;
-        if (currentStepKey === 'home') markerIcon = HomeIcon;
 
         const options: L.Control.DrawConstructorOptions = {
             position: 'topleft',
             draw: {
                 polyline: (drawMode === 'polyline' || drawMode === 'any') ? {
-                    shapeOptions: { color: '#3388ff', weight: 4 }
+                    shapeOptions: {
+                        color: currentStepKey === 'home' ? '#9333ea' : '#3388ff',
+                        weight: 4
+                    }
                 } : false,
                 polygon: (drawMode === 'polygon' || drawMode === 'any') ? {
                     allowIntersection: true,
                     showArea: true,
-                    shapeOptions: { color: '#3388ff' }
+                    shapeOptions: {
+                        color: currentStepKey === 'tall_obstacle' ? '#ef4444' : '#3388ff'
+                    }
                 } : false,
                 rectangle: (drawMode === 'polygon' || drawMode === 'any') ? {
                     showArea: false, // Disable area to prevent cursor issues
-                    shapeOptions: { color: '#3388ff' }
+                    shapeOptions: {
+                        color: currentStepKey === 'tall_obstacle' ? '#ef4444' : '#3388ff'
+                    }
                 } : false,
                 circle: false,
                 marker: (drawMode === 'marker' || drawMode === 'any') ? {
@@ -283,13 +285,13 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
         let color = '#3388ff';
         if (key === 'holes') color = '#000000';
         else if (key === 'geofence') color = '#22c55e';
-        else if (key === 'home') color = '#3b82f6';
+        else if (key === 'home') color = '#9333ea';
         else if (key === 'streets') color = '#3b82f6';
         else if (key === 'fitted_streets') color = '#2563eb'; // Darker blue for fitted
         else if (key === 'transit_streets') color = '#22c55e'; // Green for transit (matching notebook)
         else if (key === 'fitted_transit_streets') color = '#16a34a'; // Darker green for fitted transit
-        else if (key === 'obstacles') color = '#ef4444';
-        else if (key === 'high_obstacles') color = '#000000';
+        else if (key === 'obstacles') color = '#9333ea'; // Purple for normal obstacles
+        else if (key === 'high_obstacles' || key === 'tall_obstacle') color = '#ef4444'; // Red for high obstacles
         else if (key === 'routes') color = '#eab308';
         else if (key === 'global_plan_points') color = '#eab308';
         else {

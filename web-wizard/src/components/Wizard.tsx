@@ -204,6 +204,10 @@ const Wizard = () => {
                 }
             });
             setData(newData);
+            // Clear generated results when loading new data
+            setGenResult(null);
+            setViewMode('raw');
+
             if (loadedCount > 0) {
                 setCenterTrigger(prev => prev + 1);
                 alert(`Loaded ${loadedCount} files from folder.`);

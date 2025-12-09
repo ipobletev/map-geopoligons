@@ -186,6 +186,8 @@ def run_route_generation(
         streets_fitted = results.get('streets_fitted')
         transit_streets_fitted = results.get('transit_streets_fitted')
             
+        progress_queue.put({"type": "progress", "value": 100})
+        
         progress_queue.put({
             "type": "result",
             "data": {
