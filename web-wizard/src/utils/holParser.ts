@@ -72,3 +72,47 @@ export const parseHolFile = (content: string): any => {
         features: features
     };
 };
+
+export const generateHolString = (features: any[]): string => {
+    return features.map((feature, index) => {
+        const props = feature.properties || {};
+
+        // Get coordinates
+        let x = props.x;
+        let y = props.y;
+
+        // If not directly in properties, try to get from utm_coordinates
+        if ((x === undefined || y === undefined) && props.utm_coordinates) {
+            x = props.utm_coordinates.x;
+            y = props.utm_coordinates.y;
+        }
+
+        // If still undefined, we might need to convert from geometry (if we want to be robust)
+        // But Wizard.tsx ensures enrichment before save, so utm_coordinates should be there.
+        // Fallback to 0 if something is really wrong
+        if (x === undefined) x = 0;
+        if (y === undefined) y = 0;
+
+        // Get other properties with defaults based on reference file
+        const z = props.z !== undefined ? props.z : 0; // Default Z
+        const z_hole = props.z_hole !== undefined ? props.z_hole : 10;
+
+        // Unknowns (fixed values from reference)
+        const unk1 = 270;
+        const unk2 = 0.0;
+        const unk3 = 0;
+        const unk4 = -90;
+
+        // Use existing drillhole_id if available, otherwise use index + 1
+        const drillhole_id = props.drillhole_id !== undefined ? props.drillhole_id : (index + 1);
+        const mesh = props.mesh || 'peld';
+
+        // Format: x y z z_hole unk1 unk2 unk3 unk4 drillhole_id mesh
+        // Use tab or space separation? Reference looks like spaces/tabs.
+        // We'll use multiple spaces to align somewhat, or just single space.
+        // Reference: 343348.51005739527    6334425.48609453       11.80   10   270   0.0   0  -90    19    peld
+        // It seems to use variable spacing. We'll use standard space separation.
+
+        return `${x} ${y} ${z} ${z_hole} ${unk1} ${unk2} ${unk3} ${unk4} ${drillhole_id} ${mesh}`;
+    }).join('\n');
+};

@@ -8,7 +8,7 @@ frontend/dist
 
 # Python
 .venv
-web-wizard/backend/generated/*
+generated
 *.pyc
 *.pyo
 **__pycache__**

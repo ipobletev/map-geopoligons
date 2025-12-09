@@ -6,7 +6,7 @@ import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, Play, X, Settings } from 'lucide-react';
-import { parseHolFile, UTM_ZONE_19S, WGS84 } from '../utils/holParser';
+import { parseHolFile, generateHolString, UTM_ZONE_19S, WGS84 } from '../utils/holParser';
 import proj4 from 'proj4';
 import '../styles/components/Wizard.css';
 
@@ -387,6 +387,12 @@ const Wizard = () => {
             if (stepData) {
                 const filename = FILE_NAME_MAPPING[step.key] || `${step.key}.geojson`;
                 folder.file(filename, JSON.stringify(stepData, null, 4));
+
+                // Save .hol file for objective (holes)
+                if (step.key === 'objective' && stepData.features) {
+                    const holContent = generateHolString(stepData.features);
+                    folder.file('holes.hol', holContent);
+                }
             }
         });
 
@@ -395,6 +401,12 @@ const Wizard = () => {
             const enriched = enrichGeoJSONWithUTM(currentStepData);
             const filename = FILE_NAME_MAPPING[currentStep.key] || `${currentStep.key}.geojson`;
             folder.file(filename, JSON.stringify(enriched, null, 4));
+
+            // Save .hol file if current step is objective
+            if (currentStep.key === 'objective') {
+                const holContent = generateHolString(enriched.features);
+                folder.file('holes.hol', holContent);
+            }
         }
 
         const content = await zip.generateAsync({ type: 'blob' });
