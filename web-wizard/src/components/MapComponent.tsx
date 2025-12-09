@@ -15,10 +15,18 @@ const createCustomIcon = (color: string, label?: string) => {
     });
 };
 
-const ObjectiveIcon = createCustomIcon('#ef4444', 'O'); // Red for Objective
+
 const HomeIcon = createCustomIcon('#3b82f6', 'H'); // Blue for Home
 const DefaultIcon = createCustomIcon('#64748b');
 const GlobalPlanIcon = createCustomIcon('#eab308', 'P'); // Yellow for Points
+
+// Custom Icon for drawing holes (matches CircleMarker style)
+const ObjectiveDrawIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: #000000; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #0077ffff; opacity: 0.5; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
+});
 
 // Override default marker icon for Leaflet Draw if needed
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -55,10 +63,12 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
         const loadData = () => {
             editableLayers.clearLayers();
             if (initialData && initialData.type) {
+                let holeIndex = 0;
                 const geoJsonLayer = L.geoJSON(initialData, {
                     pointToLayer: (_feature, latlng) => {
                         // Use transparent black circles for objective (holes)
                         if (currentStepKey === 'objective') {
+                            holeIndex++;
                             const marker = L.circleMarker(latlng, {
                                 radius: 8,
                                 fillColor: '#000000',
@@ -68,15 +78,15 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
                                 fillOpacity: 0.3
                             });
 
-                            const drillholeId = _feature.properties?.drillhole_id;
-                            if (drillholeId !== undefined && drillholeId !== null) {
-                                marker.bindTooltip(String(drillholeId), {
-                                    permanent: true,
-                                    direction: 'top',
-                                    className: 'drillhole-tooltip-square',
-                                    offset: [0, -10]
-                                });
-                            }
+                            const drillholeId = _feature.properties?.drillhole_id !== undefined ? _feature.properties.drillhole_id : holeIndex;
+
+                            marker.bindTooltip(String(drillholeId), {
+                                permanent: true,
+                                direction: 'top',
+                                className: 'drillhole-tooltip-square',
+                                offset: [0, -10]
+                            });
+
                             return marker;
                         }
                         // Use icons for other types
@@ -95,7 +105,7 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
 
         // Determine icon based on step
         let markerIcon = DefaultIcon;
-        if (currentStepKey === 'objective') markerIcon = ObjectiveIcon;
+        if (currentStepKey === 'objective') markerIcon = ObjectiveDrawIcon;
         if (currentStepKey === 'home') markerIcon = HomeIcon;
 
         const options: L.Control.DrawConstructorOptions = {
@@ -130,7 +140,43 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
         drawControlRef.current = drawControl;
 
         const handleCreated = (e: any) => {
-            const layer = e.layer;
+            let layer = e.layer;
+
+            // If we are drawing holes (objective), replace the marker with a circle marker
+            if (currentStepKey === 'objective' && layer instanceof L.Marker) {
+                const latlng = layer.getLatLng();
+                const nextId = editableLayers.getLayers().length + 1;
+
+                layer = L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: '#000000',
+                    color: '#0077ffff',
+                    weight: 2,
+                    opacity: 0.5,
+                    fillOpacity: 0.3
+                });
+
+                layer.bindTooltip(String(nextId), {
+                    permanent: true,
+                    direction: 'top',
+                    className: 'drillhole-tooltip-square',
+                    offset: [0, -10]
+                });
+
+                // Attach properties so they persist
+                // @ts-ignore
+                layer.feature = {
+                    type: 'Feature',
+                    properties: {
+                        drillhole_id: nextId
+                    },
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [latlng.lng, latlng.lat]
+                    }
+                };
+            }
+
             editableLayers.addLayer(layer);
             onCreated();
         };
@@ -298,7 +344,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                     const marker = L.circleMarker(latlng, {
                                         radius: 8,
                                         fillColor: '#000000',
-                                        color: '#000000',
+                                        color: '#0077ffff',
                                         weight: 2,
                                         opacity: 0.5,
                                         fillOpacity: 0.3
