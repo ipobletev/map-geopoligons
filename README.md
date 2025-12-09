@@ -42,6 +42,23 @@ Servidor API construido con **FastAPI** para el procesamiento de datos geoespaci
     -   Procesamiento de archivos `.hol` y GeoJSON.
     -   Generación de rutas optimizadas.
     -   Conversión de coordenadas.
+    - **Transferencia de Archivos**: Capacidad de enviar los resultados generados a un servidor remoto vía SCP/SSH.
+
+## Transferencia de Archivos (SCP/SSH)
+
+La aplicación permite transferir los archivos generados (rutas, mapas, etc.) directamente a otro PC o servidor mediante el protocolo SCP.
+
+1.  Genera una ruta en la pestaña "Route Generator" o "Map Wizard".
+2.  Haz clic en el botón **Transfer**.
+3.  Ingresa las credenciales SSH del destino:
+    -   **Host**: IP o nombre de dominio.
+    -   **Port**: Puerto SSH (por defecto 22).
+    -   **Username**: Usuario SSH.
+    -   **Password**: Contraseña SSH.
+    -   **Remote Path**: Ruta absoluta en el servidor donde se guardarán los archivos.
+4.  Haz clic en **Send Files**.
+
+**Nota**: Esta funcionalidad requiere que la librería `paramiko` esté instalada en el backend (ya incluida en `requirements.txt`).
 
 ## Documentación y Notebooks
 

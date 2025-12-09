@@ -195,7 +195,7 @@ const Wizard = () => {
         });
 
         Promise.all(promises).then(results => {
-            const newData = { ...data };
+            const newData: Record<string, any> = {}; // Start fresh, do not keep old data
             let loadedCount = 0;
             results.forEach(result => {
                 if (result) {
