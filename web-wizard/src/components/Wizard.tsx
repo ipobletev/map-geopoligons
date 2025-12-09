@@ -5,7 +5,8 @@ import MapComponent from './MapComponent';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, Play, X, Settings } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, Play, X, Settings, Send } from 'lucide-react';
+import TransferModal from './TransferModal';
 import { parseHolFile, generateHolString, UTM_ZONE_19S, WGS84 } from '../utils/holParser';
 import proj4 from 'proj4';
 import '../styles/components/Wizard.css';
@@ -24,6 +25,8 @@ const Wizard = () => {
     const [genProgress, setGenProgress] = useState(0);
     const [genResult, setGenResult] = useState<any>(null);
     const [showGenModal, setShowGenModal] = useState(false);
+    const [showTransferModal, setShowTransferModal] = useState(false);
+    const [isTransferring, setIsTransferring] = useState(false);
 
     // View mode state
     const [viewMode, setViewMode] = useState<'raw' | 'generated'>('raw');
@@ -541,6 +544,33 @@ const Wizard = () => {
         }
     };
 
+    const handleTransfer = async (transferData: any) => {
+        setIsTransferring(true);
+        try {
+            const response = await fetch('/api/transfer-files', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(transferData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(t('Transfer successful!'));
+                setShowTransferModal(false);
+            } else {
+                alert(`Transfer failed: ${data.message}`);
+            }
+        } catch (error) {
+            console.error('Transfer error:', error);
+            alert('Transfer failed due to network error.');
+        } finally {
+            setIsTransferring(false);
+        }
+    };
+
     // Prepare data for MapComponent based on viewMode
     const getMapData = () => {
         if (viewMode === 'generated' && genResult) {
@@ -752,6 +782,12 @@ const Wizard = () => {
                         </button>
                         <div className="nav-buttons-row">
                             <button
+                                onClick={handleSaveAll}
+                                className="btn-download-all"
+                            >
+                                <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
+                            </button>
+                            <button
                                 onClick={handleDownloadGenerated}
                                 disabled={!genResult}
                                 className="btn-download-routes"
@@ -759,16 +795,25 @@ const Wizard = () => {
                             >
                                 <Download className="w-4 h-4" /> {t('wizard.downloadRoutes')}
                             </button>
-                            <button
-                                onClick={handleSaveAll}
-                                className="btn-download-all"
-                            >
-                                <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
-                            </button>
                         </div>
+                        <button
+                            onClick={() => setShowTransferModal(true)}
+                            disabled={!genResult}
+                            className="btn-download-routes bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                        >
+                            <Send className="w-4 h-4" /> Transfer
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <TransferModal
+                isOpen={showTransferModal}
+                onClose={() => setShowTransferModal(false)}
+                onTransfer={handleTransfer}
+                isTransferring={isTransferring}
+            />
 
             {/* Main Content */}
             <div className="main-content">

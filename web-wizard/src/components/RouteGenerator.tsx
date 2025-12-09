@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, Settings, CheckCircle, AlertCircle, Download, Play, Trash2, Map } from 'lucide-react';
+import { Upload, Settings, CheckCircle, AlertCircle, Download, Play, Trash2, Map, Send } from 'lucide-react';
 import MapComponent from './MapComponent';
+import TransferModal from './TransferModal';
 import proj4 from 'proj4';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -44,6 +45,8 @@ export default function RouteGenerator() {
     const [viewMode, setViewMode] = useState<'raw' | 'generated'>('raw');
     const [centerTrigger, setCenterTrigger] = useState(0);
     const [showTable, setShowTable] = useState(false);
+    const [showTransferModal, setShowTransferModal] = useState(false);
+    const [isTransferring, setIsTransferring] = useState(false);
 
     const readFile = (file: File, key: string) => {
         const reader = new FileReader();
@@ -356,6 +359,33 @@ export default function RouteGenerator() {
         saveAs(content, `route_results_${timestamp}.zip`);
     };
 
+    const handleTransfer = async (transferData: any) => {
+        setIsTransferring(true);
+        try {
+            const response = await fetch('/api/transfer-files', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(transferData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(t('Transfer successful!'));
+                setShowTransferModal(false);
+            } else {
+                alert(`Transfer failed: ${data.message}`);
+            }
+        } catch (error) {
+            console.error('Transfer error:', error);
+            alert('Transfer failed due to network error.');
+        } finally {
+            setIsTransferring(false);
+        }
+    };
+
     return (
         <div className="route-gen-container">
             <h2 className="route-gen-title">
@@ -587,13 +617,24 @@ export default function RouteGenerator() {
                         </div>
                     )}
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn-generate"
-                    >
-                        {loading ? t('routeGenerator.generating', { progress: Math.round(progress) }) : t('routeGenerator.generate')}
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="btn-generate flex-1"
+                        >
+                            {loading ? t('routeGenerator.generating', { progress: Math.round(progress) }) : t('routeGenerator.generate')}
+                        </button>
+                        <button
+                            type="button"
+                            disabled={!result || loading}
+                            onClick={() => setShowTransferModal(true)}
+                            className="px-6 py-2 rounded-md font-medium text-white transition-all flex items-center gap-2 justify-center disabled:opacity-50 disabled:cursor-not-allowed bg-indigo-600 hover:bg-indigo-700 shadow-sm"
+                        >
+                            <Send className="w-5 h-5" />
+                            Transfer
+                        </button>
+                    </div>
                 </div>
             </form>
 
@@ -602,6 +643,13 @@ export default function RouteGenerator() {
                     <strong>{t('routeGenerator.error')}:</strong> {error}
                 </div>
             )}
+
+            <TransferModal
+                isOpen={showTransferModal}
+                onClose={() => setShowTransferModal(false)}
+                onTransfer={handleTransfer}
+                isTransferring={isTransferring}
+            />
 
             {result && (
                 <div className="result-container">
