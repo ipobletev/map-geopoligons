@@ -94,7 +94,15 @@ const Wizard = () => {
         if (confirm(t('wizard.confirmClearAll'))) {
             setData({});
             setCurrentStepData(null);
-            window.location.reload();
+            setCurrentStepIndex(0);
+            setGenResult(null);
+            setGenProgress(0);
+            setGenerating(false);
+            setViewMode('raw');
+            setCenterTrigger(prev => prev + 1);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            if (folderInputRef.current) folderInputRef.current.value = '';
+            if (resultInputRef.current) resultInputRef.current.value = '';
         }
     };
 

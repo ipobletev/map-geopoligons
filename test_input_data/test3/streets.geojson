@@ -1,0 +1,79 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "utm_coordinates": [
+                    {
+                        "x": 343345.4973095774,
+                        "y": 6334411.787089365,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    },
+                    {
+                        "x": 343350.9190111107,
+                        "y": 6334417.086690936,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    },
+                    {
+                        "x": 343380.1715399377,
+                        "y": 6334420.438800766,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    }
+                ]
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -70.679094,
+                        -33.117687
+                    ],
+                    [
+                        -70.679035,
+                        -33.11764
+                    ],
+                    [
+                        -70.678721,
+                        -33.117614
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "utm_coordinates": [
+                    {
+                        "x": 343379.15244274435,
+                        "y": 6334431.624387146,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    },
+                    {
+                        "x": 343346.07247466047,
+                        "y": 6334428.321886667,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    }
+                ]
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -70.67873,
+                        -33.117513
+                    ],
+                    [
+                        -70.679085,
+                        -33.117538
+                    ]
+                ]
+            }
+        }
+    ]
+}

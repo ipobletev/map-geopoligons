@@ -538,7 +538,7 @@ def makeConnections(poses, blocked, extra_connections, turning_radius, progress_
                     connections.append([i, j])
                     line =  LineString([poses[i][0:2], poses[j][0:2]])
                     lines.append(line)
-            if progress_callback: progress_callback(30+int(60*(iter)*2/(len(poses)*(len(poses)+1))))
+            if progress_callback: progress_callback(30+int(60*(iter)*2/(len(poses)*(len(poses)-1))))
             iter += 1
 
     if len(lines) == 0:

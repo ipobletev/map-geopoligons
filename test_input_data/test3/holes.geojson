@@ -1,0 +1,480 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67905936928452,
+                    -33.117563920412515
+                ]
+            },
+            "properties": {
+                "x": 343348.51005739527,
+                "y": 6334425.48609453,
+                "z": 11.8,
+                "z_hole": 10,
+                "drillhole_id": 19,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343348.5100573936,
+                    "y": 6334425.486094529,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.6790073793429,
+                    -33.117558281504174
+                ]
+            },
+            "properties": {
+                "x": 343353.35112230416,
+                "y": 6334426.189037669,
+                "z": 11.2,
+                "z_hole": 10,
+                "drillhole_id": 18,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343353.3511223035,
+                    "y": 6334426.189037669,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.6789521791746,
+                    -33.11755346867137
+                ]
+            },
+            "properties": {
+                "x": 343358.49319460103,
+                "y": 6334426.805178921,
+                "z": 30,
+                "z_hole": 10,
+                "drillhole_id": 16,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343358.49319460144,
+                    "y": 6334426.805178922,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67889909040173,
+                    -33.117546994366904
+                ]
+            },
+            "properties": {
+                "x": 343363.4353070099,
+                "y": 6334427.602388993,
+                "z": 25,
+                "z_hole": 10,
+                "drillhole_id": 14,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343363.4353070089,
+                    "y": 6334427.602388994,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67884602733848,
+                    -33.11754313126397
+                ]
+            },
+            "properties": {
+                "x": 343368.3796576853,
+                "y": 6334428.110024129,
+                "z": 11.6,
+                "z_hole": 10,
+                "drillhole_id": 12,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343368.3796576862,
+                    "y": 6334428.11002413,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67879336027349,
+                    -33.11753884598729
+                ]
+            },
+            "properties": {
+                "x": 343373.28630932415,
+                "y": 6334428.663876328,
+                "z": 11.4,
+                "z_hole": 10,
+                "drillhole_id": 10,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343373.28630932386,
+                    "y": 6334428.663876327,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67901496075794,
+                    -33.117513406466344
+                ]
+            },
+            "properties": {
+                "x": 343352.5640263141,
+                "y": 6334431.153520926,
+                "z": 11.3,
+                "z_hole": 10,
+                "drillhole_id": 17,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343352.56402631383,
+                    "y": 6334431.153520926,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67895783737488,
+                    -33.11750618823326
+                ]
+            },
+            "properties": {
+                "x": 343357.881281317,
+                "y": 6334432.039250807,
+                "z": 11.5,
+                "z_hole": 10,
+                "drillhole_id": 15,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343357.88128131744,
+                    "y": 6334432.039250808,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67890157909126,
+                    -33.1174946310834
+                ]
+            },
+            "properties": {
+                "x": 343363.11011183896,
+                "y": 6334433.404790771,
+                "z": 11.4,
+                "z_hole": 10,
+                "drillhole_id": 13,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343363.1101118395,
+                    "y": 6334433.404790772,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.6788500617242,
+                    -33.11749644339491
+                ]
+            },
+            "properties": {
+                "x": 343367.9203168999,
+                "y": 6334433.28081779,
+                "z": 11.4,
+                "z_hole": 10,
+                "drillhole_id": 11,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343367.9203168993,
+                    "y": 6334433.28081779,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67879599900957,
+                    -33.1174925911218
+                ]
+            },
+            "properties": {
+                "x": 343372.95796536613,
+                "y": 6334433.788743351,
+                "z": 25,
+                "z_hole": 10,
+                "drillhole_id": 9,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343372.9579653664,
+                    "y": 6334433.7887433525,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67878313420238,
+                    -33.11758396853777
+                ]
+            },
+            "properties": {
+                "x": 343374.3206016289,
+                "y": 6334423.675898727,
+                "z": 11.8,
+                "z_hole": 10,
+                "drillhole_id": 8,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343374.3206016291,
+                    "y": 6334423.675898729,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67886416121627,
+                    -33.117595075125074
+                ]
+            },
+            "properties": {
+                "x": 343366.77985488484,
+                "y": 6334422.323313915,
+                "z": 28,
+                "z_hole": 10,
+                "drillhole_id": 6,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343366.7798548848,
+                    "y": 6334422.323313916,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67893161695142,
+                    -33.11759382920937
+                ]
+            },
+            "properties": {
+                "x": 343360.48348389025,
+                "y": 6334422.36066698,
+                "z": 25,
+                "z_hole": 10,
+                "drillhole_id": 4,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343360.48348389054,
+                    "y": 6334422.36066698,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67900579390998,
+                    -33.11760026153151
+                ]
+            },
+            "properties": {
+                "x": 343353.5736037669,
+                "y": 6334421.53659744,
+                "z": 11.7,
+                "z_hole": 10,
+                "drillhole_id": 2,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343353.5736037664,
+                    "y": 6334421.53659744,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.679008534873,
+                    -33.11766874596634
+                ]
+            },
+            "properties": {
+                "x": 343353.43946462043,
+                "y": 6334413.938842892,
+                "z": 11.66,
+                "z_hole": 10,
+                "drillhole_id": 1,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343353.43946462095,
+                    "y": 6334413.938842891,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67885937526141,
+                    -33.1176455689827
+                ]
+            },
+            "properties": {
+                "x": 343367.31608160073,
+                "y": 6334416.7316294275,
+                "z": 11,
+                "z_hole": 10,
+                "drillhole_id": 5,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343367.31608160096,
+                    "y": 6334416.7316294275,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.6787739551135,
+                    -33.11764440350563
+                ]
+            },
+            "properties": {
+                "x": 343375.2843892634,
+                "y": 6334416.988492568,
+                "z": 12,
+                "z_hole": 10,
+                "drillhole_id": 7,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343375.28438926267,
+                    "y": 6334416.988492569,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -70.67892728335516,
+                    -33.11765921580564
+                ]
+            },
+            "properties": {
+                "x": 343361.0039508155,
+                "y": 6334415.116977202,
+                "z": 11.3,
+                "z_hole": 10,
+                "drillhole_id": 3,
+                "mesh": "peld",
+                "source": "hol_import",
+                "utm_coordinates": {
+                    "x": 343361.0039508141,
+                    "y": 6334415.1169772,
+                    "zone": 19,
+                    "hemisphere": "S"
+                }
+            }
+        }
+    ]
+}

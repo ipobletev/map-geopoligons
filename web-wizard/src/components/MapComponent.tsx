@@ -364,7 +364,6 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
 
                                     return marker;
                                 }
-                                if (key === 'home') icon = HomeIcon;
                                 if (key === 'global_plan_points') {
                                     const poseType = _feature.properties?.pose_type; // Use pose_type instead of type
                                     const graphPose = _feature.properties?.graph_pose;

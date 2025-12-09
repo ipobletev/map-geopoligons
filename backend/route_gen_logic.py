@@ -144,6 +144,10 @@ def generate_routes_logic(
     dfs_to_concat.append(graph_dataframe)
     
     all_together = pd.concat(dfs_to_concat, ignore_index=True)
+    print("finished all together")
+
+    if progress_callback:
+        progress_callback(100)
 
     return {
         'holes_filtered': holes_filtered,

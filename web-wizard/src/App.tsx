@@ -25,7 +25,7 @@ function App() {
           </p>
         </div>
 
-        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} /> */}
 
         <div className="content-transition">
           {activeTab === 'wizard' ? (

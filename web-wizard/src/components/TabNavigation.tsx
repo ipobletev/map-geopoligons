@@ -19,12 +19,12 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange })
                 >
                     {t('tabs.mapWizard')}
                 </button>
-                {/* <button
+                <button
                     onClick={() => onTabChange('route-generator')}
                     className={`tab-button tab-button-margin ${activeTab === 'route-generator' ? 'active' : 'inactive'}`}
                 >
                     {t('tabs.routeGenerator')}
-                </button> */}
+                </button>
             </div>
         </div>
     );

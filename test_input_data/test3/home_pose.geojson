@@ -1,0 +1,37 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "utm_coordinates": [
+                    {
+                        "x": 343346.5779349252,
+                        "y": 6334414.244416071,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    },
+                    {
+                        "x": 343350.10942889453,
+                        "y": 6334415.188255563,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    }
+                ]
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -70.679082,
+                        -33.117665
+                    ],
+                    [
+                        -70.679044,
+                        -33.117657
+                    ]
+                ]
+            }
+        }
+    ]
+}

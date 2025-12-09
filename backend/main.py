@@ -125,6 +125,7 @@ def run_route_generation(
         
         holes_filtered.buffer(0.2).plot(ax=ax, color='k')
         geofence_df.boundary.plot(ax=ax, color='k')
+        progress_queue.put({"type": "progress", "value": 96})
         
         margin = 30.0
         min_x = bounding_box[0]-margin
@@ -159,9 +160,11 @@ def run_route_generation(
         all_together['local_poses']= all_together.apply(lambda row: [ [e[0]- min_x, e[1]-min_y, e[2]] for e in row['poses']] if isinstance(row['poses'], list) else None  , axis=1)
         
         all_together.to_csv(csv_filename)
+        progress_queue.put({"type": "progress", "value": 97})
         
         plt.savefig(map_png_filename, dpi=dpi)
         plt.close(fig)
+        progress_queue.put({"type": "progress", "value": 98})
         
         with open(map_yaml_filename, 'w') as file:
             file.write("image: map.png\n")
@@ -181,6 +184,7 @@ def run_route_generation(
             
         # Generate Arrow GeoJSON
         arrow_geojson = utils.generate_arrow_geojson(graph_dataframe, holes_df.crs)
+        progress_queue.put({"type": "progress", "value": 99})
         
         # Extract fitted streets and transit streets
         streets_fitted = results.get('streets_fitted')
