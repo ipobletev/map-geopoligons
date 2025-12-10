@@ -20,6 +20,51 @@ Este script levantará:
 - **Backend**: En `http://localhost:8000`
 - **Frontend**: En `http://localhost:5173` (o el puerto que asigne Vite)
 
+## Ejecución con Docker
+
+Para una configuración más robusta y aislada, puedes usar Docker:
+
+1.  Asegúrate de tener Docker y Docker Compose instalados.
+2.  Ejecuta el siguiente comando en la raíz del proyecto:
+
+```bash
+# Build and run
+sudo docker compose up --build -d
+
+# Only run
+sudo docker compose up -d
+
+```
+
+Esto iniciará los servicios en los mismos puertos que la ejecución manual:
+-   **Backend Docs**: `http://localhost:8000/docs`
+-   **Frontend**: `http://localhost:5173`
+
+Para detener los servicios:
+```bash
+sudo docker compose stop
+```
+
+## Ejecución Manual
+
+Si prefieres ejecutar los servicios manualmente:
+
+### Backend
+```bash
+cd backend
+# Activar entorno virtual si existe
+source .venv/bin/activate
+# Iniciar servidor
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Frontend
+```bash
+cd web-wizard
+npm install
+npm run dev
+```
+
 ## Estructura del Proyecto
 
 ### 1. Web Wizard (Frontend)
@@ -65,23 +110,3 @@ La aplicación permite transferir los archivos generados (rutas, mapas, etc.) di
 Para entender mejor los algoritmos y herramientas utilizados, consulta la documentación detallada y los notebooks interactivos en el directorio `docs`:
 
 - [**Ver Documentación de Notebooks**](./docs/README.md)
-
-## Ejecución Manual
-
-Si prefieres ejecutar los servicios manualmente:
-
-### Backend
-```bash
-cd backend
-# Activar entorno virtual si existe
-source .venv/bin/activate
-# Iniciar servidor
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend
-```bash
-cd web-wizard
-npm install
-npm run dev
-```
