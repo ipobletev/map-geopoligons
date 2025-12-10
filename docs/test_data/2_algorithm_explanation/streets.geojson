@@ -1,1 +1,79 @@
-{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[[-70.679102,-33.117688],[-70.678711,-33.117627]]}},{"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[[-70.67874,-33.117492],[-70.67912,-33.117575]]}}]}
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "utm_coordinates": [
+                    {
+                        "x": 343345.22626538493,
+                        "y": 6334411.22819843,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    },
+                    {
+                        "x": 343350.26230387425,
+                        "y": 6334417.29799333,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    },
+                    {
+                        "x": 343380.340400946,
+                        "y": 6334421.550604139,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    }
+                ]
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -70.679097,
+                        -33.117692
+                    ],
+                    [
+                        -70.679042,
+                        -33.117638
+                    ],
+                    [
+                        -70.678719,
+                        -33.117604
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "utm_coordinates": [
+                    {
+                        "x": 343379.4270404612,
+                        "y": 6334431.961513998,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    },
+                    {
+                        "x": 343342.261052057,
+                        "y": 6334427.373562535,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    }
+                ]
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -70.678727,
+                        -33.11751
+                    ],
+                    [
+                        -70.679126,
+                        -33.117546
+                    ]
+                ]
+            }
+        }
+    ]
+}
