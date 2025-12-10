@@ -214,6 +214,7 @@ const Wizard = () => {
             setData(newData);
             // Clear generated results when loading new data
             setGenResult(null);
+            setCurrentStepData(null); // Clear any in-progress edits to prevent overwriting loaded data on next step
             setViewMode('raw');
 
             if (loadedCount > 0) {

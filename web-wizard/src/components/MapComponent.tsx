@@ -335,7 +335,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
 
                     return (
                         <GeoJSON
-                            key={key}
+                            key={`${key}-${centerTrigger}`}
                             data={data}
                             style={() => getStyle(key)}
                             pointToLayer={(_feature, latlng) => {
@@ -452,7 +452,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
 
                 {/* Editable Layer for current step */}
                 <EditControl
-                    key={currentStepKey} // Force remount on step change
+                    key={`${currentStepKey}-${centerTrigger}`} // Force remount on step change or data load
                     drawMode={drawMode}
                     currentStepKey={currentStepKey}
                     initialData={existingData[currentStepKey]}
