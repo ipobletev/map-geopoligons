@@ -1,1 +1,37 @@
-{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[[-70.679082,-33.117661],[-70.679061,-33.117711]]}}]}
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "utm_coordinates": [
+                    {
+                        "x": 343346.57083141356,
+                        "y": 6334414.68794218,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    },
+                    {
+                        "x": 343348.6190905048,
+                        "y": 6334409.17524842,
+                        "zone": 19,
+                        "hemisphere": "S"
+                    }
+                ]
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -70.679082,
+                        -33.117661
+                    ],
+                    [
+                        -70.679061,
+                        -33.117711
+                    ]
+                ]
+            }
+        }
+    ]
+}

@@ -394,7 +394,7 @@ const Wizard = () => {
             'road': 'streets.geojson',
             'transit_road': 'transit_streets.geojson',
             'obstacles': 'obstacles.geojson',
-            'tall_obstacle': 'tall_obstacles.geojson'
+            'tall_obstacle': 'high_obstacles.geojson'
         };
 
         // Add all steps to zip
