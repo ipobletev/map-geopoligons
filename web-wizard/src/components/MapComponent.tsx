@@ -15,7 +15,12 @@ const createCustomIcon = (color: string, label?: string) => {
     });
 };
 
-const DefaultIcon = createCustomIcon('#64748b');
+const DefaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
 
 // Custom Icon for drawing holes (matches CircleMarker style)
 const ObjectiveDrawIcon = L.divIcon({
@@ -24,6 +29,22 @@ const ObjectiveDrawIcon = L.divIcon({
     iconSize: [16, 16],
     iconAnchor: [8, 8]
 });
+
+// Custom styles for tooltips
+const tooltipStyles = `
+    .hole-tooltip-small, .node-tooltip {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 10px !important;
+        font-weight: bold;
+        color: #333;
+        padding: 0 !important;
+    }
+    .hole-tooltip-small {
+        color: #b45309; /* Dark yellow/orange for holes */
+    }
+`;
 
 // Override default marker icon for Leaflet Draw if needed
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -322,156 +343,212 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
     };
 
     return (
-        <div className="h-full w-full rounded-lg overflow-hidden shadow-xl border border-slate-200">
-            <MapContainer
-                center={[-33.4489, -70.6693]}
-                zoom={15}
-                style={{ height: '100%', width: '100%' }}
-                ref={setMap}
-                maxZoom={22}
-            >
-                <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <ScaleControl position="bottomleft" />
-                <MousePosition />
+        <>
+            <style>{tooltipStyles}</style>
+            <div className="h-full w-full rounded-lg overflow-hidden shadow-xl border border-slate-200">
+                <MapContainer
+                    center={[-33.4489, -70.6693]}
+                    zoom={15}
+                    style={{ height: '100%', width: '100%' }}
+                    ref={setMap}
+                    maxZoom={22}
+                >
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <ScaleControl position="bottomleft" />
+                    <MousePosition />
 
-                {/* Static Layers from other steps */}
-                {Object.entries(existingData).map(([key, data]) => {
-                    if (key === currentStepKey) return null; // Don't show current as static
-                    if (!data || !data.type || !data.features || data.features.length === 0) return null;
+                    {/* Static Layers from other steps */}
+                    {Object.entries(existingData).map(([key, layerData]) => {
+                        if (key === currentStepKey) return null; // Don't show current as static
+                        if (!layerData || !layerData.type || !layerData.features || layerData.features.length === 0) return null;
 
-                    return (
-                        <GeoJSON
-                            key={`${key}-${centerTrigger}`}
-                            data={data}
-                            style={() => getStyle(key)}
-                            pointToLayer={(_feature, latlng) => {
-                                let icon = DefaultIcon;
-                                if (key === 'objective') {
-                                    // Get drillhole_id from feature properties
-                                    const drillholeId = _feature.properties?.drillhole_id;
-                                    const marker = L.circleMarker(latlng, {
-                                        radius: 8,
-                                        fillColor: '#000000',
-                                        color: '#0077ffff',
-                                        weight: 2,
-                                        opacity: 0.5,
-                                        fillOpacity: 0.3
-                                    });
+                        return (
+                            <GeoJSON
+                                key={key === 'interactive_path' && (layerData as any)._updateId ? `${key}-${(layerData as any)._updateId}` : key}
+                                data={layerData}
+                                style={() => getStyle(key)}
+                                pointToLayer={(_feature, latlng) => {
+                                    let icon = DefaultIcon;
+                                    if (key === 'objective') {
+                                        // Get drillhole_id from feature properties
+                                        const drillholeId = _feature.properties?.drillhole_id;
+                                        const marker = L.circleMarker(latlng, {
+                                            radius: 3,
+                                            fillColor: '#000000',
+                                            color: '#0077ffff',
+                                            weight: 2,
+                                            opacity: 0.5,
+                                            fillOpacity: 0.3
+                                        });
 
-                                    // Add label if drillhole_id exists
-                                    if (drillholeId !== undefined && drillholeId !== null) {
-                                        marker.bindTooltip(String(drillholeId), {
-                                            permanent: true,
-                                            direction: 'top',
-                                            className: 'drillhole-tooltip-square',
-                                            offset: [0, -10],
+                                        // Add label if drillhole_id exists
+                                        if (drillholeId !== undefined && drillholeId !== null) {
+                                            marker.bindTooltip(String(drillholeId), {
+                                                permanent: true,
+                                                direction: 'top',
+                                                className: 'hole-tooltip-small',
+                                                offset: [0, -5],
+                                            });
+                                        }
+
+                                        return marker;
+                                    }
+                                    if (key === 'global_plan_points') {
+                                        const poseType = _feature.properties?.pose_type; // Use pose_type instead of type
+                                        const graphPose = _feature.properties?.graph_pose;
+                                        let rotation = 0;
+
+                                        // Parse rotation from graph_pose if available
+                                        if (graphPose) {
+                                            try {
+                                                let pose = graphPose;
+                                                if (typeof pose === 'string') {
+                                                    pose = JSON.parse(pose.replace(/'/g, '"'));
+                                                }
+                                                if (Array.isArray(pose) && pose.length > 2) {
+                                                    rotation = pose[2]; // Assuming theta is at index 2
+                                                }
+                                            } catch (e) {
+                                                console.warn('Error parsing graph_pose for rotation', e);
+                                            }
+                                        }
+
+                                        // Custom Icons based on pose_type from global_plan.csv
+                                        if (poseType === 'hole') {
+                                            // Use yellow arrow for holes
+                                            const degrees = (rotation * 180) / Math.PI;
+                                            const marker = L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-arrow',
+                                                    html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
+                                                    iconSize: [20, 20],
+                                                    iconAnchor: [10, 10]
+                                                })
+                                            });
+
+                                            return marker;
+                                        } else if (poseType === 'transit_street') {
+                                            return L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-transit',
+                                                    html: `<div style="font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">z</div>`,
+                                                    iconSize: [20, 20],
+                                                    iconAnchor: [10, 10]
+                                                })
+                                            });
+                                        } else if (poseType === 'street') {
+                                            // Convert rotation to degrees for CSS
+                                            const degrees = (rotation * 180) / Math.PI;
+                                            return L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-arrow',
+                                                    html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
+                                                    iconSize: [20, 20],
+                                                    iconAnchor: [10, 10]
+                                                })
+                                            });
+                                        } else if (poseType === 'home_pose') {
+                                            // Convert rotation to degrees for CSS
+                                            const degrees = (rotation * 180) / Math.PI;
+                                            return L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-arrow',
+                                                    html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: blue; text-align: center; line-height: 1;">&gt;</div>`,
+                                                    iconSize: [20, 20],
+                                                    iconAnchor: [10, 10]
+                                                })
+                                            });
+                                        }
+
+                                        // Fallback for unknown types
+                                        return L.circleMarker(latlng, {
+                                            radius: 4,
+                                            fillColor: '#ea0808ff',
+                                            color: '#fff',
+                                            weight: 1,
+                                            opacity: 1,
+                                            fillOpacity: 0.8
                                         });
                                     }
 
-                                    return marker;
-                                }
-                                if (key === 'global_plan_points') {
-                                    const poseType = _feature.properties?.pose_type; // Use pose_type instead of type
-                                    const graphPose = _feature.properties?.graph_pose;
-                                    let rotation = 0;
-
-                                    // Parse rotation from graph_pose if available
-                                    if (graphPose) {
-                                        try {
-                                            let pose = graphPose;
-                                            if (typeof pose === 'string') {
-                                                pose = JSON.parse(pose.replace(/'/g, '"'));
+                                    // Interactive Path Markers (Start, End, Robot)
+                                    if (key === 'interactive_path') {
+                                        if (_feature.properties?.style === 'path-start') {
+                                            return L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-start',
+                                                    html: `<div style="background-color: #22c55e; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>`,
+                                                    iconSize: [14, 14],
+                                                    iconAnchor: [7, 7]
+                                                })
+                                            });
+                                        } else if (_feature.properties?.style === 'path-end') {
+                                            return L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-end',
+                                                    html: `<div style="background-color: #9333ea; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></div>`,
+                                                    iconSize: [14, 14],
+                                                    iconAnchor: [7, 7]
+                                                })
+                                            });
+                                        } else if (_feature.properties?.style === 'robot-pose') {
+                                            return L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-robot',
+                                                    html: `<div style="background-color: #3b82f6; width: 20px; height: 20px; border-radius: 2px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transform: rotate(45deg);"></div>`,
+                                                    iconSize: [24, 24],
+                                                    iconAnchor: [12, 12]
+                                                }),
+                                                zIndexOffset: 1000 // Ensure robot is on top
+                                            });
+                                        } else if (_feature.properties?.style === 'path-node') {
+                                            const marker = L.circleMarker(latlng, {
+                                                radius: 2,
+                                                fillColor: '#334155',
+                                                color: '#ffffff',
+                                                weight: 1,
+                                                opacity: 0.8,
+                                                fillOpacity: 0.8
+                                            });
+                                            if (_feature.properties?.id) {
+                                                marker.bindTooltip(String(_feature.properties.id), {
+                                                    permanent: true,
+                                                    direction: 'top',
+                                                    className: 'node-tooltip',
+                                                    offset: [0, -5]
+                                                });
                                             }
-                                            if (Array.isArray(pose) && pose.length > 2) {
-                                                rotation = pose[2]; // Assuming theta is at index 2
-                                            }
-                                        } catch (e) {
-                                            console.warn('Error parsing graph_pose for rotation', e);
+                                            return marker;
                                         }
                                     }
 
-                                    // Custom Icons based on pose_type from global_plan.csv
-                                    if (poseType === 'hole') {
-                                        // Use yellow arrow for holes
-                                        const degrees = (rotation * 180) / Math.PI;
-                                        const marker = L.marker(latlng, {
-                                            icon: L.divIcon({
-                                                className: 'custom-icon-arrow',
-                                                html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
-                                                iconSize: [20, 20],
-                                                iconAnchor: [10, 10]
-                                            })
-                                        });
-
-                                        return marker;
-                                    } else if (poseType === 'transit_street') {
-                                        return L.marker(latlng, {
-                                            icon: L.divIcon({
-                                                className: 'custom-icon-transit',
-                                                html: `<div style="font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">z</div>`,
-                                                iconSize: [20, 20],
-                                                iconAnchor: [10, 10]
-                                            })
-                                        });
-                                    } else if (poseType === 'street') {
-                                        // Convert rotation to degrees for CSS
-                                        const degrees = (rotation * 180) / Math.PI;
-                                        return L.marker(latlng, {
-                                            icon: L.divIcon({
-                                                className: 'custom-icon-arrow',
-                                                html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
-                                                iconSize: [20, 20],
-                                                iconAnchor: [10, 10]
-                                            })
-                                        });
-                                    } else if (poseType === 'home_pose') {
-                                        // Convert rotation to degrees for CSS
-                                        const degrees = (rotation * 180) / Math.PI;
-                                        return L.marker(latlng, {
-                                            icon: L.divIcon({
-                                                className: 'custom-icon-arrow',
-                                                html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: blue; text-align: center; line-height: 1;">&gt;</div>`,
-                                                iconSize: [20, 20],
-                                                iconAnchor: [10, 10]
-                                            })
-                                        });
-                                    }
-
-                                    // Fallback for unknown types
-                                    return L.circleMarker(latlng, {
-                                        radius: 4,
-                                        fillColor: '#ea0808ff',
-                                        color: '#fff',
-                                        weight: 1,
-                                        opacity: 1,
-                                        fillOpacity: 0.8
-                                    });
+                                    return L.marker(latlng, { icon: icon });
                                 }
-                                return L.marker(latlng, { icon: icon });
-                            }}
-                            onEachFeature={(_feature, layer) => {
-                                layer.bindPopup(`<b>${key}</b><br/>Saved step`);
-                            }}
-                        />
-                    );
-                })}
+                                }
+                                onEachFeature={(_feature, layer) => {
+                                    layer.bindPopup(`<b>${key}</b><br/>Saved step`);
+                                }}
+                            />
+                        );
+                    })}
 
-                {/* Editable Layer for current step */}
-                <EditControl
-                    key={`${currentStepKey}-${centerTrigger}`} // Force remount on step change or data load
-                    drawMode={drawMode}
-                    currentStepKey={currentStepKey}
-                    initialData={existingData[currentStepKey]}
-                    onCreated={handleChange}
-                    onEdited={handleChange}
-                    onDeleted={handleChange}
-                    featureGroupRef={featureGroupRef}
-                />
-            </MapContainer>
-        </div>
+                    {/* Editable Layer for current step */}
+                    <EditControl
+                        key={`${currentStepKey}-${centerTrigger}`} // Force remount on step change or data load
+                        drawMode={drawMode}
+                        currentStepKey={currentStepKey}
+                        initialData={existingData[currentStepKey]}
+                        onCreated={handleChange}
+                        onEdited={handleChange}
+                        onDeleted={handleChange}
+                        featureGroupRef={featureGroupRef}
+                    />
+                </MapContainer>
+            </div>
+        </>
     );
 };
 

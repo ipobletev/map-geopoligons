@@ -48,6 +48,8 @@ const Wizard = () => {
     const [calculatedPath, setCalculatedPath] = useState<any[] | null>(null);
     const [pathLoading, setPathLoading] = useState(false);
     const [pathProgress, setPathProgress] = useState(0);
+    const [pathRevision, setPathRevision] = useState(0);
+    const [activeTab, setActiveTab] = useState<'load' | 'details'>('load');
 
     // Translate steps dynamically
     const steps = WIZARD_STEPS.map(step => ({
@@ -601,6 +603,7 @@ const Wizard = () => {
             if (data.status === 'success') {
                 setCalculatedPath(data.path);
                 setPathProgress(0);
+                setPathRevision(prev => prev + 1);
                 setCenterTrigger(prev => prev + 1);
             } else {
                 alert('Path calculation failed: ' + data.message);
@@ -654,18 +657,77 @@ const Wizard = () => {
                 'geofence': data['geofence'],
                 'home': data['home'],
                 'obstacles': data['obstacles'],
-                'obstacles': data['obstacles'],
                 'high_obstacles': data['tall_obstacle'],
                 'interactive_path': calculatedPath ? {
                     type: 'FeatureCollection',
-                    features: [{
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: calculatedPath.map((p: any) => [p.lon, p.lat])
-                        },
-                        properties: { style: 'interactive-path' }
-                    }]
+                    _updateId: `${pathProgress}-${pathRevision}`,
+                    features: (() => {
+                        const features: any[] = [{
+                            type: 'Feature',
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: calculatedPath.map((p: any) => [p.lon, p.lat])
+                            },
+                            properties: { style: 'interactive-path' }
+                        }];
+
+                        // Add markers for all path nodes to show IDs
+                        calculatedPath.forEach((p: any) => {
+                            features.push({
+                                type: 'Feature',
+                                geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+                                properties: { style: 'path-node', id: p.id }
+                            });
+                        });
+
+                        // Add markers for all path nodes to show IDs
+                        calculatedPath.forEach((p: any) => {
+                            features.push({
+                                type: 'Feature',
+                                geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+                                properties: { style: 'path-node', id: p.id }
+                            });
+                        });
+
+                        if (calculatedPath.length > 0) {
+                            // Start Point
+                            const start = calculatedPath[0];
+                            features.push({
+                                type: 'Feature',
+                                geometry: { type: 'Point', coordinates: [start.lon, start.lat] },
+                                properties: { style: 'path-start', label: 'Start' }
+                            });
+                            // End Point
+                            const end = calculatedPath[calculatedPath.length - 1];
+                            features.push({
+                                type: 'Feature',
+                                geometry: { type: 'Point', coordinates: [end.lon, end.lat] },
+                                properties: { style: 'path-end', label: 'End' }
+                            });
+
+                            // Robot Position
+                            if (calculatedPath.length >= 2) {
+                                const totalSegments = calculatedPath.length - 1;
+                                const exactIndex = (pathProgress / 100) * totalSegments;
+                                const idx = Math.floor(exactIndex);
+                                const t = exactIndex - idx;
+
+                                const p1 = calculatedPath[Math.min(idx, calculatedPath.length - 1)];
+                                const p2 = calculatedPath[Math.min(idx + 1, calculatedPath.length - 1)];
+
+                                // Interpolate Lat/Lon
+                                const rlon = p1.lon + (p2.lon - p1.lon) * t;
+                                const rlat = p1.lat + (p2.lat - p1.lat) * t;
+
+                                features.push({
+                                    type: 'Feature',
+                                    geometry: { type: 'Point', coordinates: [rlon, rlat] },
+                                    properties: { style: 'robot-pose', label: 'Robot' }
+                                });
+                            }
+                        }
+                        return features;
+                    })()
                 } : null,
                 // Add any other generated layers if available
                 'global_plan_points': genResult.global_plan_points ? genResult.global_plan_points : (() => {
@@ -723,165 +785,181 @@ const Wizard = () => {
                     </h1>
                     <p className="wizard-subtitle">{t('wizard.subtitle')}</p>
 
-                    <div className="sidebar-actions-grid">
+                    <div className="flex border-b border-slate-200 mb-4">
                         <button
-                            onClick={handleClearAll}
-                            className="btn-action-red"
-                            title="Delete all figures"
+                            className={`flex-1 py-2 text-sm font-medium ${activeTab === 'load' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            onClick={() => setActiveTab('load')}
                         >
-                            <Trash2 className="w-3 h-3" /> {t('wizard.clearAll')}
+                            Carga
                         </button>
                         <button
-                            onClick={handleCenterMap}
-                            className="btn-action-blue"
-                            title="Center map on data"
+                            className={`flex-1 py-2 text-sm font-medium ${activeTab === 'details' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            onClick={() => setActiveTab('details')}
                         >
-                            <Upload className="w-3 h-3 rotate-90" /> {t('wizard.centerMap')}
+                            Detalles
                         </button>
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="btn-action-slate"
-                            title="Load GeoJSON"
-                        >
-                            <Upload className="w-3 h-3" /> {t('wizard.loadJson')}
-                        </button>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleLoadGeoJSON}
-                            accept=".geojson,.json,.hol"
-                            className="hidden"
-                        />
-                        <button
-                            onClick={() => folderInputRef.current?.click()}
-                            className="btn-action-slate"
-                            title="Load Folder"
-                        >
-                            <Folder className="w-3 h-3" /> {t('wizard.loadFolder')}
-                        </button>
-                        <input
-                            type="file"
-                            ref={folderInputRef}
-                            onChange={handleLoadFolder}
-                            // @ts-ignore
-                            webkitdirectory=""
-                            directory=""
-                            multiple
-                            className="hidden"
-                        />
-                        <button
-                            onClick={() => resultInputRef.current?.click()}
-                            className="btn-action-slate"
-                            title="Load Result File"
-                        >
-                            <Upload className="w-3 h-3" /> {t('Load Result')}
-                        </button>
-                        <input
-                            type="file"
-                            ref={resultInputRef}
-                            onChange={handleLoadResultFile}
-                            accept=".csv,.json,.geojson"
-                            className="hidden"
-                        />
                     </div>
                 </div>
 
-                {/* View Mode Toggle */}
-                {/* View Mode Toggle removed from here */}
-
-                <div className="steps-container">
-                    {steps.map((step, index) => {
-                        const isActive = index === currentStepIndex;
-                        const hasData = !!data[step.key];
-
-                        return (
-                            <div
-                                key={step.key}
-                                onClick={() => handleStepClick(index)}
-                                className={`step-item ${isActive
-                                    ? 'step-item-active'
-                                    : hasData
-                                        ? 'step-item-completed'
-                                        : 'step-item-inactive'
-                                    }`}
+                {activeTab === 'load' && (
+                    <>
+                        <div className="sidebar-actions-grid p-4 pt-0">
+                            <button
+                                onClick={handleClearAll}
+                                className="btn-action-red"
+                                title="Delete all figures"
                             >
-                                <div className="step-header">
-                                    <span className={`step-number ${isActive ? 'step-number-active' : 'step-number-inactive'
-                                        }`}>
-                                        {t('wizard.step')} {index + 1}
-                                    </span>
-                                    {hasData && (
-                                        <div className="step-status-wrapper">
-                                            <CheckCircle className="w-4 h-4 text-green-500" />
-                                            <button
-                                                onClick={(e) => handleClearStep(step.key, e)}
-                                                className="btn-clear-step"
-                                                title="Clear step data"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                <Trash2 className="w-3 h-3" /> {t('wizard.clearAll')}
+                            </button>
+                            <button
+                                onClick={handleCenterMap}
+                                className="btn-action-blue"
+                                title="Center map on data"
+                            >
+                                <Upload className="w-3 h-3 rotate-90" /> {t('wizard.centerMap')}
+                            </button>
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="btn-action-slate"
+                                title="Load GeoJSON"
+                            >
+                                <Upload className="w-3 h-3" /> {t('wizard.loadJson')}
+                            </button>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleLoadGeoJSON}
+                                accept=".geojson,.json,.hol"
+                                className="hidden"
+                            />
+                            <button
+                                onClick={() => folderInputRef.current?.click()}
+                                className="btn-action-slate"
+                                title="Load Folder"
+                            >
+                                <Folder className="w-3 h-3" /> {t('wizard.loadFolder')}
+                            </button>
+                            <input
+                                type="file"
+                                ref={folderInputRef}
+                                onChange={handleLoadFolder}
+                                // @ts-ignore
+                                webkitdirectory=""
+                                directory=""
+                                multiple
+                                className="hidden"
+                            />
+                            <button
+                                onClick={() => resultInputRef.current?.click()}
+                                className="btn-action-slate"
+                                title="Load Result File"
+                            >
+                                <Upload className="w-3 h-3" /> {t('Load Result')}
+                            </button>
+                            <input
+                                type="file"
+                                ref={resultInputRef}
+                                onChange={handleLoadResultFile}
+                                accept=".csv,.json,.geojson"
+                                className="hidden"
+                            />
+                        </div>
+
+                        <div className="steps-container">
+                            {steps.map((step, index) => {
+                                const isActive = index === currentStepIndex;
+                                const hasData = !!data[step.key];
+
+                                return (
+                                    <div
+                                        key={step.key}
+                                        onClick={() => handleStepClick(index)}
+                                        className={`step-item ${isActive
+                                            ? 'step-item-active'
+                                            : hasData
+                                                ? 'step-item-completed'
+                                                : 'step-item-inactive'
+                                            }`}
+                                    >
+                                        <div className="step-header">
+                                            <span className={`step-number ${isActive ? 'step-number-active' : 'step-number-inactive'
+                                                }`}>
+                                                {t('wizard.step')} {index + 1}
+                                            </span>
+                                            {hasData && (
+                                                <div className="step-status-wrapper">
+                                                    <CheckCircle className="w-4 h-4 text-green-500" />
+                                                    <button
+                                                        onClick={(e) => handleClearStep(step.key, e)}
+                                                        className="btn-clear-step"
+                                                        title="Clear step data"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+                                        <h3 className={`step-label ${isActive ? 'step-label-active' : 'step-label-inactive'}`}>
+                                            {step.label}
+                                        </h3>
+                                        <p className="step-desc">
+                                            {step.description}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="sidebar-footer">
+                            <div className="footer-actions">
+                                <div className="nav-buttons-row">
+                                    <button
+                                        onClick={handlePrev}
+                                        disabled={currentStepIndex === 0}
+                                        className="btn-nav-back"
+                                    >
+                                        <ArrowLeft className="w-4 h-4" />
+                                        {t('wizard.back')}
+                                    </button>
+                                    <button
+                                        onClick={handleNext}
+                                        disabled={isLastStep}
+                                        className="btn-nav-next"
+                                    >
+                                        {t('wizard.next')}
+                                        <ArrowRight className="w-4 h-4" />
+                                    </button>
                                 </div>
-                                <h3 className={`step-label ${isActive ? 'step-label-active' : 'step-label-inactive'}`}>
-                                    {step.label}
-                                </h3>
-                                <p className="step-desc">
-                                    {step.description}
-                                </p>
+                                <button
+                                    onClick={handleGenerateRoute}
+                                    disabled={generating}
+                                    className="btn-generate-route"
+                                >
+                                    {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="w-4 h-4" /> {t('wizard.generateRoute')}</>}
+                                </button>
+                                <div className="nav-buttons-row">
+                                    <button
+                                        onClick={handleSaveAll}
+                                        className="btn-download-all"
+                                    >
+                                        <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowTransferModal(true)}
+                                        className="btn-transfer"
+                                        title="Transfer files via SCP"
+                                    >
+                                        <Send className="w-4 h-4" /> {t('Transfer')}
+                                    </button>
+                                </div>
                             </div>
-                        );
-                    })}
-                </div>
-
-                <div className="sidebar-footer">
-                    <div className="footer-actions">
-                        <div className="nav-buttons-row">
-                            <button
-                                onClick={handlePrev}
-                                disabled={currentStepIndex === 0}
-                                className="btn-nav-back"
-                            >
-                                <ArrowLeft className="w-4 h-4" />
-                                {t('wizard.back')}
-                            </button>
-                            <button
-                                onClick={handleNext}
-                                disabled={isLastStep}
-                                className="btn-nav-next"
-                            >
-                                {t('wizard.next')}
-                                <ArrowRight className="w-4 h-4" />
-                            </button>
                         </div>
-                        <button
-                            onClick={handleGenerateRoute}
-                            disabled={generating}
-                            className="btn-generate-route"
-                        >
-                            {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="w-4 h-4" /> {t('wizard.generateRoute')}</>}
-                        </button>
-                        <div className="nav-buttons-row">
-                            <button
-                                onClick={handleSaveAll}
-                                className="btn-download-all"
-                            >
-                                <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
-                            </button>
-                            <button
-                                onClick={() => setShowTransferModal(true)}
-                                className="btn-transfer"
-                                title="Transfer files via SCP"
-                            >
-                                <Send className="w-4 h-4" /> {t('Transfer')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    </>
+                )}
 
-                {/* Path Interaction Section - Only visible when generated */}
-                {viewMode === 'generated' && (
-                    <div className="mt-auto pt-4 border-t border-slate-200">
+                {/* Path Interaction Section - Visible in Details tab */}
+                {activeTab === 'details' && (
+                    <div className="mt-auto pt-4 border-t border-slate-200 h-full overflow-y-auto">
                         <h3 className="text-sm font-semibold text-slate-700 mb-2">Path Finder</h3>
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-2">
