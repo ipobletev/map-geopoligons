@@ -294,6 +294,15 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
         else if (key === 'high_obstacles' || key === 'tall_obstacle') color = '#ef4444'; // Red for high obstacles
         else if (key === 'routes') color = '#eab308';
         else if (key === 'global_plan_points') color = '#eab308';
+        else if (key === 'interactive_path') {
+            return {
+                color: '#2563eb', // Mobile-blue / Primary
+                weight: 5,
+                opacity: 0.8,
+                dashArray: '10, 10',
+                lineCap: 'round'
+            };
+        }
         else {
             // Generate a consistent color based on the key string
             let hash = 0;

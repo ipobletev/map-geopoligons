@@ -41,6 +41,14 @@ const Wizard = () => {
         use_transit_streets: true
     });
 
+    // Path Finding State
+    const [pathNodes, setPathNodes] = useState<{ id: number, label: string, type: string }[]>([]);
+    const [pathStart, setPathStart] = useState<string>('');
+    const [pathEnd, setPathEnd] = useState<string>('');
+    const [calculatedPath, setCalculatedPath] = useState<any[] | null>(null);
+    const [pathLoading, setPathLoading] = useState(false);
+    const [pathProgress, setPathProgress] = useState(0);
+
     // Translate steps dynamically
     const steps = WIZARD_STEPS.map(step => ({
         ...step,
@@ -557,6 +565,54 @@ const Wizard = () => {
         }
     };
 
+    const fetchGraphNodes = async () => {
+        try {
+            const response = await fetch('/api/graph-nodes');
+            if (response.ok) {
+                const data = await response.json();
+                setPathNodes(data.nodes);
+                // Set defaults if available
+                const home = data.nodes.find((n: any) => n.label.includes('Home'));
+                if (home) setPathStart(home.id.toString());
+            }
+        } catch (e) {
+            console.error('Error fetching graph nodes:', e);
+        }
+    };
+
+    // Fetch nodes when generation succeeds or result loaded
+    if (viewMode === 'generated' && pathNodes.length === 0 && genResult) {
+        fetchGraphNodes();
+    }
+
+    const handleCalculatePath = async () => {
+        if (!pathStart || !pathEnd) {
+            alert(t('Select start and end nodes'));
+            return;
+        }
+        setPathLoading(true);
+        try {
+            const response = await fetch('/api/calculate-path', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ start_node: parseInt(pathStart), end_node: parseInt(pathEnd) })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                setCalculatedPath(data.path);
+                setPathProgress(0);
+                setCenterTrigger(prev => prev + 1);
+            } else {
+                alert('Path calculation failed: ' + data.message);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error calculating path');
+        } finally {
+            setPathLoading(false);
+        }
+    };
+
     const handleTransfer = async (transferData: any) => {
         setIsTransferring(true);
         try {
@@ -598,7 +654,19 @@ const Wizard = () => {
                 'geofence': data['geofence'],
                 'home': data['home'],
                 'obstacles': data['obstacles'],
+                'obstacles': data['obstacles'],
                 'high_obstacles': data['tall_obstacle'],
+                'interactive_path': calculatedPath ? {
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: calculatedPath.map((p: any) => [p.lon, p.lat])
+                        },
+                        properties: { style: 'interactive-path' }
+                    }]
+                } : null,
                 // Add any other generated layers if available
                 'global_plan_points': genResult.global_plan_points ? genResult.global_plan_points : (() => {
                     // If global_plan_points is not pre-calculated (e.g. from fresh generation), calculate it here
@@ -801,25 +869,194 @@ const Wizard = () => {
                                 <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
                             </button>
                             <button
-                                onClick={handleDownloadGenerated}
-                                disabled={!genResult}
-                                className="btn-download-routes"
-                                title="Download generated route files"
+                                onClick={() => setShowTransferModal(true)}
+                                className="btn-transfer"
+                                title="Transfer files via SCP"
                             >
-                                <Download className="w-4 h-4" /> {t('wizard.downloadRoutes')}
+                                <Send className="w-4 h-4" /> {t('Transfer')}
                             </button>
                         </div>
-                        <button
-                            onClick={() => setShowTransferModal(true)}
-                            disabled={!genResult}
-                            className="btn-download-routes bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                        >
-                            <Send className="w-4 h-4" /> Transfer
-                        </button>
                     </div>
                 </div>
+
+                {/* Path Interaction Section - Only visible when generated */}
+                {viewMode === 'generated' && (
+                    <div className="mt-auto pt-4 border-t border-slate-200">
+                        <h3 className="text-sm font-semibold text-slate-700 mb-2">Path Finder</h3>
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-500 mb-1">Start Node</label>
+                                    <select
+                                        value={pathStart}
+                                        onChange={(e) => setPathStart(e.target.value)}
+                                        className="w-full text-sm border-slate-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">Select Start</option>
+                                        {pathNodes.map(node => (
+                                            <option key={node.id} value={node.id}>{node.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-500 mb-1">End Node</label>
+                                    <select
+                                        value={pathEnd}
+                                        onChange={(e) => setPathEnd(e.target.value)}
+                                        className="w-full text-sm border-slate-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">Select End</option>
+                                        {pathNodes.map(node => (
+                                            <option key={node.id} value={node.id}>{node.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleCalculatePath}
+                                disabled={pathLoading}
+                                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                            >
+                                {pathLoading ? (
+                                    <>
+                                        <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                                        Calculating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Play className="w-4 h-4 fill-current" /> Calculate Path
+                                    </>
+                                )}
+                            </button>
+
+                            {calculatedPath && (
+                                <div className="mt-4 p-3 bg-slate-50 rounded border border-slate-200">
+                                    <div className="mb-2">
+                                        <label className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                                            <span>Robot Simulation</span>
+                                            <span>{pathProgress}%</span>
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={pathProgress}
+                                            onChange={(e) => setPathProgress(parseInt(e.target.value))}
+                                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                        />
+                                    </div>
+
+                                    <div className="font-mono text-[10px] leading-tight text-slate-700 overflow-x-auto whitespace-pre bg-white p-2 rounded border border-slate-200 shadow-inner max-h-[200px] overflow-y-auto">
+                                        {(() => {
+                                            // 1. Calculate Robot Pose based on progress
+                                            if (!calculatedPath || calculatedPath.length < 2) return "";
+
+                                            const totalSegments = calculatedPath.length - 1;
+                                            const exactIndex = (pathProgress / 100) * totalSegments;
+                                            const idx = Math.floor(exactIndex);
+                                            const t = exactIndex - idx;
+
+                                            // Safety check
+                                            if (idx >= calculatedPath.length - 1) {
+                                                const last = calculatedPath[calculatedPath.length - 1];
+                                                // Handle logic for last point similar to inside loop
+                                                // ... (Simplified for updating View)
+                                            }
+
+                                            const p1 = calculatedPath[Math.min(idx, calculatedPath.length - 1)];
+                                            const p2 = calculatedPath[Math.min(idx + 1, calculatedPath.length - 1)];
+
+                                            // Interpolate Robot Pose (Global Plan coords are typically local for simulation, but we use them as is)
+                                            // Use x,y from path which are local/UTM (not lat/lon) for consistent distance calc
+                                            const rx = p1.x + (p2.x - p1.x) * t;
+                                            const ry = p1.y + (p2.y - p1.y) * t;
+                                            // Interpolate Angle
+                                            // Shortest path interpolation for angle
+                                            let a1 = p1.theta;
+                                            let a2 = p2.theta;
+                                            let da = a2 - a1;
+                                            while (da > Math.PI) da -= 2 * Math.PI;
+                                            while (da < -Math.PI) da += 2 * Math.PI;
+                                            const rtheta = a1 + da * t;
+
+                                            // 2. Find Nearest Street Pose
+                                            // Using genResult.global_plan_points which contains all graph nodes
+                                            let min_dist = Infinity;
+                                            let nearest_pose: any = null;
+                                            let nearest_id = -1;
+
+                                            // Filter for street nodes from cached data if possible, or just iterate all
+                                            if (genResult && genResult.global_plan_points && genResult.global_plan_points.features) {
+                                                for (const f of genResult.global_plan_points.features) {
+                                                    const props = f.properties;
+                                                    // Check if type is street (or home/transit? usually just street for compliance)
+                                                    if (props.pose_type === 'street' || props.pose_type === 'transit_street' || props.pose_type === 'home_pose') {
+                                                        // Parse coords
+                                                        let px = 0, py = 0, pth = 0;
+                                                        // Using local coords if available for distance check?
+                                                        // Graph points features usually have lat/lon in geometry, but properties might have local
+                                                        // Let's use properties.graph_pose_local if available, else standard
+                                                        try {
+                                                            if (props.graph_pose_local) {
+                                                                const parts = JSON.parse(props.graph_pose_local);
+                                                                px = parts[0]; py = parts[1]; pth = parts[2];
+                                                            } else if (props.graph_pose) {
+                                                                // Use whatever is there
+                                                                const parts = typeof props.graph_pose === 'string' ? JSON.parse(props.graph_pose.replace(/'/g, '"')) : props.graph_pose;
+                                                                px = parts[0]; py = parts[1]; pth = parts[2];
+                                                            }
+                                                        } catch (e) { continue; }
+
+                                                        const d = Math.sqrt(Math.pow(px - rx, 2) + Math.pow(py - ry, 2));
+                                                        if (d < min_dist) {
+                                                            min_dist = d;
+                                                            nearest_pose = { x: px, y: py, theta: pth };
+                                                            nearest_id = props.graph_id;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // 3. Calculate Assigned & Recovery
+                                            let assigned_pose = nearest_pose ? { ...nearest_pose } : null;
+                                            if (min_dist > 2.0) {
+                                                assigned_pose = { x: rx, y: ry, theta: rtheta };
+                                            }
+
+                                            let recovery_pose = null;
+                                            if (assigned_pose) {
+                                                const rec_dist = -2.0;
+                                                recovery_pose = {
+                                                    x: assigned_pose.x + rec_dist * Math.cos(assigned_pose.theta),
+                                                    y: assigned_pose.y + rec_dist * Math.sin(assigned_pose.theta),
+                                                    theta: assigned_pose.theta
+                                                };
+                                            }
+
+                                            // Formatting Output
+                                            const pathIds = calculatedPath.map(p => p.id);
+                                            const waypointsStr = calculatedPath.map(p => `${p.id}(${p.x.toFixed(1)}, ${p.y.toFixed(1)})`).join(', ');
+
+                                            return (
+                                                <>
+                                                    <div>Nodos del camino ({calculatedPath.length}): [{pathIds.join(', ')}]</div>
+                                                    <div className="mt-1">Poses Waypoints: {waypointsStr}</div>
+                                                    <div className="mt-1 font-bold text-blue-700">Robot Pose:     x={rx.toFixed(2)}, y={ry.toFixed(2)}</div>
+                                                    <div className="text-green-700">Nearest Pose:   x={nearest_pose?.x.toFixed(2) || 'N/A'}, y={nearest_pose?.y.toFixed(2) || 'N/A'}</div>
+                                                    <div className="text-purple-700">Assigned Pose:  x={assigned_pose?.x.toFixed(2) || 'N/A'}, y={assigned_pose?.y.toFixed(2) || 'N/A'}</div>
+                                                    <div className="text-red-700">Recovery Pose:  x={recovery_pose?.x.toFixed(2) || 'N/A'}, y={recovery_pose?.y.toFixed(2) || 'N/A'}</div>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
+
 
             <TransferModal
                 isOpen={showTransferModal}

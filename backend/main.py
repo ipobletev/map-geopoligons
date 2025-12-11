@@ -300,7 +300,18 @@ async def generate_routes(
                     item = progress_queue.get(timeout=1)
                     yield json.dumps(item) + "\n"
                     
-                    if item["type"] in ["result", "error"]:
+                    if item["type"] == "result":
+                        # Auto-load graph after success
+                        csv_path = os.path.join(GENERATED_DIR, 'global_plan.csv')
+                        if os.path.exists(csv_path):
+                            print("Auto-loading Global Plan Graph...")
+                            try:
+                                import path_finding
+                                path_finding.graph_manager.load_graph_from_csv(csv_path)
+                            except Exception as e:
+                                print(f"Error auto-loading graph: {e}")
+                        break
+                    elif item["type"] == "error":
                         break
                 except queue.Empty:
                     if not thread.is_alive():
@@ -359,3 +370,38 @@ async def transfer_files(req: TransferRequest):
 
     except Exception as e:
         return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+
+class PathRequest(BaseModel):
+    start_node: int
+    end_node: int
+
+@app.post("/api/calculate-path")
+async def calculate_path(req: PathRequest):
+    import path_finding
+    if not path_finding.graph_manager.G:
+        # Try to load default if not loaded
+        csv_path = os.path.join(GENERATED_DIR, 'global_plan.csv')
+        if os.path.exists(csv_path):
+            path_finding.graph_manager.load_graph_from_csv(csv_path)
+        else:
+             return JSONResponse(content={"status": "error", "message": "Graph not loaded and no global_plan.csv found"}, status_code=400)
+    
+    try:
+        path = path_finding.graph_manager.find_path(req.start_node, req.end_node)
+        if path is None:
+             return JSONResponse(content={"status": "error", "message": "No path found"}, status_code=404)
+        
+        return {"status": "success", "path": path}
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e)}, status_code=500)
+
+@app.get("/api/graph-nodes")
+async def get_graph_nodes():
+    import path_finding
+    if not path_finding.graph_manager.G:
+        csv_path = os.path.join(GENERATED_DIR, 'global_plan.csv')
+        if os.path.exists(csv_path):
+            path_finding.graph_manager.load_graph_from_csv(csv_path)
+    
+    nodes = path_finding.graph_manager.get_nodes_list()
+    return {"nodes": nodes}
