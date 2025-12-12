@@ -839,6 +839,122 @@ const Wizard = () => {
                                     geometry: { type: 'Point', coordinates: [rlon, rlat] },
                                     properties: { style: 'robot-pose', label: 'Robot' }
                                 });
+
+                                // --- Add Nearest & Recovery Poses (Moved from Render) ---
+                                // 1. Calculate Robot Pose in WGS84 (Lat/Lon)
+                                // We already have rlon, rlat calculated above.
+
+                                // 2. Find Nearest Street Pose
+                                // We use local coordinates for DISTANCE CHECK only, assuming path nodes are local-ish (or align with graph local)
+                                const rx_local = p1.x + (p2.x - p1.x) * t;
+                                const ry_local = p1.y + (p2.y - p1.y) * t;
+                                // Interpolate Angle
+                                let a1 = p1.theta;
+                                let a2 = p2.theta;
+                                let da = a2 - a1;
+                                while (da > Math.PI) da -= 2 * Math.PI;
+                                while (da < -Math.PI) da += 2 * Math.PI;
+                                const rtheta = a1 + da * t;
+
+                                let min_dist = Infinity;
+                                let nearest_feature: any = null;
+
+                                if (genResult && genResult.global_plan_points && genResult.global_plan_points.features) {
+                                    for (const f of genResult.global_plan_points.features) {
+                                        const props = f.properties;
+                                        if (props.pose_type === 'street' || props.pose_type === 'transit_street' || props.pose_type === 'home_pose') {
+                                            // Get Local Coords for distance check
+                                            let px = 0, py = 0;
+                                            try {
+                                                let parts = null;
+                                                if (Array.isArray(props.graph_pose_local)) parts = props.graph_pose_local;
+                                                else if (typeof props.graph_pose_local === 'string') parts = JSON.parse(props.graph_pose_local);
+
+                                                // Fallback to graph_pose if local not available (assuming dataset might be mixed, 
+                                                // but usually if local exists we use it. If rx is local, we must use local)
+                                                if (!parts && Array.isArray(props.graph_pose)) parts = props.graph_pose;
+                                                // Warning: if rx is local and we compare with UTM, distance will be huge. 
+                                                // We assume consistency: path includes local coords if global_plan has them.
+
+                                                if (parts && Array.isArray(parts) && parts.length >= 2) {
+                                                    px = parts[0]; py = parts[1];
+                                                } else {
+                                                    continue;
+                                                }
+                                            } catch (e) { continue; }
+
+                                            const d = Math.sqrt(Math.pow(px - rx_local, 2) + Math.pow(py - ry_local, 2));
+                                            if (d < min_dist) {
+                                                min_dist = d;
+                                                nearest_feature = f;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 3. Add Nearest Pose
+                                let assigned_theta = rtheta;
+                                // If found, use the feature's ALREADY CALCULATED WGS84 geometry
+                                if (nearest_feature && min_dist < 50.0) { // Safety threshold
+                                    // Assuming nearest_feature geometry is Point [lon, lat]
+                                    if (nearest_feature.geometry && nearest_feature.geometry.coordinates) {
+                                        features.push({
+                                            type: 'Feature',
+                                            geometry: { type: 'Point', coordinates: nearest_feature.geometry.coordinates },
+                                            properties: { style: 'nearest-pose', label: 'Nearest' }
+                                        });
+
+                                        // Update assigned theta to nearest pose theta if close enough? 
+                                        // Logic in Notebook says: assigned_pose = nearest_pose if dist < 2.0
+                                        // But here we need to calculate recovery based on assigned.
+
+                                        if (min_dist < 2.0) {
+                                            // We align with the street here
+                                            // But obtaining theta from feature properties might be tricky if not parsed.
+                                            // graph_pose often has [x, y, theta]
+                                            // Let's try to parse theta from graph_pose (UTM) or graph_pose_local
+                                            try {
+                                                let gp = nearest_feature.properties.graph_pose;
+                                                if (typeof gp === 'string') gp = JSON.parse(gp.replace(/'/g, '"'));
+                                                if (Array.isArray(gp) && gp.length >= 3) {
+                                                    assigned_theta = gp[2];
+                                                }
+                                            } catch (e) { }
+                                        }
+                                    }
+                                }
+
+                                // 4. Add Recovery Pose
+                                // Strategy: Use Robot WGS84 -> UTM -> Offset -> WGS84
+                                // Only show recovery if we are "close" to a street (logic: min_dist < 2.0 -> assigned is nearest)
+                                // OR logic from notebook: assigned is robot if > 2.0.
+                                // NOTE: Logic reversed in notebook? 
+                                // "if (min_dist > 2.0) assigned_pose = {rx, ry, rtheta}" -> implying if FAR, use robot pose.
+                                // implied else: use nearest_pose.
+
+                                // So if min_dist <= 2.0 (we are ON the street), we use the street orientation for recovery.
+                                // If min_dist > 2.0 (we are OFF road), we use robot orientation. 
+                                // Actually let's just stick to the requested "Recovery Pose" which is -2m from Assigned.
+
+                                // Project Robot Lat/Lon to UTM
+                                try {
+                                    // Current Robot UTM
+                                    const [utm_x, utm_y] = proj4(WGS84, UTM_ZONE_19S, [rlon, rlat]);
+
+                                    // Calculate Offset in Meters
+                                    const rec_dist = -2.0;
+                                    const recovery_x = utm_x + rec_dist * Math.cos(assigned_theta);
+                                    const recovery_y = utm_y + rec_dist * Math.sin(assigned_theta);
+
+                                    // Project back to WGS84
+                                    const [rec_lon, rec_lat] = proj4(UTM_ZONE_19S, WGS84, [recovery_x, recovery_y]);
+
+                                    features.push({
+                                        type: 'Feature',
+                                        geometry: { type: 'Point', coordinates: [rec_lon, rec_lat] },
+                                        properties: { style: 'recovery-pose', label: 'Recovery' }
+                                    });
+                                } catch (e) { console.error("Projection error", e); }
                             }
                         }
                         return features;

@@ -453,30 +453,24 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                         return marker;
                                     }
                                     if (key === 'global_plan_points') {
-                                        const poseType = _feature.properties?.pose_type; // Use pose_type instead of type
+                                        const poseType = _feature.properties?.pose_type;
                                         const graphPose = _feature.properties?.graph_pose;
                                         let rotation = 0;
 
-                                        // Parse rotation from graph_pose if available
+                                        // Parse rotation
                                         if (graphPose) {
                                             try {
                                                 let pose = graphPose;
-                                                if (typeof pose === 'string') {
-                                                    pose = JSON.parse(pose.replace(/'/g, '"'));
-                                                }
-                                                if (Array.isArray(pose) && pose.length > 2) {
-                                                    rotation = pose[2]; // Assuming theta is at index 2
-                                                }
-                                            } catch (e) {
-                                                console.warn('Error parsing graph_pose for rotation', e);
-                                            }
+                                                if (typeof pose === 'string') pose = JSON.parse(pose.replace(/'/g, '"'));
+                                                if (Array.isArray(pose) && pose.length > 2) rotation = pose[2];
+                                            } catch (e) { /* ignore */ }
                                         }
 
-                                        // Custom Icons based on pose_type from global_plan.csv
+                                        let marker;
+                                        const degrees = (rotation * 180) / Math.PI;
+
                                         if (poseType === 'hole') {
-                                            // Use yellow arrow for loading poses (pose_type=hole)
-                                            const degrees = (rotation * 180) / Math.PI;
-                                            return L.marker(latlng, {
+                                            marker = L.marker(latlng, {
                                                 icon: L.divIcon({
                                                     className: 'custom-icon-arrow',
                                                     html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
@@ -485,10 +479,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                 })
                                             });
                                         } else if (_feature.properties?.type === 'hole') {
-                                            // This is a reference hole (type=hole), not a loading pose
-                                            // Render as circle marker similar to objective
                                             const drillholeId = _feature.properties?.drillhole_id;
-                                            const marker = L.circleMarker(latlng, {
+                                            marker = L.circleMarker(latlng, {
                                                 radius: 3,
                                                 fillColor: '#000000',
                                                 color: '#0077ffff',
@@ -496,18 +488,13 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                 opacity: 0.5,
                                                 fillOpacity: 0.3
                                             });
-
                                             if (drillholeId) {
                                                 marker.bindTooltip(String(drillholeId), {
-                                                    permanent: true,
-                                                    direction: 'top',
-                                                    className: 'hole-tooltip-small',
-                                                    offset: [0, -5],
+                                                    permanent: true, direction: 'top', className: 'hole-tooltip-small', offset: [0, -5]
                                                 });
                                             }
-                                            return marker;
                                         } else if (poseType === 'transit_street') {
-                                            return L.marker(latlng, {
+                                            marker = L.marker(latlng, {
                                                 icon: L.divIcon({
                                                     className: 'custom-icon-transit',
                                                     html: `<div style="font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">z</div>`,
@@ -516,9 +503,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                 })
                                             });
                                         } else if (poseType === 'street') {
-                                            // Convert rotation to degrees for CSS
-                                            const degrees = (rotation * 180) / Math.PI;
-                                            return L.marker(latlng, {
+                                            marker = L.marker(latlng, {
                                                 icon: L.divIcon({
                                                     className: 'custom-icon-arrow',
                                                     html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
@@ -527,9 +512,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                 })
                                             });
                                         } else if (poseType === 'home_pose') {
-                                            // Convert rotation to degrees for CSS
-                                            const degrees = (rotation * 180) / Math.PI;
-                                            return L.marker(latlng, {
+                                            marker = L.marker(latlng, {
                                                 icon: L.divIcon({
                                                     className: 'custom-icon-arrow',
                                                     html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: blue; text-align: center; line-height: 1;">&gt;</div>`,
@@ -537,31 +520,47 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                     iconAnchor: [10, 10]
                                                 })
                                             });
+                                        } else if (poseType === 'nearest_pose' || poseType === 'nearest-pose') {
+                                            marker = L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-nearest',
+                                                    html: `<div style="background-color: #06b6d4; width: 14px; height: 14px; border-radius: 2px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                                                    iconSize: [18, 18],
+                                                    iconAnchor: [9, 9]
+                                                })
+                                            });
+                                        } else if (poseType === 'recovery_pose' || poseType === 'street_recovery_pose' || poseType === 'recovery-pose') {
+                                            marker = L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-recovery',
+                                                    html: `<div style="background-color: #f97316; width: 14px; height: 14px; border-radius: 2px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                                                    iconSize: [18, 18],
+                                                    iconAnchor: [9, 9]
+                                                })
+                                            });
+                                        } else {
+                                            // Fallback
+                                            marker = L.circleMarker(latlng, {
+                                                radius: 4,
+                                                fillColor: '#ea0808ff',
+                                                color: '#fff',
+                                                weight: 1,
+                                                opacity: 1,
+                                                fillOpacity: 0.8
+                                            });
                                         }
 
-                                        // Add tooltips with local coordinates if available
-                                        const marker = L.circleMarker(latlng, {
-                                            radius: 4,
-                                            fillColor: '#ea0808ff',
-                                            color: '#fff',
-                                            weight: 1,
-                                            opacity: 1,
-                                            fillOpacity: 0.8
-                                        });
-
+                                        // Add local coords tooltip
                                         if (_feature.properties?.graph_pose_local) {
                                             try {
                                                 let gpl = _feature.properties.graph_pose_local;
                                                 if (typeof gpl === 'string') gpl = JSON.parse(gpl.replace(/'/g, '"'));
                                                 if (Array.isArray(gpl) && gpl.length >= 2) {
                                                     marker.bindTooltip(`Local: ${gpl[0].toFixed(2)}, ${gpl[1].toFixed(2)}`, {
-                                                        direction: 'top',
-                                                        className: 'node-tooltip'
+                                                        direction: 'top', className: 'node-tooltip'
                                                     });
                                                 }
-                                            } catch (e) {
-                                                // ignore
-                                            }
+                                            } catch (e) { /* ignore */ }
                                         }
                                         return marker;
                                     }
@@ -596,6 +595,27 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                 }),
                                                 zIndexOffset: 1000 // Ensure robot is on top
                                             });
+                                        } else if (_feature.properties?.style === 'nearest-pose' || _feature.properties?.style === 'nearest_pose') {
+                                            const marker = L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-nearest',
+                                                    html: `<div style="background-color: #06b6d4; width: 14px; height: 14px; border-radius: 2px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                                                    iconSize: [18, 18],
+                                                    iconAnchor: [9, 9]
+                                                })
+                                            });
+                                            // Add local coords if available
+                                            return marker;
+                                        } else if (_feature.properties?.style === 'recovery-pose' || _feature.properties?.style === 'recovery_pose' || _feature.properties?.style === 'street_recovery_pose') {
+                                            const marker = L.marker(latlng, {
+                                                icon: L.divIcon({
+                                                    className: 'custom-icon-recovery',
+                                                    html: `<div style="background-color: #f97316; width: 14px; height: 14px; border-radius: 2px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                                                    iconSize: [18, 18],
+                                                    iconAnchor: [9, 9]
+                                                })
+                                            });
+                                            return marker;
                                         } else if (_feature.properties?.style === 'path-node') {
                                             const marker = L.circleMarker(latlng, {
                                                 radius: 2,
