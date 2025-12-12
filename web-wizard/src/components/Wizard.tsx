@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { WIZARD_STEPS } from '../types';
 import MapComponent from './MapComponent';
@@ -219,6 +219,17 @@ const Wizard = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const folderInputRef = useRef<HTMLInputElement>(null);
     const resultInputRef = useRef<HTMLInputElement>(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
+    const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+    useEffect(() => {
+        if (stepRefs.current[currentStepIndex]) {
+            stepRefs.current[currentStepIndex]?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    }, [currentStepIndex]);
 
     const [generating, setGenerating] = useState(false);
     const [genProgress, setGenProgress] = useState(0);
@@ -950,7 +961,7 @@ const Wizard = () => {
     return (
         <div className="wizard-container">
             {/* Sidebar */}
-            <div className="sidebar">
+            <div className="sidebar" ref={sidebarRef}>
                 <div className="sidebar-header">
                     <h1 className="wizard-title">
                         {t('wizard.title')}
@@ -1045,6 +1056,7 @@ const Wizard = () => {
                                 return (
                                     <div
                                         key={step.key}
+                                        ref={el => stepRefs.current[index] = el}
                                         onClick={() => handleStepClick(index)}
                                         className={`step-item ${isActive
                                             ? 'step-item-active'
