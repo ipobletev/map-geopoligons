@@ -293,7 +293,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                 map.fitBounds(bounds, { padding: [50, 50], maxZoom: 22 });
             }
         }
-    }, [map, existingData, currentStepKey, centerTrigger]);
+    }, [map, currentStepKey, centerTrigger]);
 
     const handleChange = () => {
         if (featureGroupRef.current) {
@@ -367,7 +367,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
 
                         return (
                             <GeoJSON
-                                key={key === 'interactive_path' && (layerData as any)._updateId ? `${key}-${(layerData as any)._updateId}` : key}
+                                key={(layerData as any)._updateId ? `${key}-${(layerData as any)._updateId}` : key}
                                 data={layerData}
                                 style={() => getStyle(key)}
                                 pointToLayer={(_feature, latlng) => {

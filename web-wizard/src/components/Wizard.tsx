@@ -11,6 +11,201 @@ import { parseHolFile, generateHolString, UTM_ZONE_19S, WGS84 } from '../utils/h
 import proj4 from 'proj4';
 import '../styles/components/Wizard.css';
 
+// Helper to parse Global Plan CSV
+const parseGlobalPlanCsv = (content: string) => {
+    const lines = content.split('\n');
+    const headers = lines[0].split(',');
+    const data: any[] = [];
+
+    // Helper to safely parse CSV line respecting quotes
+    const parseLine = (line: string) => {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current);
+        return result;
+    };
+
+    for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const values = parseLine(lines[i]);
+        const row: any = {};
+        headers.forEach((header, index) => {
+            row[header.trim()] = values[index]?.trim();
+        });
+        data.push(row);
+    }
+
+    // Extract Points (Graph Nodes)
+    const nodes: Record<string, [number, number]> = {};
+    const pointsFeatures = data
+        .filter((row: any) => row.type === 'graph_pose' || row.type === 'hole')
+        .map((row: any) => {
+            try {
+                // Try to use global coordinates first (UTM)
+                let coordsStr = row.graph_pose;
+                let isGlobal = true;
+
+                if (!coordsStr || coordsStr === 'nan') {
+                    // Fallback to local
+                    coordsStr = row.graph_pose_local;
+                    isGlobal = false;
+                }
+
+                // Fallback for holes: use 'geometry' column (WKT)
+                let wktCoords: [number, number] | null = null;
+                if ((!coordsStr || coordsStr === 'nan' || coordsStr === '""') && row.geometry && row.geometry.startsWith('POINT')) {
+                    try {
+                        const parts = row.geometry.replace('POINT (', '').replace(')', '').trim().split(' ');
+                        if (parts.length >= 2) {
+                            const x = parseFloat(parts[0]);
+                            const y = parseFloat(parts[1]);
+                            if (!isNaN(x) && !isNaN(y)) {
+                                wktCoords = [x, y];
+                                isGlobal = true;
+                            }
+                        }
+                    } catch (e) { }
+                }
+
+                if (coordsStr || wktCoords) {
+                    let lon = 0;
+                    let lat = 0;
+
+                    if (wktCoords) {
+                        lon = wktCoords[0];
+                        lat = wktCoords[1];
+                    } else if (coordsStr) {
+                        coordsStr = coordsStr.replace(/^"|"$/g, '').replace(/'/g, '"');
+                        try {
+                            const coords = JSON.parse(coordsStr);
+                            if (Array.isArray(coords) && coords.length >= 2) {
+                                lon = coords[0];
+                                lat = coords[1];
+                            } else {
+                                return null;
+                            }
+                        } catch (e) {
+                            return null;
+                        }
+                    }
+
+                    // Convert UTM to WGS84 if using global coordinates
+                    if (isGlobal) {
+                        [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [lon, lat]);
+                    }
+
+                    nodes[row.graph_id] = [lon, lat];
+                    return {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [lon, lat]
+                        },
+                        properties: row
+                    };
+                }
+            } catch (e) { }
+            return null;
+        })
+        .filter(Boolean);
+
+    // Identify Home Poses to exclude from lines
+    const homeNodeIds = new Set<string>();
+    pointsFeatures.forEach((f: any) => {
+        if (f.properties.pose_type === 'home_pose') {
+            homeNodeIds.add(f.properties.graph_id);
+        }
+    });
+
+    // Extract Lines (Routes)
+    const lineFeatures: any[] = [];
+    for (const row of data) {
+        if (row.type === 'graph_pose' && row.connections && nodes[row.graph_id]) {
+            if (homeNodeIds.has(row.graph_id)) continue;
+
+            try {
+                let connsStr = row.connections.replace(/^"|"$/g, '').replace(/'/g, '"');
+                if (connsStr && connsStr !== 'nan' && connsStr !== '[]') {
+                    const conns = JSON.parse(connsStr);
+                    if (Array.isArray(conns)) {
+                        conns.forEach((targetId: any) => {
+                            if (homeNodeIds.has(targetId)) return;
+
+                            if (nodes[targetId]) {
+                                lineFeatures.push({
+                                    type: 'Feature',
+                                    geometry: {
+                                        type: 'LineString',
+                                        coordinates: [nodes[row.graph_id], nodes[targetId]]
+                                    },
+                                    properties: { source: row.graph_id, target: targetId }
+                                });
+                            }
+                        });
+                    }
+                }
+            } catch (e) { }
+        }
+    }
+
+    // Extract Obstacles (Polygons)
+    const obstacleFeatures: any[] = [];
+    const highObstacleFeatures: any[] = [];
+
+    for (const row of data) {
+        try {
+            const type = row.type ? row.type.trim() : '';
+            const isObstacle = type.includes('obstacle');
+
+            if (isObstacle && row.geometry && row.geometry.includes('POLYGON')) {
+                let wkt = row.geometry;
+                wkt = wkt.replace(/POLYGON\s*\(\(/i, '').replace(/\)\)\s*$/, '').trim();
+
+                const coordPairs = wkt.split(',');
+                const coordinates = coordPairs.map((pair: string) => {
+                    const parts = pair.trim().split(/\s+/);
+                    let x = parseFloat(parts[0]);
+                    let y = parseFloat(parts[1]);
+                    if (isNaN(x) || isNaN(y)) return null;
+                    const [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [x, y]);
+                    return [lon, lat];
+                }).filter((c: any) => c !== null);
+
+                if (coordinates.length > 0) {
+                    const feature = {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [coordinates]
+                        },
+                        properties: row
+                    };
+
+                    if (type.includes('tall') || type.includes('high')) {
+                        highObstacleFeatures.push(feature);
+                    } else {
+                        obstacleFeatures.push(feature);
+                    }
+                }
+            }
+        } catch (e) { }
+    }
+
+    return { pointsFeatures, lineFeatures, obstacleFeatures, highObstacleFeatures };
+};
+
 const Wizard = () => {
     const { t } = useTranslation();
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -247,162 +442,13 @@ const Wizard = () => {
             try {
                 const content = e.target?.result as string;
                 if (file.name.endsWith('.csv')) {
-                    // Parse CSV
-                    const lines = content.split('\n');
-                    const headers = lines[0].split(',');
-                    const data = [];
-
-                    // Helper to safely parse CSV line respecting quotes
-                    const parseLine = (line: string) => {
-                        const result = [];
-                        let current = '';
-                        let inQuotes = false;
-                        for (let i = 0; i < line.length; i++) {
-                            const char = line[i];
-                            if (char === '"') {
-                                inQuotes = !inQuotes;
-                            } else if (char === ',' && !inQuotes) {
-                                result.push(current);
-                                current = '';
-                            } else {
-                                current += char;
-                            }
-                        }
-                        result.push(current);
-                        return result;
-                    };
-
-                    for (let i = 1; i < lines.length; i++) {
-                        if (!lines[i].trim()) continue;
-                        const values = parseLine(lines[i]);
-                        const row: any = {};
-                        headers.forEach((header, index) => {
-                            row[header.trim()] = values[index]?.trim();
-                        });
-                        data.push(row);
-                    }
-
-                    // Extract Points (Graph Nodes)
-                    const nodes: Record<string, [number, number]> = {};
-                    const pointsFeatures = data
-                        .filter((row: any) => row.type === 'graph_pose' || row.type === 'hole')
-                        .map((row: any) => {
-                            try {
-                                if (row.type === 'hole') {
-                                    console.log('Found hole row candidate:', row);
-                                }
-
-                                // Try to use global coordinates first (UTM)
-                                // The CSV column is 'graph_pose' for global UTM coordinates
-                                let coordsStr = row.graph_pose;
-                                let isGlobal = true;
-
-                                if (!coordsStr || coordsStr === 'nan') {
-                                    // Fallback to local if global is missing (though global is preferred for map)
-                                    coordsStr = row.graph_pose_local;
-                                    isGlobal = false;
-                                }
-
-                                // Fallback for holes: use 'geometry' column (WKT)
-                                let wktCoords: [number, number] | null = null;
-                                if ((!coordsStr || coordsStr === 'nan' || coordsStr === '""') && row.geometry && row.geometry.startsWith('POINT')) {
-                                    try {
-                                        // Parse "POINT (x y)"
-                                        const parts = row.geometry.replace('POINT (', '').replace(')', '').trim().split(' ');
-                                        if (parts.length >= 2) {
-                                            const x = parseFloat(parts[0]);
-                                            const y = parseFloat(parts[1]);
-                                            if (!isNaN(x) && !isNaN(y)) {
-                                                wktCoords = [x, y];
-                                                isGlobal = true; // Assuming WKT geometry in this CSV is global (UTM based on values seen)
-                                                if (row.type === 'hole') console.log('Parsed coords from geometry WKT:', wktCoords);
-                                            }
-                                        }
-                                    } catch (e) {
-                                        console.warn('Failed to parse WKT', row.geometry);
-                                    }
-                                }
-
-                                if (coordsStr || wktCoords) {
-                                    let lon = 0;
-                                    let lat = 0;
-
-                                    if (wktCoords) {
-                                        lon = wktCoords[0];
-                                        lat = wktCoords[1];
-                                    } else if (coordsStr) {
-                                        coordsStr = coordsStr.replace(/^"|"$/g, '').replace(/'/g, '"');
-                                        try {
-                                            const coords = JSON.parse(coordsStr);
-                                            if (Array.isArray(coords) && coords.length >= 2) {
-                                                lon = coords[0];
-                                                lat = coords[1];
-                                            } else {
-                                                if (row.type === 'hole') console.warn('Hole coords not array or too short:', coords);
-                                                return null;
-                                            }
-                                        } catch (e) {
-                                            if (row.type === 'hole') console.warn('Failed to JSON parse hole coords:', coordsStr, e);
-                                            return null;
-                                        }
-                                    }
-
-                                    // Convert UTM to WGS84 if using global coordinates
-                                    if (isGlobal) {
-                                        [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [lon, lat]);
-                                    }
-
-                                    nodes[row.graph_id] = [lon, lat];
-                                    return {
-                                        type: 'Feature',
-                                        geometry: {
-                                            type: 'Point',
-                                            coordinates: [lon, lat]
-                                        },
-                                        properties: row
-                                    };
-                                } else {
-                                    if (row.type === 'hole') console.warn('Hole row missing graph_pose, graph_pose_local, and valid geometry');
-                                }
-                            } catch (e) {
-                                console.warn('Failed to parse pose', row, e);
-                            }
-                            return null;
-                        })
-                        .filter(Boolean);
-
-                    // Extract Lines (Routes)
-                    const lineFeatures: any[] = [];
-                    for (const row of data) {
-                        if (row.type === 'graph_pose' && row.connections && nodes[row.graph_id]) {
-                            try {
-                                let connsStr = row.connections.replace(/^"|"$/g, '').replace(/'/g, '"');
-                                if (connsStr && connsStr !== 'nan' && connsStr !== '[]') {
-                                    const conns = JSON.parse(connsStr);
-                                    if (Array.isArray(conns)) {
-                                        conns.forEach((targetId: any) => {
-                                            if (nodes[targetId]) {
-                                                lineFeatures.push({
-                                                    type: 'Feature',
-                                                    geometry: {
-                                                        type: 'LineString',
-                                                        coordinates: [nodes[row.graph_id], nodes[targetId]]
-                                                    },
-                                                    properties: { source: row.graph_id, target: targetId }
-                                                });
-                                            }
-                                        });
-                                    }
-                                }
-                            } catch (e) {
-                                // console.warn('Failed to parse connections', row);
-                            }
-                        }
-                    }
+                    const { pointsFeatures, lineFeatures, obstacleFeatures, highObstacleFeatures } = parseGlobalPlanCsv(content);
 
                     setGenResult({
                         arrow_geojson: { type: 'FeatureCollection', features: lineFeatures },
                         global_plan_points: { type: 'FeatureCollection', features: pointsFeatures },
+                        obstacles_geojson: { type: 'FeatureCollection', features: obstacleFeatures },
+                        high_obstacles_geojson: { type: 'FeatureCollection', features: highObstacleFeatures },
                         download_links: {} // Empty links as we just loaded a file
                     });
 
@@ -559,6 +605,26 @@ const Wizard = () => {
                             setGenResult(message.data);
                             setViewMode('generated'); // Switch to generated view automatically
                             alert(t('wizard.successRoute'));
+
+                            // Fetch CSV content to visualize obstacles correctly
+                            if (message.data.download_links && message.data.download_links.csv) {
+                                fetch(message.data.download_links.csv)
+                                    .then(res => res.text())
+                                    .then(csvText => {
+                                        const { obstacleFeatures, highObstacleFeatures, pointsFeatures } = parseGlobalPlanCsv(csvText);
+
+                                        setGenResult((prev: any) => {
+                                            const now = Date.now();
+                                            return {
+                                                ...prev,
+                                                obstacles_geojson: { type: 'FeatureCollection', features: obstacleFeatures, _updateId: now },
+                                                high_obstacles_geojson: { type: 'FeatureCollection', features: highObstacleFeatures, _updateId: now },
+                                                global_plan_points: { type: 'FeatureCollection', features: pointsFeatures, _updateId: now },
+                                            };
+                                        });
+                                    })
+                                    .catch(err => console.error('Failed to fetch generated CSV for visualization', err));
+                            }
                         } else if (message.type === 'error') {
                             alert(t('wizard.errorRoute') + ': ' + message.message);
                         }
@@ -697,12 +763,16 @@ const Wizard = () => {
                 // Show fitted streets if available
                 'fitted_streets': genResult.fitted_streets_geojson ? JSON.parse(genResult.fitted_streets_geojson) : null,
                 'fitted_transit_streets': genResult.fitted_transit_streets_geojson ? JSON.parse(genResult.fitted_transit_streets_geojson) : null,
-                // Show original context layers if they exist in genResult or data
-                'objective': data['objective'],
-                'geofence': data['geofence'],
-                'home': data['home'],
-                'obstacles': data['obstacles'],
-                'high_obstacles': data['tall_obstacle'],
+                // Only show generated obstacles if available, otherwise null (clean view)
+                'obstacles': genResult.obstacles_geojson ? genResult.obstacles_geojson : null,
+                'high_obstacles': genResult.high_obstacles_geojson ? genResult.high_obstacles_geojson : null,
+                // Ensure raw inputs are hidden in generated mode
+                'objective': null,
+                'geofence': null,
+                'road': null,
+                'transit_road': null,
+                'home': null,
+                // Interactive Path Overlay
                 'interactive_path': calculatedPath ? {
                     type: 'FeatureCollection',
                     _updateId: `${pathProgress}-${pathRevision}`,
@@ -1057,7 +1127,7 @@ const Wizard = () => {
                                 <div className="mt-4 p-3 bg-slate-50 rounded border border-slate-200">
                                     <div className="mb-2">
                                         <label className="flex justify-between text-xs font-medium text-slate-600 mb-1">
-                                            <span>Robot Simulation</span>
+                                            <span>Robot Steps</span>
                                             <span>{pathProgress}%</span>
                                         </label>
                                         <input
@@ -1082,7 +1152,7 @@ const Wizard = () => {
 
                                             // Safety check
                                             if (idx >= calculatedPath.length - 1) {
-                                                const last = calculatedPath[calculatedPath.length - 1];
+                                                // const last = calculatedPath[calculatedPath.length - 1];
                                                 // Handle logic for last point similar to inside loop
                                                 // ... (Simplified for updating View)
                                             }
@@ -1107,7 +1177,6 @@ const Wizard = () => {
                                             // Using genResult.global_plan_points which contains all graph nodes
                                             let min_dist = Infinity;
                                             let nearest_pose: any = null;
-                                            let nearest_id = -1;
 
                                             // Filter for street nodes from cached data if possible, or just iterate all
                                             if (genResult && genResult.global_plan_points && genResult.global_plan_points.features) {
@@ -1121,13 +1190,17 @@ const Wizard = () => {
                                                         // Graph points features usually have lat/lon in geometry, but properties might have local
                                                         // Let's use properties.graph_pose_local if available, else standard
                                                         try {
-                                                            if (props.graph_pose_local) {
-                                                                const parts = JSON.parse(props.graph_pose_local);
-                                                                px = parts[0]; py = parts[1]; pth = parts[2];
-                                                            } else if (props.graph_pose) {
-                                                                // Use whatever is there
-                                                                const parts = typeof props.graph_pose === 'string' ? JSON.parse(props.graph_pose.replace(/'/g, '"')) : props.graph_pose;
-                                                                px = parts[0]; py = parts[1]; pth = parts[2];
+                                                            let parts = null;
+                                                            if (Array.isArray(props.graph_pose_local)) parts = props.graph_pose_local;
+                                                            else if (typeof props.graph_pose_local === 'string') parts = JSON.parse(props.graph_pose_local);
+
+                                                            if (!parts && Array.isArray(props.graph_pose)) parts = props.graph_pose;
+                                                            else if (!parts && typeof props.graph_pose === 'string') parts = JSON.parse(props.graph_pose.replace(/'/g, '"'));
+
+                                                            if (parts && Array.isArray(parts) && parts.length >= 2) {
+                                                                px = parts[0]; py = parts[1]; pth = parts[2] || 0;
+                                                            } else {
+                                                                continue;
                                                             }
                                                         } catch (e) { continue; }
 
@@ -1135,7 +1208,6 @@ const Wizard = () => {
                                                         if (d < min_dist) {
                                                             min_dist = d;
                                                             nearest_pose = { x: px, y: py, theta: pth };
-                                                            nearest_id = props.graph_id;
                                                         }
                                                     }
                                                 }
