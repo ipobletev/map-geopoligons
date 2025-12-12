@@ -673,11 +673,19 @@ const Wizard = () => {
     const handleTransfer = async (transferData: any) => {
         setIsTransferring(true);
         try {
-            await transferFiles(transferData);
-            alert(t('Transfer successful!'));
+            const result = await transferFiles(transferData);
+
+            // Format result message if multiple files
+            let msg = result.message;
+            if (result.results) {
+                const successCount = result.results.filter((r: any) => r.status === 'success').length;
+                const failCount = result.results.length - successCount;
+                msg = `Transferred ${successCount} files. ${failCount > 0 ? `${failCount} failed.` : ''}`;
+            }
+
+            alert(msg || 'Transfer successful!');
             setShowTransferModal(false);
         } catch (error: any) {
-            console.error('Transfer error:', error);
             alert(`Transfer failed: ${error.message}`);
         } finally {
             setIsTransferring(false);
@@ -1307,6 +1315,7 @@ const Wizard = () => {
                 onClose={() => setShowTransferModal(false)}
                 onTransfer={handleTransfer}
                 isTransferring={isTransferring}
+                availableFiles={['global_plan.csv', 'map.png', 'maze_peld.yaml', 'latlon.yaml']}
             />
 
             {/* Main Content */}

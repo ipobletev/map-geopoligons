@@ -1,15 +1,10 @@
 
 export interface TransferData {
-    target_ip: string;
-    target_user: string;
-    target_path: string;
-    files: {
-        global_plan: boolean;
-        map_image: boolean;
-        map_yaml: boolean;
-        latlon_yaml: boolean;
-    };
-    ssh_key_path?: string;
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    files: Record<string, string>; // filename -> remote_path
 }
 
 export async function transferFiles(data: TransferData): Promise<any> {

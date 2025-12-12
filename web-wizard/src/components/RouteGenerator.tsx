@@ -614,6 +614,7 @@ export default function RouteGenerator() {
                 onClose={() => setShowTransferModal(false)}
                 onTransfer={handleTransfer}
                 isTransferring={isTransferring}
+                availableFiles={['global_plan.csv', 'map.png', 'maze_peld.yaml', 'latlon.yaml']}
             />
 
             {result && (

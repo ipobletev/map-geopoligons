@@ -53,12 +53,65 @@ def transfer_files_scp(host, port, username, password, local_path, remote_path):
             # Directory transfer is more complex, for now let's support single file (zip)
             raise ValueError("Directory transfer not yet supported, please zip first.")
 
-        sftp.close()
         ssh.close()
         return {"status": "success", "message": f"File transferred to {remote_file_path}"}
 
     except Exception as e:
         logger.error(f"Transfer failed: {e}")
+        return {"status": "error", "message": str(e)}
+    finally:
+        ssh.close()
+
+def transfer_multiple_files_scp(host, port, username, password, files_map):
+    """
+    Transfers multiple files using a single SSH connection.
+    files_map: Dict[local_path, remote_path]
+    """
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    results = []
+    
+    try:
+        logger.info(f"Connecting to {host}:{port} as {username}...")
+        ssh.connect(host, port=port, username=username, password=password, timeout=10)
+        sftp = ssh.open_sftp()
+        
+        for local_path, remote_path in files_map.items():
+            try:
+                if not os.path.exists(local_path):
+                    results.append({"file": os.path.basename(local_path), "status": "error", "message": "Local file not found"})
+                    continue
+                    
+                filename = os.path.basename(local_path)
+                
+                # Logic to determine final remote path
+                remote_file_path = remote_path
+                
+                # If remote_path looks like a directory or ends in slash, append filename
+                if remote_path.endswith('/') or remote_path.endswith('\\'):
+                     # Try to create dir if needed (simple attempt)
+                     try:
+                         sftp.stat(remote_path)
+                     except FileNotFoundError:
+                         try:
+                            sftp.mkdir(remote_path)
+                         except:
+                            pass
+                     remote_file_path = os.path.join(remote_path, filename).replace('\\', '/')
+                
+                logger.info(f"Uploading {local_path} to {remote_file_path}...")
+                sftp.put(local_path, remote_file_path)
+                results.append({"file": filename, "status": "success"})
+                
+            except Exception as e:
+                logger.error(f"Failed to transfer {local_path}: {e}")
+                results.append({"file": os.path.basename(local_path), "status": "error", "message": str(e)})
+
+        sftp.close()
+        return {"status": "success", "results": results}
+
+    except Exception as e:
+        logger.error(f"Batch transfer failed: {e}")
         return {"status": "error", "message": str(e)}
     finally:
         ssh.close()
