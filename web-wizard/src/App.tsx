@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Wizard from './components/Wizard';
 import RouteGenerator from './components/RouteGenerator';
-import TabNavigation from './components/TabNavigation';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import './styles/App.css';
 
 function App() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'wizard' | 'route-generator'>('wizard');
+  const [activeTab] = useState<'wizard' | 'route-generator'>('wizard');
 
   return (
     <div className="app-container">

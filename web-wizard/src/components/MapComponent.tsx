@@ -10,14 +10,7 @@ import proj4 from 'proj4';
 proj4.defs("EPSG:32719", "+proj=utm +zone=19 +south +datum=WGS84 +units=m +no_defs");
 
 // Custom Icons
-const createCustomIcon = (color: string, label?: string) => {
-    return L.divIcon({
-        className: 'custom-div-icon',
-        html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${label || ''}</div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-    });
-};
+
 
 const DefaultIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',

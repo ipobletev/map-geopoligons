@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, Settings, CheckCircle, AlertCircle, Download, Play, Trash2, Map, Send } from 'lucide-react';
+import { Upload, Settings, Download, Trash2, Map, Send } from 'lucide-react';
 import MapComponent from './MapComponent';
 import TransferModal from './TransferModal';
 import proj4 from 'proj4';
@@ -8,7 +8,10 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { parseHolFile, UTM_ZONE_19S, WGS84 } from '../utils/holParser';
+
 import '../styles/components/RouteGenerator.css';
+import { generateRoutes } from '../routes/generateRoutes';
+import { transferFiles } from '../routes/transferFiles';
 
 export default function RouteGenerator() {
     const { t } = useTranslation();
@@ -269,52 +272,27 @@ export default function RouteGenerator() {
             }
         });
 
-        try {
-            const response = await fetch('/api/generate-routes', {
-                method: 'POST',
-                body: formData,
-            });
+        const options = {
+            fit_streets: true, // Hardcoded or from state if you add state for options in RouteGenerator
+            fit_twice: true,
+            wgs84: true,
+            use_obstacles: true, // Defaulting based on typical usage or add inputs
+            use_high_obstacles: true,
+            use_transit_streets: true
+        };
 
-            if (!response.body) {
-                throw new Error('No response body');
+        generateRoutes(files, previewData, options, (message: any) => {
+            if (message.type === 'progress') {
+                setProgress(message.value);
+            } else if (message.type === 'result') {
+                setResult(message.data);
+                setViewMode('generated');
+            } else if (message.type === 'error') {
+                setError(message.message);
             }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-                    try {
-                        const message = JSON.parse(line);
-                        if (message.type === 'progress') {
-                            setProgress(message.value);
-                        } else if (message.type === 'result') {
-                            setResult(message.data);
-                            setViewMode('generated');
-                        } else if (message.type === 'error') {
-                            setError(message.message);
-                        }
-                    } catch (e) {
-                        console.error('Error parsing JSON:', e);
-                    }
-                }
-            }
-
-        } catch (err) {
-            setError(t('routeGenerator.connectionError'));
-            console.error(err);
-        } finally {
+        }).finally(() => {
             setLoading(false);
-        }
+        });
     };
 
     const handleClearResults = () => {
@@ -362,25 +340,12 @@ export default function RouteGenerator() {
     const handleTransfer = async (transferData: any) => {
         setIsTransferring(true);
         try {
-            const response = await fetch('/api/transfer-files', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(transferData),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                alert(t('Transfer successful!'));
-                setShowTransferModal(false);
-            } else {
-                alert(`Transfer failed: ${data.message}`);
-            }
-        } catch (error) {
+            await transferFiles(transferData);
+            alert(t('Transfer successful!'));
+            setShowTransferModal(false);
+        } catch (error: any) {
             console.error('Transfer error:', error);
-            alert('Transfer failed due to network error.');
+            alert(`Transfer failed: ${error.message}`);
         } finally {
             setIsTransferring(false);
         }
@@ -733,15 +698,7 @@ export default function RouteGenerator() {
     );
 }
 
-function parseGeoJSON(jsonString: string | undefined | null) {
-    if (!jsonString) return null;
-    try {
-        return JSON.parse(jsonString);
-    } catch (e) {
-        console.error("Failed to parse GeoJSON", e);
-        return null;
-    }
-}
+
 
 function FileInput({
     name,

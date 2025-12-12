@@ -9,6 +9,10 @@ import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, P
 import TransferModal from './TransferModal';
 import { parseHolFile, generateHolString, UTM_ZONE_19S, WGS84 } from '../utils/holParser';
 import proj4 from 'proj4';
+import { generateRoutes } from '../routes/generateRoutes';
+import { fetchGraphNodes } from '../routes/graphNodes';
+import { calculatePath } from '../routes/calculatePath';
+import { transferFiles } from '../routes/transferFiles';
 import '../styles/components/Wizard.css';
 
 // Helper to parse Global Plan CSV
@@ -237,7 +241,7 @@ const Wizard = () => {
     });
 
     // Path Finding State
-    const [pathNodes, setPathNodes] = useState<{ id: number, label: string, type: string }[]>([]);
+    const [pathNodes, setPathNodes] = useState<any[]>([]);
     const [pathStart, setPathStart] = useState<string>('');
     const [pathEnd, setPathEnd] = useState<string>('');
     const [calculatedPath, setCalculatedPath] = useState<any[] | null>(null);
@@ -548,154 +552,98 @@ const Wizard = () => {
         setGenProgress(0);
         setGenResult(null);
 
-        const formData = new FormData();
+        // Map Wizard keys to backend keys
+        const formattedData: Record<string, any> = {};
+        if (allData['objective']) formattedData['holes'] = allData['objective'];
+        if (allData['road']) formattedData['streets'] = allData['road'];
+        if (allData['home']) formattedData['home_pose'] = allData['home'];
+        if (allData['geofence']) formattedData['geofence'] = allData['geofence']; // Same key
+        if (allData['obstacles']) formattedData['obstacles'] = allData['obstacles']; // Same key
+        if (allData['tall_obstacle']) formattedData['high_obstacles'] = allData['tall_obstacle'];
+        if (allData['transit_road']) formattedData['transit_streets'] = allData['transit_road'];
 
-        const appendFile = (key: string, fieldName: string, filename: string) => {
-            if (allData[key]) {
-                const blob = new Blob([JSON.stringify(allData[key])], { type: 'application/json' });
-                formData.append(fieldName, blob, filename);
-            }
-        };
-
-        appendFile('objective', 'holes', 'holes.geojson');
-        appendFile('geofence', 'geofence', 'geofence.geojson');
-        appendFile('road', 'streets', 'streets.geojson');
-        appendFile('home', 'home_pose', 'home_pose.geojson');
-        appendFile('obstacles', 'obstacles', 'obstacles.geojson');
-        appendFile('tall_obstacle', 'high_obstacles', 'high_obstacles.geojson');
-        appendFile('transit_road', 'transit_streets', 'transit_streets.geojson');
-
-        // Add default options
-        // Add options from state
-        formData.append('fit_streets', options.fit_streets.toString());
-        formData.append('fit_twice', options.fit_twice.toString());
-        formData.append('wgs84', options.wgs84.toString());
-
-        formData.append('use_obstacles', options.use_obstacles.toString());
-        formData.append('use_high_obstacles', options.use_high_obstacles.toString());
-        formData.append('use_transit_streets', options.use_transit_streets.toString());
-
-        try {
-            const response = await fetch('/api/generate-routes', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.body) throw new Error('No response body');
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-                    try {
-                        const message = JSON.parse(line);
-                        if (message.type === 'progress') {
-                            setGenProgress(message.value);
-                        } else if (message.type === 'result') {
-                            setGenResult(message.data);
-                            setViewMode('generated'); // Switch to generated view automatically
-                            alert(t('wizard.successRoute'));
-
-                            // Fetch CSV content to visualize obstacles correctly
-                            if (message.data.download_links && message.data.download_links.csv) {
-                                fetch(message.data.download_links.csv)
-                                    .then(res => res.text())
-                                    .then(csvText => {
-                                        const { obstacleFeatures, highObstacleFeatures, pointsFeatures } = parseGlobalPlanCsv(csvText);
-
-                                        setGenResult((prev: any) => {
-                                            const now = Date.now();
-                                            return {
-                                                ...prev,
-                                                obstacles_geojson: { type: 'FeatureCollection', features: obstacleFeatures, _updateId: now },
-                                                high_obstacles_geojson: { type: 'FeatureCollection', features: highObstacleFeatures, _updateId: now },
-                                                global_plan_points: { type: 'FeatureCollection', features: pointsFeatures, _updateId: now },
-                                            };
-                                        });
-                                    })
-                                    .catch(err => console.error('Failed to fetch generated CSV for visualization', err));
-                            }
-                        } else if (message.type === 'error') {
-                            alert(t('wizard.errorRoute') + ': ' + message.message);
-                        }
-                    } catch (e) {
-                        console.error('Error parsing JSON:', e);
+        generateRoutes(
+            {}, // Files mapping empty as Wizard uses 'allData' JSON blobs mainly
+            formattedData, // GeoJSON map with corrected keys
+            options,
+            (message: any) => {
+                if (message.type === 'progress') {
+                    setGenProgress(message.value);
+                } else if (message.type === 'result') {
+                    setGenResult(message.data);
+                    // Extract path nodes if generated
+                    if (message.data.global_plan_points) {
+                        try {
+                            const gj = message.data.global_plan_points;
+                            const nodes: any[] = [];
+                            gj.features.forEach((f: any) => {
+                                if (f.properties.type === 'graph_pose') {
+                                    nodes.push({
+                                        id: f.properties.graph_id,
+                                        label: `${f.properties.graph_id} (${f.properties.pose_type})`,
+                                        type: f.properties.pose_type
+                                    });
+                                }
+                            });
+                            setPathNodes(nodes);
+                        } catch (e) { console.error(e); }
                     }
+
+                    setViewMode('generated'); // Switch to generated view automatically
+                    alert(t('wizard.successRoute'));
+
+                    // Fetch CSV content to visualize obstacles correctly
+                    if (message.data.download_links && message.data.download_links.csv) {
+                        fetch(message.data.download_links.csv)
+                            .then(res => res.text())
+                            .then(csvText => {
+                                const { obstacleFeatures, highObstacleFeatures, pointsFeatures } = parseGlobalPlanCsv(csvText);
+
+                                setGenResult((prev: any) => {
+                                    const now = Date.now();
+                                    return {
+                                        ...prev,
+                                        obstacles_geojson: { type: 'FeatureCollection', features: obstacleFeatures, _updateId: now },
+                                        high_obstacles_geojson: { type: 'FeatureCollection', features: highObstacleFeatures, _updateId: now },
+                                        global_plan_points: { type: 'FeatureCollection', features: pointsFeatures, _updateId: now },
+                                    };
+                                });
+                            })
+                            .catch(err => console.error('Failed to fetch generated CSV for visualization', err));
+                    }
+                } else if (message.type === 'error') {
+                    alert(`Error: ${message.message}`);
                 }
             }
-        } catch (e) {
-            console.error(e);
-            alert(t('wizard.errorRoute'));
-        } finally {
+        ).finally(() => {
             setGenerating(false);
-        }
+        });
     };
 
-    const handleDownloadGenerated = async () => {
-        if (!genResult || !genResult.download_links) return;
-
-        const zip = new JSZip();
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const folderName = `generated_routes_${timestamp}`;
-        const folder = zip.folder(folderName);
-
-        if (!folder) return;
-
+    const refreshNodes = async () => {
         try {
-            const links = genResult.download_links;
-            const filesToDownload = [
-                { name: 'global_plan.csv', url: links.csv },
-                { name: 'map.png', url: links.map_png },
-                { name: 'map.yaml', url: links.map_yaml },
-                { name: 'latlon.yaml', url: links.latlon_yaml }
-            ];
+            const nodes = await fetchGraphNodes();
+            // Map backend nodes structure to UI structure if needed, or if fetchGraphNodes returns GraphNode[]
+            // Backend returns { nodes: [{id, x, y, theta, type, label?}, ...] }
+            // fetchGraphNodes returns GraphNode[] directly.
 
-            await Promise.all(filesToDownload.map(async (file) => {
-                try {
-                    const response = await fetch(file.url);
-                    const blob = await response.blob();
-                    folder.file(file.name, blob);
-                } catch (e) {
-                    console.error(`Error downloading ${file.name}:`, e);
-                }
+            // Adjust to match state type
+            const mappedNodes = nodes.map((n: any) => ({
+                id: n.id,
+                label: n.label || `${n.id} (${n.type})`,
+                type: n.type,
+                x: n.x, y: n.y, theta: n.theta // Preserve coordinates
             }));
+            setPathNodes(mappedNodes);
 
-            const content = await zip.generateAsync({ type: 'blob' });
-            saveAs(content, `routes-${timestamp}.zip`);
-        } catch (e) {
-            console.error('Error creating zip:', e);
-            alert('Error creating zip file');
-        }
-    };
-
-    const fetchGraphNodes = async () => {
-        try {
-            const response = await fetch('/api/graph-nodes');
-            if (response.ok) {
-                const data = await response.json();
-                setPathNodes(data.nodes);
-                // Set defaults if available
-                const home = data.nodes.find((n: any) => n.label.includes('Home'));
-                if (home) setPathStart(home.id.toString());
-            }
-        } catch (e) {
-            console.error('Error fetching graph nodes:', e);
+        } catch (error) {
+            console.error('Failed to refresh nodes', error);
         }
     };
 
     // Fetch nodes when generation succeeds or result loaded
     if (viewMode === 'generated' && pathNodes.length === 0 && genResult) {
-        fetchGraphNodes();
+        refreshNodes();
     }
 
     const handleCalculatePath = async () => {
@@ -705,23 +653,18 @@ const Wizard = () => {
         }
         setPathLoading(true);
         try {
-            const response = await fetch('/api/calculate-path', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ start_node: parseInt(pathStart), end_node: parseInt(pathEnd) })
-            });
-            const data = await response.json();
-            if (data.status === 'success') {
-                setCalculatedPath(data.path);
+            const result = await calculatePath(parseInt(pathStart), parseInt(pathEnd));
+
+            if (result.path) {
+                // Backend returns full list of node objects with coords
+                setCalculatedPath(result.path);
                 setPathProgress(0);
-                setPathRevision(prev => prev + 1);
+                setPathRevision(prev => prev + 1); // Trigger map update
                 setCenterTrigger(prev => prev + 1);
-            } else {
-                alert('Path calculation failed: ' + data.message);
             }
-        } catch (e) {
-            console.error(e);
-            alert('Error calculating path');
+
+        } catch (err: any) {
+            alert(err.message || 'Error calculating path');
         } finally {
             setPathLoading(false);
         }
@@ -730,25 +673,12 @@ const Wizard = () => {
     const handleTransfer = async (transferData: any) => {
         setIsTransferring(true);
         try {
-            const response = await fetch('/api/transfer-files', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(transferData),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                alert(t('Transfer successful!'));
-                setShowTransferModal(false);
-            } else {
-                alert(`Transfer failed: ${data.message}`);
-            }
-        } catch (error) {
+            await transferFiles(transferData);
+            alert(t('Transfer successful!'));
+            setShowTransferModal(false);
+        } catch (error: any) {
             console.error('Transfer error:', error);
-            alert('Transfer failed due to network error.');
+            alert(`Transfer failed: ${error.message}`);
         } finally {
             setIsTransferring(false);
         }

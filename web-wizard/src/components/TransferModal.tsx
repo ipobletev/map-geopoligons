@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Send, Loader2 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+
 
 interface TransferModalProps {
     isOpen: boolean;
@@ -10,7 +10,6 @@ interface TransferModalProps {
 }
 
 export default function TransferModal({ isOpen, onClose, onTransfer, isTransferring }: TransferModalProps) {
-    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         host: '',
         port: 22,
