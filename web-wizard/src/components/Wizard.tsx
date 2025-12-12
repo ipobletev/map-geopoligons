@@ -1056,7 +1056,14 @@ const Wizard = () => {
                                 return (
                                     <div
                                         key={step.key}
-                                        ref={el => stepRefs.current[index] = el}
+                                        ref={(el: HTMLDivElement | null) => {
+                                            if (el) {
+                                                stepRefs.current[index] = el;
+                                            } else {
+                                                // Clean up ref when component unmounts
+                                                delete stepRefs.current[index];
+                                            }
+                                        }}
                                         onClick={() => handleStepClick(index)}
                                         className={`step-item ${isActive
                                             ? 'step-item-active'
