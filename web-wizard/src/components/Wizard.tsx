@@ -285,9 +285,13 @@ const Wizard = () => {
                     // Extract Points (Graph Nodes)
                     const nodes: Record<string, [number, number]> = {};
                     const pointsFeatures = data
-                        .filter((row: any) => row.type === 'graph_pose')
+                        .filter((row: any) => row.type === 'graph_pose' || row.type === 'hole')
                         .map((row: any) => {
                             try {
+                                if (row.type === 'hole') {
+                                    console.log('Found hole row candidate:', row);
+                                }
+
                                 // Try to use global coordinates first (UTM)
                                 // The CSV column is 'graph_pose' for global UTM coordinates
                                 let coordsStr = row.graph_pose;
@@ -299,31 +303,69 @@ const Wizard = () => {
                                     isGlobal = false;
                                 }
 
-                                if (coordsStr) {
-                                    coordsStr = coordsStr.replace(/^"|"$/g, '').replace(/'/g, '"');
-                                    const coords = JSON.parse(coordsStr);
-                                    if (Array.isArray(coords) && coords.length >= 2) {
-                                        let lon = coords[0];
-                                        let lat = coords[1];
-
-                                        // Convert UTM to WGS84 if using global coordinates
-                                        if (isGlobal) {
-                                            [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [coords[0], coords[1]]);
+                                // Fallback for holes: use 'geometry' column (WKT)
+                                let wktCoords: [number, number] | null = null;
+                                if ((!coordsStr || coordsStr === 'nan' || coordsStr === '""') && row.geometry && row.geometry.startsWith('POINT')) {
+                                    try {
+                                        // Parse "POINT (x y)"
+                                        const parts = row.geometry.replace('POINT (', '').replace(')', '').trim().split(' ');
+                                        if (parts.length >= 2) {
+                                            const x = parseFloat(parts[0]);
+                                            const y = parseFloat(parts[1]);
+                                            if (!isNaN(x) && !isNaN(y)) {
+                                                wktCoords = [x, y];
+                                                isGlobal = true; // Assuming WKT geometry in this CSV is global (UTM based on values seen)
+                                                if (row.type === 'hole') console.log('Parsed coords from geometry WKT:', wktCoords);
+                                            }
                                         }
-
-                                        nodes[row.graph_id] = [lon, lat];
-                                        return {
-                                            type: 'Feature',
-                                            geometry: {
-                                                type: 'Point',
-                                                coordinates: [lon, lat]
-                                            },
-                                            properties: row
-                                        };
+                                    } catch (e) {
+                                        console.warn('Failed to parse WKT', row.geometry);
                                     }
                                 }
+
+                                if (coordsStr || wktCoords) {
+                                    let lon = 0;
+                                    let lat = 0;
+
+                                    if (wktCoords) {
+                                        lon = wktCoords[0];
+                                        lat = wktCoords[1];
+                                    } else if (coordsStr) {
+                                        coordsStr = coordsStr.replace(/^"|"$/g, '').replace(/'/g, '"');
+                                        try {
+                                            const coords = JSON.parse(coordsStr);
+                                            if (Array.isArray(coords) && coords.length >= 2) {
+                                                lon = coords[0];
+                                                lat = coords[1];
+                                            } else {
+                                                if (row.type === 'hole') console.warn('Hole coords not array or too short:', coords);
+                                                return null;
+                                            }
+                                        } catch (e) {
+                                            if (row.type === 'hole') console.warn('Failed to JSON parse hole coords:', coordsStr, e);
+                                            return null;
+                                        }
+                                    }
+
+                                    // Convert UTM to WGS84 if using global coordinates
+                                    if (isGlobal) {
+                                        [lon, lat] = proj4(UTM_ZONE_19S, WGS84, [lon, lat]);
+                                    }
+
+                                    nodes[row.graph_id] = [lon, lat];
+                                    return {
+                                        type: 'Feature',
+                                        geometry: {
+                                            type: 'Point',
+                                            coordinates: [lon, lat]
+                                        },
+                                        properties: row
+                                    };
+                                } else {
+                                    if (row.type === 'hole') console.warn('Hole row missing graph_pose, graph_pose_local, and valid geometry');
+                                }
                             } catch (e) {
-                                console.warn('Failed to parse pose', row);
+                                console.warn('Failed to parse pose', row, e);
                             }
                             return null;
                         })
@@ -363,9 +405,12 @@ const Wizard = () => {
                         global_plan_points: { type: 'FeatureCollection', features: pointsFeatures },
                         download_links: {} // Empty links as we just loaded a file
                     });
+
+                    const holeCount = pointsFeatures.filter((f: any) => f.properties.type === 'hole').length;
+                    alert(`Loaded result. Found ${holeCount} valid holes (type=hole). If 0, please check browser console (F12) for warnings starting with "Hole...".`);
+
                     setViewMode('generated');
                     setCenterTrigger(prev => prev + 1);
-                    alert('Loaded result file successfully.');
 
                 } else if (file.name.endsWith('.json') || file.name.endsWith('.geojson')) {
                     const parsed = JSON.parse(content);

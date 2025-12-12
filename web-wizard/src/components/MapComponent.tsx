@@ -121,7 +121,7 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
         loadData();
 
         // Determine icon based on step
-        let markerIcon = DefaultIcon;
+        let markerIcon: L.Icon | L.DivIcon = DefaultIcon;
         if (currentStepKey === 'objective') markerIcon = ObjectiveDrawIcon;
 
         const options: L.Control.DrawConstructorOptions = {
@@ -148,7 +148,7 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
                 } : false,
                 circle: false,
                 marker: (drawMode === 'marker' || drawMode === 'any') ? {
-                    icon: markerIcon
+                    icon: markerIcon as L.Icon
                 } : false,
                 circlemarker: false,
             },
@@ -321,7 +321,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                 weight: 5,
                 opacity: 0.8,
                 dashArray: '10, 10',
-                lineCap: 'round'
+                lineCap: 'round' as 'round'
             };
         }
         else {
@@ -418,9 +418,9 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
 
                                         // Custom Icons based on pose_type from global_plan.csv
                                         if (poseType === 'hole') {
-                                            // Use yellow arrow for holes
+                                            // Use yellow arrow for loading poses (pose_type=hole)
                                             const degrees = (rotation * 180) / Math.PI;
-                                            const marker = L.marker(latlng, {
+                                            return L.marker(latlng, {
                                                 icon: L.divIcon({
                                                     className: 'custom-icon-arrow',
                                                     html: `<div style="transform: rotate(${-degrees}deg); font-weight: bold; font-size: 16px; color: yellow; text-align: center; line-height: 1;">&gt;</div>`,
@@ -428,7 +428,27 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                     iconAnchor: [10, 10]
                                                 })
                                             });
+                                        } else if (_feature.properties?.type === 'hole') {
+                                            // This is a reference hole (type=hole), not a loading pose
+                                            // Render as circle marker similar to objective
+                                            const drillholeId = _feature.properties?.drillhole_id;
+                                            const marker = L.circleMarker(latlng, {
+                                                radius: 3,
+                                                fillColor: '#000000',
+                                                color: '#0077ffff',
+                                                weight: 2,
+                                                opacity: 0.5,
+                                                fillOpacity: 0.3
+                                            });
 
+                                            if (drillholeId) {
+                                                marker.bindTooltip(String(drillholeId), {
+                                                    permanent: true,
+                                                    direction: 'top',
+                                                    className: 'hole-tooltip-small',
+                                                    offset: [0, -5],
+                                                });
+                                            }
                                             return marker;
                                         } else if (poseType === 'transit_street') {
                                             return L.marker(latlng, {
