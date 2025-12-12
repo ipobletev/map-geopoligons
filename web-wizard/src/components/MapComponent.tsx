@@ -4,6 +4,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
+import proj4 from 'proj4';
+
+// Define UTM Zone 19S
+proj4.defs("EPSG:32719", "+proj=utm +zone=19 +south +datum=WGS84 +units=m +no_defs");
 
 // Custom Icons
 const createCustomIcon = (color: string, label?: string) => {
@@ -222,7 +226,7 @@ const EditControl = ({ drawMode, currentStepKey, initialData, onCreated, onEdite
     return null;
 };
 
-const MousePosition = () => {
+const MousePosition = ({ localOrigin }: { localOrigin: { x: number, y: number } | null }) => {
     const [position, setPosition] = useState<{ lat: number; lng: number } | null>(null);
     useMapEvents({
         mousemove(e) {
@@ -231,6 +235,18 @@ const MousePosition = () => {
     });
 
     if (!position) return null;
+
+    // Calculate UTM
+    const utmCoords = proj4('EPSG:4326', 'EPSG:32719', [position.lng, position.lat]);
+    const utmX = utmCoords[0];
+    const utmY = utmCoords[1];
+
+    let localInfo = "";
+    if (localOrigin) {
+        const localX = utmX - localOrigin.x;
+        const localY = utmY - localOrigin.y;
+        localInfo = `, Local X: ${localX.toFixed(2)}, Y: ${localY.toFixed(2)}`;
+    }
 
     return (
         <div className="leaflet-bottom leaflet-right">
@@ -244,7 +260,8 @@ const MousePosition = () => {
                 border: '2px solid rgba(0,0,0,0.2)',
                 borderRadius: '4px'
             }}>
-                Lat: {position.lat.toFixed(5)}, Lng: {position.lng.toFixed(5)}
+                <div>Lat: {position.lat.toFixed(5)}, Lng: {position.lng.toFixed(5)}</div>
+                <div>UTM X: {utmX.toFixed(2)}, Y: {utmY.toFixed(2)}{localInfo}</div>
             </div>
         </div>
     );
@@ -253,6 +270,45 @@ const MousePosition = () => {
 const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, existingData, onUpdate, centerTrigger }) => {
     const [map, setMap] = useState<L.Map | null>(null);
     const featureGroupRef = useRef<L.FeatureGroup | null>(null);
+    const [localOrigin, setLocalOrigin] = useState<{ x: number, y: number } | null>(null);
+
+    // Calculate local origin from loaded data if available
+    useEffect(() => {
+        if (existingData['global_plan_points'] && existingData['global_plan_points'].features && existingData['global_plan_points'].features.length > 0) {
+            // Find a point with graph_pose and graph_pose_local to calculate offset
+            // We can pick specific one or just infer from the first valid one
+            // We know: graph_pose_local = graph_pose - origin
+            // So: origin = graph_pose - graph_pose_local
+
+            for (const feature of existingData['global_plan_points'].features) {
+                const props = feature.properties;
+                // graph_pose is usually [x, y, yaw] or string "[x, y, yaw]"
+                // graph_pose_local is [x_loc, y_loc, yaw] or string
+
+                if (props.graph_pose && props.graph_pose_local) {
+                    try {
+                        let gp = props.graph_pose;
+                        if (typeof gp === 'string') gp = JSON.parse(gp.replace(/'/g, '"'));
+
+                        let gpl = props.graph_pose_local;
+                        if (typeof gpl === 'string') gpl = JSON.parse(gpl.replace(/'/g, '"'));
+
+                        if (Array.isArray(gp) && gp.length >= 2 && Array.isArray(gpl) && gpl.length >= 2) {
+                            const originX = gp[0] - gpl[0];
+                            const originY = gp[1] - gpl[1];
+                            setLocalOrigin({ x: originX, y: originY });
+                            console.log("Calculated Local Origin (UTM):", originX, originY);
+                            break;
+                        }
+                    } catch (e) {
+                        console.warn("Error parsing poses for origin calc:", e);
+                    }
+                }
+            }
+        } else {
+            setLocalOrigin(null);
+        }
+    }, [existingData]);
 
     // Force map resize on mount/update to prevent rendering issues
     useEffect(() => {
@@ -358,7 +414,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <ScaleControl position="bottomleft" />
-                    <MousePosition />
+                    <MousePosition localOrigin={localOrigin} />
 
                     {/* Static Layers from other steps */}
                     {Object.entries(existingData).map(([key, layerData]) => {
@@ -483,8 +539,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                             });
                                         }
 
-                                        // Fallback for unknown types
-                                        return L.circleMarker(latlng, {
+                                        // Add tooltips with local coordinates if available
+                                        const marker = L.circleMarker(latlng, {
                                             radius: 4,
                                             fillColor: '#ea0808ff',
                                             color: '#fff',
@@ -492,6 +548,22 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                             opacity: 1,
                                             fillOpacity: 0.8
                                         });
+
+                                        if (_feature.properties?.graph_pose_local) {
+                                            try {
+                                                let gpl = _feature.properties.graph_pose_local;
+                                                if (typeof gpl === 'string') gpl = JSON.parse(gpl.replace(/'/g, '"'));
+                                                if (Array.isArray(gpl) && gpl.length >= 2) {
+                                                    marker.bindTooltip(`Local: ${gpl[0].toFixed(2)}, ${gpl[1].toFixed(2)}`, {
+                                                        direction: 'top',
+                                                        className: 'node-tooltip'
+                                                    });
+                                                }
+                                            } catch (e) {
+                                                // ignore
+                                            }
+                                        }
+                                        return marker;
                                     }
 
                                     // Interactive Path Markers (Start, End, Robot)
