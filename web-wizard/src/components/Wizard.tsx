@@ -894,6 +894,10 @@ const Wizard = () => {
 
                                 // 3. Add Nearest Pose
                                 let assigned_theta = rtheta;
+                                let assigned_x = 0;
+                                let assigned_y = 0;
+                                let use_nearest_for_recovery = false;
+
                                 // If found, use the feature's ALREADY CALCULATED WGS84 geometry
                                 if (nearest_feature && min_dist < 50.0) { // Safety threshold
                                     // Assuming nearest_feature geometry is Point [lon, lat]
@@ -904,20 +908,17 @@ const Wizard = () => {
                                             properties: { style: 'nearest-pose', label: 'Nearest' }
                                         });
 
-                                        // Update assigned theta to nearest pose theta if close enough? 
-                                        // Logic in Notebook says: assigned_pose = nearest_pose if dist < 2.0
-                                        // But here we need to calculate recovery based on assigned.
-
                                         if (min_dist < 2.0) {
                                             // We align with the street here
-                                            // But obtaining theta from feature properties might be tricky if not parsed.
-                                            // graph_pose often has [x, y, theta]
-                                            // Let's try to parse theta from graph_pose (UTM) or graph_pose_local
+                                            // We need both theta AND position from the graph node (UTM)
                                             try {
                                                 let gp = nearest_feature.properties.graph_pose;
                                                 if (typeof gp === 'string') gp = JSON.parse(gp.replace(/'/g, '"'));
                                                 if (Array.isArray(gp) && gp.length >= 3) {
+                                                    assigned_x = gp[0];
+                                                    assigned_y = gp[1];
                                                     assigned_theta = gp[2];
+                                                    use_nearest_for_recovery = true;
                                                 }
                                             } catch (e) { }
                                         }
@@ -925,26 +926,28 @@ const Wizard = () => {
                                 }
 
                                 // 4. Add Recovery Pose
-                                // Strategy: Use Robot WGS84 -> UTM -> Offset -> WGS84
-                                // Only show recovery if we are "close" to a street (logic: min_dist < 2.0 -> assigned is nearest)
-                                // OR logic from notebook: assigned is robot if > 2.0.
-                                // NOTE: Logic reversed in notebook? 
-                                // "if (min_dist > 2.0) assigned_pose = {rx, ry, rtheta}" -> implying if FAR, use robot pose.
-                                // implied else: use nearest_pose.
+                                // Strategy: Use Assigned Pose -> Offset -> WGS84
+                                // If min_dist < 2.0, assigned is Nearest Node (UTM).
+                                // If min_dist >= 2.0, assigned is Robot (Lat/Lon -> UTM).
 
-                                // So if min_dist <= 2.0 (we are ON the street), we use the street orientation for recovery.
-                                // If min_dist > 2.0 (we are OFF road), we use robot orientation. 
-                                // Actually let's just stick to the requested "Recovery Pose" which is -2m from Assigned.
-
-                                // Project Robot Lat/Lon to UTM
                                 try {
-                                    // Current Robot UTM
-                                    const [utm_x, utm_y] = proj4(WGS84, UTM_ZONE_19S, [rlon, rlat]);
+                                    let start_x, start_y;
+
+                                    if (use_nearest_for_recovery) {
+                                        // Use the street node's UTM directly
+                                        start_x = assigned_x;
+                                        start_y = assigned_y;
+                                    } else {
+                                        // Use Robot's UTM
+                                        const [utm_x, utm_y] = proj4(WGS84, UTM_ZONE_19S, [rlon, rlat]);
+                                        start_x = utm_x;
+                                        start_y = utm_y;
+                                    }
 
                                     // Calculate Offset in Meters
                                     const rec_dist = -2.0;
-                                    const recovery_x = utm_x + rec_dist * Math.cos(assigned_theta);
-                                    const recovery_y = utm_y + rec_dist * Math.sin(assigned_theta);
+                                    const recovery_x = start_x + rec_dist * Math.cos(assigned_theta);
+                                    const recovery_y = start_y + rec_dist * Math.sin(assigned_theta);
 
                                     // Project back to WGS84
                                     const [rec_lon, rec_lat] = proj4(UTM_ZONE_19S, WGS84, [recovery_x, recovery_y]);
