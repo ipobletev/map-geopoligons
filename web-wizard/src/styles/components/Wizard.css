@@ -114,6 +114,10 @@
     @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all;
 }
 
+.btn-transfer {
+    @apply flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-medium hover:from-violet-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all;
+}
+
 .btn-download-all {
     @apply flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white font-medium hover:bg-slate-800 shadow-md hover:shadow-lg transition-all;
 }

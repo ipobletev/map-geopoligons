@@ -4,47 +4,57 @@ import os
 from pydantic import BaseModel
 from config import GENERATED_DIR
 
+from typing import Dict
+from . import transfer_logic
+import glob
+
 class TransferRequest(BaseModel):
     host: str
     port: int
     username: str
     password: str
-    remote_path: str
-    file_type: str = "zip" # 'zip' or specific file key
+    files: Dict[str, str]  # filename -> remote_path
 
 transfer_files_bp = APIRouter()
 
 @transfer_files_bp.post("/api/v1/transfer-files")
 async def transfer_files(req: TransferRequest):
     try:
-        # We need to find the latest generated files or specific ones.
-        # For simplicity, let's assume we zip everything currently in generated/ or re-generate a zip?
-        # Or better: The frontend triggers a download, but here we want to transfer.
-        # Let's zip the 'generated' folder content into a temporary zip or use the existing logic if possible.
+        # Construct a map of absolute local path -> remote path
+        files_map = {}
         
-        # Re-using zip logic might be hard without refactoring.
-        # Let's create a zip of the GENERATED_DIR content.
+        # We need to map filenames to actual local paths in GENERATED_DIR
+        # Files available: global_plan.csv, map.png, maze_peld.yaml, latlon.yaml
+        # For generated files, we should look in the last generated folder or just use the known structure if flat?
+        # The previous logic walked GENERATED_DIR. Let's find files by name in GENERATED_DIR recursively.
         
-        timestamp = int(time.time())
-        zip_filename = f"route_results_{timestamp}.zip"
-        zip_path = os.path.join(tempfile.gettempdir(), zip_filename)
-        
-        import zipfile
-        with zipfile.ZipFile(zip_path, 'w') as zipf:
-            for root, dirs, files in os.walk(GENERATED_DIR):
-                for file in files:
-                    zipf.write(os.path.join(root, file), file)
-        
-        result = transfer_logic.transfer_files_scp(
+        # Helper to find file path
+        def find_file(name):
+             # Search recursively in GENERATED_DIR
+             for root, dirs, files in os.walk(GENERATED_DIR):
+                 if name in files:
+                     return os.path.join(root, name)
+             return None
+
+        for filename, remote_path in req.files.items():
+            local_path = find_file(filename)
+            if local_path:
+                files_map[local_path] = remote_path
+            else:
+                # If checking specifically for files that might not exist yet, handle gracefully or skip
+                # But for now let's skip/warn
+                pass
+
+        if not files_map:
+             return JSONResponse(content={"status": "error", "message": "No files found to transfer"}, status_code=404)
+
+        result = transfer_logic.transfer_multiple_files_scp(
             req.host,
             req.port,
             req.username,
             req.password,
-            zip_path,
-            req.remote_path
+            files_map
         )
-        
-        os.remove(zip_path)
         
         if result["status"] == "error":
             return JSONResponse(content=result, status_code=500)
