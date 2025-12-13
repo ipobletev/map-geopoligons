@@ -1128,16 +1128,61 @@ const Wizard = () => {
                                 >
                                     {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="w-4 h-4" /> {t('wizard.generateRoute')}</>}
                                 </button>
+
                                 <div className="nav-buttons-row">
                                     <button
                                         onClick={handleSaveAll}
-                                        className="btn-download-all"
+                                        disabled={Object.keys(data).length === 0}
+                                        className="btn-download-all disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <Download className="w-4 h-4" /> {t('wizard.downloadAll')}
+                                        <Download className="w-4 h-4" /> {t('wizard.saveInputs')}
                                     </button>
                                     <button
+                                        onClick={() => {
+                                            if (!genResult || !genResult.download_links) {
+                                                alert(t('wizard.noResultsToDownload'));
+                                                return;
+                                            }
+
+                                            const now = new Date();
+                                            const timestamp = now.toISOString().replace(/[:.]/g, '-').split('T')[0] + '_' + now.toTimeString().split(' ')[0].replace(/:/g, '');
+                                            const zip = new JSZip();
+                                            const folder = zip.folder(`results_${timestamp}`);
+
+                                            // Helper to fetch and add file
+                                            const addFile = async (url: string, name: string) => {
+                                                try {
+                                                    const res = await fetch(url);
+                                                    if (!res.ok) throw new Error('Fetch failed');
+                                                    const blob = await res.blob();
+                                                    folder?.file(name, blob);
+                                                } catch (e) {
+                                                    console.warn(`Failed to download ${name}`, e);
+                                                }
+                                            };
+
+                                            const promises = [];
+                                            if (genResult.download_links.csv) promises.push(addFile(genResult.download_links.csv, 'global_plan.csv'));
+                                            if (genResult.download_links.map_png) promises.push(addFile(genResult.download_links.map_png, 'map.png'));
+                                            if (genResult.download_links.map_yaml) promises.push(addFile(genResult.download_links.map_yaml, 'maze_peld.yaml'));
+                                            if (genResult.download_links.latlon_yaml) promises.push(addFile(genResult.download_links.latlon_yaml, 'latlon.yaml'));
+
+                                            Promise.all(promises).then(async () => {
+                                                const content = await zip.generateAsync({ type: 'blob' });
+                                                saveAs(content, `generated_results_${timestamp}.zip`);
+                                            });
+                                        }}
+                                        disabled={!genResult}
+                                        className="btn-download-all bg-green-600 hover:bg-green-600 disabled:bg-slate-300"
+                                        title={t('wizard.downloadGeneratedFiles')}
+                                    >
+                                        <Download className="w-4 h-4" /> {t('wizard.downloadResults')}
+                                    </button>
+                                </div>
+                                <div className="nav-buttons-row">
+                                    <button
                                         onClick={() => setShowTransferModal(true)}
-                                        className="btn-transfer"
+                                        className="btn-transfer w-full"
                                         title="Transfer files via SCP"
                                     >
                                         <Send className="w-4 h-4" /> {t('Transfer')}
