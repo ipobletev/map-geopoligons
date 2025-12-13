@@ -62,7 +62,7 @@ El servidor se iniciará en `http://0.0.0.0:8000`.
 
 ## API Endpoints
 
-### `POST /api/generate-routes`
+### `POST /api/v1/generate-routes`
 
 Inicia el proceso de generación de rutas.
 

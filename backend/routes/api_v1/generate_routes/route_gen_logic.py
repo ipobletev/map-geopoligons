@@ -1,8 +1,8 @@
 import pandas as pd
 import geopandas as gpd
-import utils
-from gui_text_exception import GuiTextException
-from fit_streets import fit_all_streets
+from modules.poses_geometry import utils
+from modules.poses_geometry.utils import GuiTextException
+from .algorithm.fit_streets import fit_all_streets
 
 # Global constants (can be overridden or passed as args if needed)
 HOLE_DISTANCE = 2.5 + 1.3

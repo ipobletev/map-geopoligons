@@ -21,14 +21,15 @@ import math
 
 import networkx as nx
 
-from gui_text_exception import GuiTextException
-
-
 connect_holes = False
 del_colliding_poses = True
 
 # QRoundProgressBar, WorkerSignals, and Worker classes removed for backend compatibility
 
+class GuiTextException(Exception):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
 
 def plotPose(pose):
     start = (pose[0], pose[1])
