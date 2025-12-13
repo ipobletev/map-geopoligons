@@ -549,7 +549,12 @@ const MapComponent: React.FC<MapComponentProps> = ({ currentStepKey, drawMode, e
                                                 let gpl = _feature.properties.graph_pose_local;
                                                 if (typeof gpl === 'string') gpl = JSON.parse(gpl.replace(/'/g, '"'));
                                                 if (Array.isArray(gpl) && gpl.length >= 2) {
-                                                    marker.bindTooltip(`Local: ${gpl[0].toFixed(2)}, ${gpl[1].toFixed(2)}`, {
+                                                    const graphId = _feature.properties.graph_id;
+                                                    let tooltipText = `Local: ${gpl[0].toFixed(2)}, ${gpl[1].toFixed(2)}`;
+                                                    if (graphId !== undefined) {
+                                                        tooltipText = `ID: ${graphId} | ${tooltipText}`;
+                                                    }
+                                                    marker.bindTooltip(tooltipText, {
                                                         direction: 'top', className: 'node-tooltip'
                                                     });
                                                 }

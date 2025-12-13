@@ -468,7 +468,7 @@ const Wizard = () => {
                     });
 
                     const holeCount = pointsFeatures.filter((f: any) => f.properties.type === 'hole').length;
-                    alert(`Loaded result. Found ${holeCount} valid holes (type=hole). If 0, please check browser console (F12) for warnings starting with "Hole...".`);
+                    alert(`Loaded result. Found ${holeCount} valid holes.`);
 
                     setViewMode('generated');
                     setCenterTrigger(prev => prev + 1);
