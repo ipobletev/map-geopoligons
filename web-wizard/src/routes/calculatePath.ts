@@ -12,7 +12,7 @@ export interface PathResponse {
 
 export async function calculatePath(start: string | number, end: string | number): Promise<PathResponse> {
     try {
-        const response = await fetch('/api/calculate-path', {
+        const response = await fetch('/api/v1/calculate-path', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

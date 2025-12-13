@@ -64,7 +64,7 @@ export async function generateRoutes(
     formData.append('use_transit_streets', options.use_transit_streets.toString());
 
     try {
-        const response = await fetch('/api/generate-routes', {
+        const response = await fetch('/api/v1/generate-routes', {
             method: 'POST',
             body: formData,
         });

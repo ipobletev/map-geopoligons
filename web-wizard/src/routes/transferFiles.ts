@@ -9,7 +9,7 @@ export interface TransferData {
 
 export async function transferFiles(data: TransferData): Promise<any> {
     try {
-        const response = await fetch('/api/transfer-files', {
+        const response = await fetch('/api/v1/transfer-files', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

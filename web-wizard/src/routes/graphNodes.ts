@@ -7,7 +7,7 @@ export interface GraphNode {
 
 export async function fetchGraphNodes(): Promise<GraphNode[]> {
     try {
-        const response = await fetch('/api/graph-nodes');
+        const response = await fetch('/api/v1/graph-nodes');
         if (!response.ok) {
             throw new Error('Failed to fetch graph nodes');
         }
