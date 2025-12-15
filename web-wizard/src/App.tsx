@@ -1,13 +1,30 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import Wizard from './components/Wizard';
-import RouteGenerator from './components/RouteGenerator';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import TabNavigation from './components/TabNavigation';
 import './styles/App.css';
 
 function App() {
-  const { t } = useTranslation();
-  const [activeTab] = useState<'wizard' | 'route-generator'>('wizard');
+  const [activeTab, setActiveTab] = useState('planner');
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'supervisor':
+        return <div className="fade-in-wrapper"><h2>Supervisor Component (Empty)</h2></div>;
+      case 'status':
+        return <div className="fade-in-wrapper"><h2>Estado Component (Empty)</h2></div>;
+      case 'autonomous':
+        return <div className="fade-in-wrapper"><h2>Autonomo Component (Empty)</h2></div>;
+      case 'planner':
+        return (
+          <div className="fade-in-wrapper">
+            <Wizard />
+          </div>
+        );
+      default:
+        return <div className="fade-in-wrapper"><h2>Select a tab</h2></div>;
+    }
+  };
 
   return (
     <div className="app-container">
@@ -16,26 +33,12 @@ function App() {
           <div className="lang-switcher-wrapper">
             <LanguageSwitcher />
           </div>
-          <h1 className="app-title">
-            {t('app.title')}
-          </h1>
-          <p className="app-subtitle">
-            {t('app.subtitle')}
-          </p>
         </div>
 
-        {/* <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} /> */}
+        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="content-transition">
-          {activeTab === 'wizard' ? (
-            <div className="fade-in-wrapper">
-              <Wizard />
-            </div>
-          ) : (
-            <div className="fade-in-wrapper">
-              <RouteGenerator />
-            </div>
-          )}
+          {renderContent()}
         </div>
       </div>
     </div>

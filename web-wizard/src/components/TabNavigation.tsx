@@ -1,31 +1,30 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import '../styles/components/TabNavigation.css';
 
 interface TabNavigationProps {
-    activeTab: 'wizard' | 'route-generator';
-    onTabChange: (tab: 'wizard' | 'route-generator') => void;
+    activeTab: string;
+    onTabChange: (tab: string) => void;
 }
 
 const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
-    const { t } = useTranslation();
+    const tabs = [
+        { id: 'supervisor', label: 'Supervisor' },
+        { id: 'status', label: 'Estado' },
+        { id: 'autonomous', label: 'Autonomo' },
+        { id: 'planner', label: 'Planificador de ruta' },
+    ];
 
     return (
-        <div className="tab-nav-container">
-            <div className="tab-nav-wrapper">
+        <div className="tab-navigation">
+            {tabs.map((tab) => (
                 <button
-                    onClick={() => onTabChange('wizard')}
-                    className={`tab-button ${activeTab === 'wizard' ? 'active' : 'inactive'}`}
+                    key={tab.id}
+                    className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+                    onClick={() => onTabChange(tab.id)}
                 >
-                    {t('tabs.mapWizard')}
+                    {tab.label}
                 </button>
-                <button
-                    onClick={() => onTabChange('route-generator')}
-                    className={`tab-button tab-button-margin ${activeTab === 'route-generator' ? 'active' : 'inactive'}`}
-                >
-                    {t('tabs.routeGenerator')}
-                </button>
-            </div>
+            ))}
         </div>
     );
 };
