@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import Supervisor from './components/Supervisor';
-import Sidebar from './components/Sidebar';
-import Status from './components/Status';
 import Wizard from './components/Wizard';
+import Supervisor from './components/Supervisor';
+import Status from './components/Status';
+import Autonomous from './components/Autonomous';
+import Sidebar from './components/Sidebar';
 
 function App() {
   const [activeTab, setActiveTab] = useState('supervisor');
@@ -35,7 +36,8 @@ function App() {
                     px-6 h-full flex items-center text-sm font-medium transition-colors relative
                     ${activeTab === tab.id
                       ? 'text-blue-600 bg-blue-50/50'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }
                   `}
                 >
                   {tab.label}
@@ -54,23 +56,16 @@ function App() {
         </header>
 
         {/* Dynamic Tab Content */}
-        <main className="flex-1 overflow-hidden relative bg-gray-50">
+        <div className="flex-1 relative overflow-hidden">
+          {activeTab === 'planner' && <Wizard />}
           {activeTab === 'supervisor' && <Supervisor />}
+          {activeTab === 'autonomous' && <Autonomous />}
           {activeTab === 'status' && <Status />}
-          {activeTab === 'autonomous' && (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              Contenido de Autónomo en construcción...
-            </div>
-          )}
-          {activeTab === 'planner' && (
-            <div className="h-full">
-              <Wizard />
-            </div>
-          )}
-        </main>
+        </div>
       </div>
     </div>
   );
 }
+
 
 export default App;
