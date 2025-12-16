@@ -13,24 +13,43 @@ const Sidebar: React.FC = () => {
     const [warnings, setWarnings] = useState<string[]>([]);
     // const [dangers, setDangers] = useState<string[]>([]); // TODO: Implement Dangers when topic is known
 
+    const infoListRef = React.useRef<HTMLUListElement>(null);
+    const warningListRef = React.useRef<HTMLUListElement>(null);
+    const dangerListRef = React.useRef<HTMLUListElement>(null);
+
+    // Auto-scroll helper
+    const scrollToBottom = (ref: React.RefObject<HTMLUListElement>) => {
+        if (ref.current) {
+            ref.current.scrollTop = ref.current.scrollHeight;
+        }
+    };
+
     useEffect(() => {
         if (infoMsg?.data) {
-            setInfos(prev => [infoMsg.data, ...prev].slice(0, 50));
+            setInfos(prev => [...prev, infoMsg.data].slice(-50));
         }
     }, [infoMsg]);
 
     useEffect(() => {
+        scrollToBottom(infoListRef);
+    }, [infos]);
+
+    useEffect(() => {
         if (warningMsg?.data) {
-            setWarnings(prev => [warningMsg.data, ...prev].slice(0, 50));
+            setWarnings(prev => [...prev, warningMsg.data].slice(-50));
         }
     }, [warningMsg]);
+
+    useEffect(() => {
+        scrollToBottom(warningListRef);
+    }, [warnings]);
 
     return (
         <div className="flex flex-col w-64 h-full bg-gray-100 border-r border-gray-300 p-2 gap-2 shrink-0">
             {/* Información */}
             <div className="flex flex-col h-1/3 bg-white border border-gray-300 rounded-sm">
                 <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">{t('sidebar.information')}</div>
-                <ul className="flex-1 overflow-y-auto p-1 text-xs font-mono">
+                <ul ref={infoListRef} className="flex-1 overflow-y-auto p-1 text-xs font-mono">
                     {infos.map((msg, i) => (
                         <li key={i} className="whitespace-pre-wrap mb-1">{msg}</li>
                     ))}
@@ -40,7 +59,7 @@ const Sidebar: React.FC = () => {
             {/* Advertencia */}
             <div className="flex flex-col h-1/3 bg-white border border-gray-300 rounded-sm">
                 <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">{t('sidebar.warning')}</div>
-                <ul className="flex-1 overflow-y-auto p-1 text-xs font-mono text-orange-600">
+                <ul ref={warningListRef} className="flex-1 overflow-y-auto p-1 text-xs font-mono text-orange-600">
                     {warnings.map((msg, i) => (
                         <li key={i} className="whitespace-pre-wrap mb-1">{msg}</li>
                     ))}
@@ -50,7 +69,7 @@ const Sidebar: React.FC = () => {
             {/* Peligro */}
             <div className="flex flex-col h-1/3 bg-white border border-gray-300 rounded-sm">
                 <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">{t('sidebar.danger')}</div>
-                <ul className="flex-1 overflow-y-auto p-1 text-xs font-mono text-red-600">
+                <ul ref={dangerListRef} className="flex-1 overflow-y-auto p-1 text-xs font-mono text-red-600">
                     {/* dangers.map(...) */}
                 </ul>
             </div>
