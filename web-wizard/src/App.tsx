@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Wizard from './app/Wizard';
 import Supervisor from './app/Supervisor';
 import Status from './app/Status';
@@ -8,10 +9,17 @@ import ConnectionModal from './components/ConnectionModal';
 import RosConnection from './ros/RosConnection';
 
 function App() {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState('supervisor');
   const [isConnectionModalOpen, setIsConnectionModalOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  // const [language, setLanguage] = useState('es'); // Removed local state
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'es' ? 'en' : 'es';
+    i18n.changeLanguage(newLang);
+  };
 
   useEffect(() => {
     const rosConnection = RosConnection.getInstance();
@@ -64,10 +72,10 @@ function App() {
 
             <nav className="flex space-x-1 h-full">
               {[
-                { id: 'supervisor', label: 'Supervisor' },
-                { id: 'status', label: 'Estado' },
-                { id: 'autonomous', label: 'Autónomo' },
-                { id: 'planner', label: 'Planificador' }
+                { id: 'supervisor', label: t('tabs.supervisor') },
+                { id: 'status', label: t('tabs.status') },
+                { id: 'autonomous', label: t('tabs.autonomous') },
+                { id: 'planner', label: t('tabs.planner') }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -89,6 +97,16 @@ function App() {
             </nav>
 
             <div className="ml-auto flex items-center text-sm text-gray-400 gap-4">
+              {/* Language Selector */}
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center gap-1 p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition-colors font-medium"
+                title="Switch Language"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                <span>{i18n.language.toUpperCase()}</span>
+              </button>
+
               {/* Connection Settings Button */}
               <button
                 onClick={() => setIsConnectionModalOpen(true)}
@@ -112,7 +130,7 @@ function App() {
                     </svg>
                   )}
                   <span className={`${isConnected ? 'text-green-600 font-medium' : isReconnecting ? 'text-yellow-600 italic' : 'text-red-500'}`}>
-                    {isConnected ? 'System Ready' : isReconnecting ? 'Conectando...' : 'Disconnected'}
+                    {isConnected ? t('status.systemReady') : isReconnecting ? t('status.connecting') : t('status.disconnected')}
                   </span>
                 </div>
               </div>

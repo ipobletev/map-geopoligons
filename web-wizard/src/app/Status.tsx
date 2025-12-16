@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePrimerInfo } from '../ros/topics/PrimerInfo';
 import { useInclination } from '../ros/topics/Inclination';
 import { useMachineInfo } from '../ros/topics/MachineInfo';
@@ -18,12 +19,12 @@ const DieciIcon = ({
 }) => (
     <div className="flex flex-col items-center">
         <div className={`
-w - 20 h - 20 rounded - lg border - 2 flex items - center justify - center mb - 1 bg - white shadow - sm
+w-20 h-20 rounded-lg border-2 flex items-center justify-center mb-1 bg-white shadow-sm
             ${alert ? 'border-red-500 text-red-500 bg-red-50' : 'border-gray-400 text-gray-600'}
 `}>
             <Icon size={40} strokeWidth={1.5} />
         </div>
-        <span className={`text - sm font - medium text - center leading - tight max - w - [100px] ${alert ? 'text-red-600' : 'text-gray-600'} `}>{label}</span>
+        <span className={`text-sm font-medium text-center leading-tight max-w-[100px] ${alert ? 'text-red-600' : 'text-gray-600'} `}>{label}</span>
     </div>
 );
 
@@ -45,7 +46,7 @@ const SensorItem = ({ label, status = 'idle' }: { label: string, status?: 'ok' |
     if (status === 'ok') bg = 'bg-[#e6f4ea] border-[#1e8e3e] text-[#1e8e3e]';
 
     return (
-        <div className={`border rounded px - 3 py - 1.5 text - sm font - medium shadow - sm text - center mb - 2 transition - colors ${bg} `}>
+        <div className={`border rounded px-3 py-1.5 text-sm font-medium shadow-sm text-center mb-2 transition-colors ${bg} `}>
             {label}
         </div>
     );
@@ -79,7 +80,7 @@ const unpackBits = (byte: number): boolean[] => {
 // --- Layout Helpers ---
 const GridItem = ({ label, active }: { label: string | number, active: boolean }) => (
     <div className={`
-w - 14 h - 8 flex items - center justify - center rounded border border - gray - 800 text - sm font - bold shadow - sm transition - colors
+w-14 h-8 flex items-center justify-center rounded border border-gray-800 text-sm font-bold shadow-sm transition-colors
         ${active ? 'bg-[#1B8819] text-white' : 'bg-white text-gray-800'}
 `}>
         {label}
@@ -87,6 +88,7 @@ w - 14 h - 8 flex items - center justify - center rounded border border - gray -
 );
 
 const Status: React.FC = () => {
+    const { t } = useTranslation();
     const { data: primerData } = usePrimerInfo();
     const { data: inclinationData } = useInclination();
     const { data: machineData } = useMachineInfo();
@@ -220,19 +222,19 @@ const Status: React.FC = () => {
             <div className="flex items-start justify-between z-10 shrink-0">
                 {/* Icons Group */}
                 <div className="flex flex-col gap-2">
-                    <h3 className="text-gray-600 font-medium ml-1">Información Dieci</h3>
+                    <h3 className="text-gray-600 font-medium ml-1">{t('status.dieciInfo')}</h3>
                     <div className="flex gap-6">
-                        <DieciIcon icon={Fuel} label="Combustible" alert={fuelLow} />
-                        <DieciIcon icon={Battery} label="Batería" alert={batteryLow} />
-                        <DieciIcon icon={Thermometer} label="Alerta temperatura" alert={tempAlert} />
-                        <DieciIcon icon={Droplet} label="Alerta presión aceite" alert={oilAlert} />
+                        <DieciIcon icon={Fuel} label={t('status.fuel')} alert={fuelLow} />
+                        <DieciIcon icon={Battery} label={t('status.battery')} alert={batteryLow} />
+                        <DieciIcon icon={Thermometer} label={t('status.tempAlert')} alert={tempAlert} />
+                        <DieciIcon icon={Droplet} label={t('status.oilPressureAlert')} alert={oilAlert} />
                     </div>
                 </div>
 
                 {/* Inclination Dieci */}
                 <div className="flex gap-4 items-end">
-                    <InclinationBox label="Inclinación en roll" value={inclinationData?.machine_roll_deg?.toFixed(1) ?? '0.0'} />
-                    <InclinationBox label="Inclinación en pitch" value={inclinationData?.machine_pitch_deg?.toFixed(1) ?? '0.0'} />
+                    <InclinationBox label={t('status.rollInclination')} value={inclinationData?.machine_roll_deg?.toFixed(1) ?? '0.0'} />
+                    <InclinationBox label={t('status.pitchInclination')} value={inclinationData?.machine_pitch_deg?.toFixed(1) ?? '0.0'} />
                 </div>
             </div>
 
@@ -242,39 +244,39 @@ const Status: React.FC = () => {
                 {/* LEFT COLUMN: Sensors Sidebar */}
                 <div className="w-52 flex flex-col gap-3 overflow-y-auto pr-1">
                     <h3 className="text-gray-600 font-medium flex items-center justify-between">
-                        Información Sensores
+                        {t('status.sensorsInfo')}
                         <Settings size={16} className="text-blue-500" />
                     </h3>
 
                     {/* Laser Group */}
                     <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
-                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">Laser</h4>
+                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{t('status.laser')}</h4>
                         <div className="flex flex-col gap-2">
-                            <SensorItem label="Láser Derecho" />
-                            <SensorItem label="Láser Izquierdo" />
-                            <SensorItem label="Láser Frontal" />
-                            <SensorItem label="Láser Trasero" />
+                            <SensorItem label={t('status.laserRight')} />
+                            <SensorItem label={t('status.laserLeft')} />
+                            <SensorItem label={t('status.laserFront')} />
+                            <SensorItem label={t('status.laserRear')} />
                         </div>
                     </div>
 
                     {/* IMU Group */}
                     <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
-                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">IMU</h4>
+                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{t('status.imu')}</h4>
                         <div className="flex flex-col gap-2">
-                            <SensorItem label="IMU Derecha" />
-                            <SensorItem label="IMU Izquierda" />
-                            <SensorItem label="IMU Frontal" />
-                            <SensorItem label="IMU Trasera" />
+                            <SensorItem label={t('status.imuRight')} />
+                            <SensorItem label={t('status.imuLeft')} />
+                            <SensorItem label={t('status.imuFront')} />
+                            <SensorItem label={t('status.imuRear')} />
                         </div>
                     </div>
 
                     {/* Others Group */}
                     <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
-                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">Otros</h4>
+                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{t('status.others')}</h4>
                         <div className="flex flex-col gap-2">
-                            <SensorItem label="Primador" />
-                            <SensorItem label="Pozómetro" />
-                            <SensorItem label="GNSS" />
+                            <SensorItem label={t('status.primer')} />
+                            <SensorItem label={t('status.porometer')} />
+                            <SensorItem label={t('status.gnss')} />
                         </div>
                     </div>
                 </div>
@@ -285,17 +287,17 @@ const Status: React.FC = () => {
                     {/* Primer Information Container */}
                     <div className="bg-gray-200 rounded-lg flex flex-1 min-h-0 border border-gray-300 shadow-sm overflow-hidden flex-col">
                         <div className="bg-white px-4 py-2 border-b border-gray-300">
-                            <h3 className="text-lg font-medium text-slate-700">Información Primador</h3>
+                            <h3 className="text-lg font-medium text-slate-700">{t('status.primerInfo')}</h3>
                         </div>
 
                         <div className="flex flex-1 min-h-0">
                             {/* Vertical Tabs */}
                             <div className="w-12 bg-gray-300 flex flex-col pt-2 border-r border-gray-400 shrink-0 gap-y-1 rounded-tl-lg rounded-bl-lg h-full">
                                 {[
-                                    { id: 'general', label: 'General' },
-                                    { id: 'racks_spoolers', label: 'Racks spoolers' },
-                                    { id: 'racks_colihues', label: 'Rack colihues' },
-                                    { id: 'racks_booster', label: 'Rack booster' }
+                                    { id: 'general', label: t('status.general') },
+                                    { id: 'racks_spoolers', label: t('status.racksSpoolers') },
+                                    { id: 'racks_colihues', label: t('status.racksColihues') },
+                                    { id: 'racks_booster', label: t('status.racksBooster') }
                                 ].map(tab => (
                                     <button
                                         key={tab.id}
@@ -319,29 +321,29 @@ const Status: React.FC = () => {
                                     <div className="flex flex-row w-full h-full gap-8">
                                         {/* Counts Card - Takes up available space */}
                                         <div className="flex-[3] bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-between">
-                                            <h4 className="text-xl font-bold text-slate-700 border-b border-gray-100 pb-4">Conteo Generales</h4>
+                                            <h4 className="text-xl font-bold text-slate-700 border-b border-gray-100 pb-4">{t('status.generalCounts')}</h4>
                                             <div className="flex flex-col flex-1 justify-center gap-4">
-                                                <InfoField label="Número de spoolers derecha:" value={primerData?.spooler_count_right ?? '-'} />
-                                                <InfoField label="Número de spoolers izquierda:" value={primerData?.spooler_count_left ?? '-'} />
-                                                <InfoField label="Número de booster derecha:" value={primerData?.booster_count_right ?? '-'} />
-                                                <InfoField label="Número de booster izquierda:" value={primerData?.booster_count_left ?? '-'} />
-                                                <InfoField label="Número de colihues:" value={primerData?.stick_count ?? '-'} />
+                                                <InfoField label={t('status.spoolersRight')} value={primerData?.spooler_count_right ?? '-'} />
+                                                <InfoField label={t('status.spoolersLeft')} value={primerData?.spooler_count_left ?? '-'} />
+                                                <InfoField label={t('status.boosterRight')} value={primerData?.booster_count_right ?? '-'} />
+                                                <InfoField label={t('status.boosterLeft')} value={primerData?.booster_count_left ?? '-'} />
+                                                <InfoField label={t('status.colihues')} value={primerData?.stick_count ?? '-'} />
                                             </div>
                                         </div>
 
                                         {/* Controls/Inclination Card - Takes up sidebar space but fills height */}
                                         <div className="flex-[2] flex flex-col gap-6 p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
                                             <div>
-                                                <h4 className="text-xl font-bold text-slate-700 w-full text-center border-b border-gray-100 pb-4 mb-8">Inclinación</h4>
+                                                <h4 className="text-xl font-bold text-slate-700 w-full text-center border-b border-gray-100 pb-4 mb-8">{t('status.inclinometer')}</h4>
                                                 <div className="flex flex-col gap-8 items-center">
-                                                    <InclinationBox label="Inclinación en roll" value={inclinationData?.primer_roll_deg?.toFixed(1) ?? '0.0'} />
-                                                    <InclinationBox label="Inclinación en pitch" value={inclinationData?.primer_pitch_deg?.toFixed(1) ?? '0.0'} />
+                                                    <InclinationBox label={t('status.rollInclination')} value={inclinationData?.primer_roll_deg?.toFixed(1) ?? '0.0'} />
+                                                    <InclinationBox label={t('status.pitchInclination')} value={inclinationData?.primer_pitch_deg?.toFixed(1) ?? '0.0'} />
                                                 </div>
                                             </div>
 
                                             <div className="w-full">
-                                                <button className="w-full h-24 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all duration-200 text-center text-xl leading-tight flex items-center justify-center">
-                                                    Revisar<br />Calibración
+                                                <button className="w-full h-24 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all duration-200 text-center text-xl leading-tight flex items-center justify-center whitespace-pre-wrap">
+                                                    {t('status.checkCalibration')}
                                                 </button>
                                             </div>
                                         </div>
@@ -351,13 +353,13 @@ const Status: React.FC = () => {
                                 {activePrimerTab === 'racks_spoolers' && (
                                     <div className="flex w-full h-full gap-8">
                                         <div className="flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">Rack Derecho</span>
+                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">{t('status.rackRight')}</span>
                                             <div className="flex-1 flex items-center justify-center w-full">
                                                 {renderSpoolerPanel(0)}
                                             </div>
                                         </div>
                                         <div className="flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">Rack Izquierdo</span>
+                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">{t('status.rackLeft')}</span>
                                             <div className="flex-1 flex items-center justify-center w-full">
                                                 {renderSpoolerPanel(15)}
                                             </div>
@@ -367,7 +369,7 @@ const Status: React.FC = () => {
 
                                 {activePrimerTab === 'racks_colihues' && (
                                     <div className="flex w-full h-full bg-white p-12 rounded-3xl border border-slate-200 shadow-xl flex-col">
-                                        <h4 className="text-xl font-bold text-slate-700 text-center border-b border-gray-100 pb-4 shrink-0">Estado Colihues</h4>
+                                        <h4 className="text-xl font-bold text-slate-700 text-center border-b border-gray-100 pb-4 shrink-0">{t('status.colihuesStatus')}</h4>
                                         <div className="flex-1 flex items-center justify-center gap-12 w-full">
                                             {[0, 10, 20].map(offset => (
                                                 <div key={offset} className="flex flex-col justify-between h-[80%]">
@@ -383,13 +385,13 @@ const Status: React.FC = () => {
                                 {activePrimerTab === 'racks_booster' && (
                                     <div className="flex w-full h-full gap-8">
                                         <div className="flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">Rack Derecho</span>
+                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">{t('status.rackRight')}</span>
                                             <div className="flex-1 flex items-center justify-center w-full">
                                                 {renderBoosterPanel(0)}
                                             </div>
                                         </div>
                                         <div className="flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">Rack Izquierdo</span>
+                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">{t('status.rackLeft')}</span>
                                             <div className="flex-1 flex items-center justify-center w-full">
                                                 {renderBoosterPanel(15)}
                                             </div>
@@ -403,14 +405,14 @@ const Status: React.FC = () => {
 
                     {/* Batteries Section */}
                     <div className="bg-white border border-gray-300 rounded-lg p-5 shadow-sm shrink-0">
-                        <h3 className="text-lg font-medium text-slate-600 mb-4 ml-2">Información Baterías</h3>
+                        <h3 className="text-lg font-medium text-slate-600 mb-4 ml-2">{t('status.batteriesInfo')}</h3>
                         <div className="flex gap-8 px-4 justify-center">
                             <div className="bg-slate-500 rounded-lg p-1 pr-4 pl-4 flex items-center gap-6 shadow-inset justify-between w-[400px]">
-                                <span className="text-white font-medium text-lg">Voltaje Batería Principal</span>
+                                <span className="text-white font-medium text-lg">{t('status.mainBatteryVoltage')}</span>
                                 <NumberDisplay value={machineData?.main_battery_voltage?.toFixed(1) ?? '24.0'} />
                             </div>
                             <div className="bg-slate-500 rounded-lg p-1 pr-4 pl-4 flex items-center gap-6 shadow-inset justify-between w-[400px]">
-                                <span className="text-white font-medium text-lg">Voltaje Batería Auxiliar</span>
+                                <span className="text-white font-medium text-lg">{t('status.auxBatteryVoltage')}</span>
                                 <NumberDisplay value={(machineData as any)?.aux_battery_voltage?.toFixed(1) ?? '24.0'} />
                             </div>
                         </div>

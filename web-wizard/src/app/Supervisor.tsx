@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMachineInfo } from '../ros/topics/MachineInfo';
 import { toggleMachineOn, toggleMachineOperative } from '../ros/topics/MachineControl';
 
 const Supervisor: React.FC = () => {
+    const { t } = useTranslation();
     const { data: machineInfo } = useMachineInfo();
 
     // Helpers
@@ -32,14 +34,14 @@ const Supervisor: React.FC = () => {
                         onClick={() => toggleMachineOperative(!machineInfo?.contact_indicator)}
                         className={`w-32 h-32 rounded-full border-4 flex items-center justify-center text-white font-bold text-xl shadow-lg transition-transform active:scale-95 ${machineInfo?.contact_indicator ? 'bg-green-600 border-green-800' : 'bg-black border-gray-700'}`}
                     >
-                        START
+                        {t('supervisor.start')}
                     </button>
 
                     <button
                         onClick={() => toggleMachineOn(!machineInfo?.machine_on_status)}
                         className={`w-32 h-16 rounded-lg self-center flex items-center justify-center text-white font-bold text-lg shadow-lg transition-colors ${machineInfo?.machine_on_status ? 'bg-green-600' : 'bg-black'}`}
                     >
-                        Contacto
+                        {t('supervisor.contact')}
                     </button>
                 </div>
             </div>
@@ -49,7 +51,7 @@ const Supervisor: React.FC = () => {
 
                 {/* Combustible */}
                 <div className="bg-gray-300 rounded-t-lg p-2 flex flex-col relative">
-                    <span className="text-gray-700 font-bold mb-2">Combustible [%]</span>
+                    <span className="text-gray-700 font-bold mb-2">{t('supervisor.fuel')}</span>
                     <div className="flex-1 bg-slate-700 flex items-center justify-end pr-4 rounded">
                         <span className="font-mono text-5xl text-white tracking-widest">{formatValue(machineInfo?.fuel_level)}</span>
                     </div>
@@ -57,7 +59,7 @@ const Supervisor: React.FC = () => {
 
                 {/* Velocidad */}
                 <div className="bg-gray-300 rounded-t-lg p-2 flex flex-col items-center">
-                    <span className="text-gray-700 font-bold w-full text-left mb-1">Velocidad</span>
+                    <span className="text-gray-700 font-bold w-full text-left mb-1">{t('supervisor.speed')}</span>
                     <div className="relative w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center">
                         <span className="font-mono text-4xl text-white">{formatSpeed(machineInfo?.speed)}</span>
                         <span className="absolute bottom-4 text-xs text-gray-400">m/s</span>
@@ -66,7 +68,7 @@ const Supervisor: React.FC = () => {
 
                 {/* RPM */}
                 <div className="bg-gray-300 rounded-t-lg p-2 flex flex-col relative">
-                    <span className="text-gray-700 font-bold mb-2">RPM</span>
+                    <span className="text-gray-700 font-bold mb-2">{t('supervisor.rpm')}</span>
                     <div className="flex-1 bg-slate-700 flex items-center justify-end pr-4 rounded">
                         <span className="font-mono text-5xl text-white tracking-widest">{formatValue(machineInfo?.rpm)}</span>
                     </div>
@@ -74,12 +76,12 @@ const Supervisor: React.FC = () => {
 
                 {/* Alerta Vuelco */}
                 <div className="bg-white rounded-t-lg p-2 flex flex-col">
-                    <span className="text-gray-700 font-bold mb-2">Alerta vuelco</span>
+                    <span className="text-gray-700 font-bold mb-2">{t('supervisor.rollAlert')}</span>
                     <div className="flex-1 border-2 border-gray-300 flex items-center justify-center relative bg-gray-100">
                         {/* Alarm Icon Placeholder */}
                         {machineInfo?.cell_load_95 ? (
                             <div className="text-red-600 font-bold text-center animate-pulse">
-                                ⚠ VUELCO
+                                ⚠ {t('supervisor.rollover')}
                             </div>
                         ) : (
                             <div className="opacity-20 text-6xl">⚠</div>

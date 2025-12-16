@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useWarnMessage } from '../ros/topics/Alarms';
 import { useGuiInfo } from '../ros/topics/Logs';
 import { Octagon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Sidebar: React.FC = () => {
+    const { t } = useTranslation();
     const { data: warningMsg } = useWarnMessage();
     const { data: infoMsg } = useGuiInfo();
 
@@ -27,7 +29,7 @@ const Sidebar: React.FC = () => {
         <div className="flex flex-col w-64 h-full bg-gray-100 border-r border-gray-300 p-2 gap-2 shrink-0">
             {/* Información */}
             <div className="flex flex-col h-1/3 bg-white border border-gray-300 rounded-sm">
-                <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">Información</div>
+                <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">{t('sidebar.information')}</div>
                 <ul className="flex-1 overflow-y-auto p-1 text-xs font-mono">
                     {infos.map((msg, i) => (
                         <li key={i} className="whitespace-pre-wrap mb-1">{msg}</li>
@@ -37,7 +39,7 @@ const Sidebar: React.FC = () => {
 
             {/* Advertencia */}
             <div className="flex flex-col h-1/3 bg-white border border-gray-300 rounded-sm">
-                <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">Advertencia</div>
+                <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">{t('sidebar.warning')}</div>
                 <ul className="flex-1 overflow-y-auto p-1 text-xs font-mono text-orange-600">
                     {warnings.map((msg, i) => (
                         <li key={i} className="whitespace-pre-wrap mb-1">{msg}</li>
@@ -47,7 +49,7 @@ const Sidebar: React.FC = () => {
 
             {/* Peligro */}
             <div className="flex flex-col h-1/3 bg-white border border-gray-300 rounded-sm">
-                <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">Peligro</div>
+                <div className="bg-gray-200 px-2 py-1 font-bold text-gray-700 text-sm">{t('sidebar.danger')}</div>
                 <ul className="flex-1 overflow-y-auto p-1 text-xs font-mono text-red-600">
                     {/* dangers.map(...) */}
                 </ul>

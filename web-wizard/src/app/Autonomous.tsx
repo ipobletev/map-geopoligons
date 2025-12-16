@@ -5,6 +5,7 @@ import {
     Upload, RefreshCw, Map as MapIcon,
     AlertCircle
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // Helper for input fields with icons
 const InfoInput = ({ label, icon: Icon, value, placeholder }: any) => (
@@ -34,6 +35,7 @@ const StatusField = ({ label, value }: { label: string, value: string }) => (
 );
 
 const Autonomous: React.FC = () => {
+    const { t } = useTranslation();
     // Mock State for UI visualization
     const [consoleState] = useState<'idle' | 'request'>('idle');
 
@@ -46,7 +48,7 @@ const Autonomous: React.FC = () => {
                 {/* Console */}
                 <div className="flex-[3] bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
                     <div className="bg-white px-6 py-3 border-b border-slate-100">
-                        <span className="font-bold text-slate-700 text-lg">Consola de operación</span>
+                        <span className="font-bold text-slate-700 text-lg">{t('autonomous.console')}</span>
                     </div>
                     {/* Console Viewport */}
                     <div className={`flex-1 flex items-center justify-center p-6 ${consoleState === 'idle' ? 'bg-[#a3b3cc]/30' : 'bg-red-50'}`}>
@@ -55,12 +57,12 @@ const Autonomous: React.FC = () => {
                                 <div className="bg-[#1B8819] rounded-full p-2">
                                     <CheckCircle size={48} className="text-white" />
                                 </div>
-                                <span className="text-xl font-medium text-slate-600">Sin solicitudes por responder</span>
+                                <span className="text-xl font-medium text-slate-600">{t('autonomous.noRequests')}</span>
                             </div>
                         ) : (
                             <div className="flex items-center gap-4">
                                 <AlertCircle size={48} className="text-red-500" />
-                                <span className="text-xl font-medium text-red-600">Nueva solicitud pendiente...</span>
+                                <span className="text-xl font-medium text-red-600">{t('autonomous.newRequest')}</span>
                             </div>
                         )}
                     </div>
@@ -68,26 +70,26 @@ const Autonomous: React.FC = () => {
 
                 {/* Operation Buttons */}
                 <div className="flex-[1] flex flex-col gap-3 h-full">
-                    <span className="text-sm font-medium text-slate-500 ml-1 mb-1 hidden">Botones de Operación</span>
+                    <span className="text-sm font-medium text-slate-500 ml-1 mb-1 hidden">{t('autonomous.opButtons')}</span>
 
                     <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center gap-3 transition-all relative overflow-hidden group">
                         <div className="flex items-center justify-center bg-white/20 p-2 rounded-lg">
                             <Truck size={24} className="text-white fill-current" />
                         </div>
-                        <span className="font-bold text-lg leading-tight text-center">Iniciar Operación</span>
+                        <span className="font-bold text-lg leading-tight text-center">{t('autonomous.startOp')}</span>
                         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
 
                     <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center font-bold text-lg transition-all">
-                        Primar
+                        {t('autonomous.prime')}
                     </button>
 
                     <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center font-bold text-lg transition-all">
-                        Abortar Misión
+                        {t('autonomous.abort')}
                     </button>
 
                     <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center font-bold text-lg transition-all">
-                        Volver a Origen
+                        {t('autonomous.returnHome')}
                     </button>
                 </div>
             </div>
@@ -100,57 +102,57 @@ const Autonomous: React.FC = () => {
                 <div className="flex-[2] bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                     {/* Placeholder for Map */}
                     <div className="flex-1 m-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center">
-                        <span className="text-slate-400 font-medium">Map Visualization Area</span>
+                        <span className="text-slate-400 font-medium">{t('autonomous.mapArea')}</span>
                     </div>
                 </div>
 
                 {/* 2. Well Info (Center) */}
                 <div className="flex-[1] flex flex-col gap-4 min-w-[250px] overflow-y-auto pr-1">
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg font-bold text-slate-700">Mapa de Pozos</span>
+                        <span className="text-lg font-bold text-slate-700">{t('autonomous.wellsMap')}</span>
                         <AlertCircle size={16} className="text-blue-500 cursor-help" />
                     </div>
 
-                    <InfoInput label="Pozo ID" icon={MapIcon} placeholder="-" />
-                    <InfoInput label="Estado" icon={Settings} placeholder="-" />
-                    <InfoInput label="Profundidad medida" icon={Ruler} placeholder="-" />
-                    <InfoInput label="Profundidad en archivo" icon={FileText} placeholder="-" />
-                    <InfoInput label="Altura agua" icon={Droplet} placeholder="-" />
-                    <InfoInput label="Profundidad booster" icon={Zap} placeholder="-" />
+                    <InfoInput label={t('autonomous.wellId')} icon={MapIcon} placeholder="-" />
+                    <InfoInput label={t('autonomous.state')} icon={Settings} placeholder="-" />
+                    <InfoInput label={t('autonomous.measuredDepth')} icon={Ruler} placeholder="-" />
+                    <InfoInput label={t('autonomous.fileDepth')} icon={FileText} placeholder="-" />
+                    <InfoInput label={t('autonomous.waterHeight')} icon={Droplet} placeholder="-" />
+                    <InfoInput label={t('autonomous.boosterDepth')} icon={Zap} placeholder="-" />
 
                     <button className="mt-4 w-full bg-[#0055cb] hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-colors">
                         <MapIcon size={20} />
-                        Cargar malla
+                        {t('autonomous.loadMesh')}
                     </button>
                 </div>
 
                 {/* 3. Operation Summary (Right) */}
                 <div className="flex-[1] flex flex-col gap-4 min-w-[280px] bg-[#dbe4f0]/50 -m-2 p-4 rounded-xl border border-slate-200/50">
-                    <span className="text-lg font-bold text-slate-700 mb-2">Resumen de Operación</span>
+                    <span className="text-lg font-bold text-slate-700 mb-2">{t('autonomous.opSummary')}</span>
 
                     <div className="flex gap-4 mb-2">
                         <div className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col items-center justify-center gap-2 h-32">
                             <span className="text-3xl font-bold text-slate-800">0</span>
-                            <span className="text-xs font-medium text-slate-500 text-center leading-tight">Pozos<br />primados</span>
+                            <span className="text-xs font-medium text-slate-500 text-center leading-tight whitespace-pre-line">{t('autonomous.primedWells')}</span>
                         </div>
                         <div className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col items-center justify-center gap-2 h-32">
                             <span className="text-3xl font-bold text-slate-800">0</span>
-                            <span className="text-xs font-medium text-slate-500 text-center leading-tight">Pozos<br />con agua</span>
+                            <span className="text-xs font-medium text-slate-500 text-center leading-tight whitespace-pre-line">{t('autonomous.waterWells')}</span>
                         </div>
                     </div>
 
-                    <StatusField label="Tarea Actual:" value="" />
-                    <StatusField label="Estado Primador:" value="" />
-                    <StatusField label="Estado Pozómetro:" value="" />
+                    <StatusField label={`${t('autonomous.currentTask')}:`} value="" />
+                    <StatusField label={`${t('autonomous.primerStatus')}:`} value="" />
+                    <StatusField label={`${t('autonomous.porometerStatus')}:`} value="" />
 
                     <div className="flex gap-3 mt-auto pt-4">
                         <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 text-white text-xs font-bold py-3 px-2 rounded-lg shadow-sm flex flex-col items-center justify-center gap-1 text-center leading-tight h-16">
                             <Upload size={18} />
-                            Subir XML
+                            {t('autonomous.uploadXml')}
                         </button>
                         <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 text-white text-xs font-bold py-3 px-2 rounded-lg shadow-sm flex flex-col items-center justify-center gap-1 text-center leading-tight h-16">
                             <RefreshCw size={18} />
-                            Umbrales Inc.
+                            {t('autonomous.incThresholds')}
                         </button>
                     </div>
                 </div>
