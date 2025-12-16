@@ -8,3 +8,304 @@
 .vertical-tab-active {
     @apply bg-[#e6e7eb] text-slate-800;
 }
+
+/* Dieci Info Icon Button */
+.dieci-icon-container {
+    @apply flex flex-col items-center;
+}
+
+.dieci-icon-box {
+    @apply w-20 h-20 rounded-lg border-2 flex items-center justify-center mb-1 bg-white shadow-sm;
+}
+
+.dieci-icon-box-alert {
+    @apply border-red-500 text-red-500 bg-red-50;
+}
+
+.dieci-icon-box-normal {
+    @apply border-gray-400 text-gray-600;
+}
+
+.dieci-icon-label {
+    @apply text-sm font-medium text-center leading-tight max-w-[100px];
+}
+
+.dieci-icon-label-alert {
+    @apply text-red-600;
+}
+
+.dieci-icon-label-normal {
+    @apply text-gray-600;
+}
+
+/* Inclination Box */
+.inclination-box {
+    @apply flex flex-col items-center justify-center w-36 h-24 bg-white rounded-xl border border-gray-300 shadow-sm;
+}
+
+.inclination-label {
+    @apply text-sm font-medium text-gray-600 mb-1 text-center px-1 leading-tight;
+}
+
+.inclination-value {
+    @apply text-2xl font-bold text-gray-800;
+}
+
+/* Sensor Status Item */
+.sensor-item {
+    @apply border rounded px-3 py-1.5 text-sm font-medium shadow-sm text-center mb-2 transition-colors;
+}
+
+.sensor-item-idle {
+    @apply bg-white border-gray-300 text-gray-600;
+}
+
+.sensor-item-error {
+    @apply bg-red-100 border-red-500 text-red-700;
+}
+
+.sensor-item-ok {
+    @apply bg-[#e6f4ea] border-[#1e8e3e] text-[#1e8e3e];
+}
+
+/* Input Field Display */
+.info-field-container {
+    @apply flex flex-col mb-4;
+}
+
+.info-field-box {
+    @apply bg-white border border-gray-400 rounded-lg h-12 px-4 flex items-center justify-between shadow-sm;
+}
+
+.info-field-label {
+    @apply text-slate-700 font-medium whitespace-nowrap mr-4;
+}
+
+.info-field-value {
+    @apply font-mono font-bold text-lg text-slate-800;
+}
+
+/* Number Display */
+.number-display {
+    @apply bg-slate-700 text-white font-mono text-4xl px-4 py-1 rounded border-2 border-slate-500 shadow-inner min-w-[80px] text-center;
+}
+
+/* Grid Item */
+.grid-item {
+    @apply w-14 h-8 flex items-center justify-center rounded border border-gray-800 text-sm font-bold shadow-sm transition-colors;
+}
+
+.grid-item-active {
+    @apply bg-[#1B8819] text-white;
+}
+
+.grid-item-inactive {
+    @apply bg-white text-gray-800;
+}
+
+/* Layout & Containers */
+.status-container {
+    @apply flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden relative;
+}
+
+.disconnected-overlay {
+    @apply absolute inset-0 z-50 bg-gray-200/50 backdrop-blur-[0.8px] flex items-center justify-center;
+}
+
+.disconnected-box {
+    @apply bg-white/90 px-8 py-4 rounded-xl shadow-lg border border-red-200 flex items-center gap-3;
+}
+
+.status-top-section {
+    @apply flex items-start justify-between z-10 shrink-0;
+}
+
+.status-mid-section {
+    @apply flex flex-1 gap-6 min-h-0;
+}
+
+.status-sidebar {
+    @apply w-52 flex flex-col gap-3 overflow-y-auto pr-1;
+}
+
+.sensor-group {
+    @apply bg-white rounded-xl p-3 shadow-sm border border-gray-200;
+}
+
+.sensor-group-title {
+    @apply text-xs font-bold uppercase text-gray-400 mb-2;
+}
+
+.status-main-content {
+    @apply flex-1 flex flex-col gap-6 min-w-0;
+}
+
+.primer-container {
+    @apply bg-gray-200 rounded-lg flex flex-1 min-h-0 border border-gray-300 shadow-sm overflow-hidden flex-col;
+}
+
+.batteries-section {
+    @apply bg-white border border-gray-300 rounded-lg p-5 shadow-sm shrink-0;
+}
+
+.battery-item {
+    @apply bg-slate-500 rounded-lg p-1 pr-4 pl-4 flex items-center gap-6 shadow-inset justify-between w-[400px];
+}
+
+/* Panels & Cards */
+.spooler-column {
+    @apply flex flex-col gap-4;
+}
+
+.spooler-panel {
+    @apply flex gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner;
+}
+
+.booster-panel {
+    @apply bg-slate-50 p-2 rounded-2xl border border-slate-100 shadow-inner flex flex-col items-center gap-2;
+}
+
+.booster-columns-container {
+    @apply flex gap-2;
+}
+
+.booster-column {
+    @apply flex flex-col gap-1;
+}
+
+/* Tab Content - General */
+.tab-content-container {
+    @apply flex flex-row w-full h-full gap-8;
+}
+
+.general-card {
+    @apply bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-between flex-[3];
+}
+
+.card-title {
+    @apply text-xl font-bold text-slate-700 border-b border-gray-100 pb-4;
+}
+
+.general-info-list {
+    @apply flex flex-col flex-1 justify-center gap-1;
+}
+
+.controls-card {
+    @apply flex flex-col gap-6 p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between flex-[2];
+}
+
+.inclinometer-title {
+    @apply text-xl font-bold text-slate-700 w-full text-center border-b border-gray-100 pb-2 mb-4;
+}
+
+.inclinometer-group {
+    @apply flex flex-col gap-2 items-center;
+}
+
+.check-calibration-btn {
+    @apply w-full h-16 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all duration-200 text-center text-xl leading-tight flex items-center justify-center whitespace-pre-wrap;
+}
+
+/* Tab Content - Racks */
+.rack-container {
+    @apply flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between;
+}
+
+/* For booster tab, padding is p-1 instead of p-8. We can make a variant or just override/use separate class */
+.rack-container-booster {
+    @apply flex-1 flex flex-col items-center p-1 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between;
+}
+
+.rack-title {
+    @apply text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4;
+}
+
+.rack-title-booster {
+    @apply text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-1;
+}
+
+.panel-wrapper {
+    @apply flex-1 flex items-center justify-center w-full;
+}
+
+/* Tab Content - Colihues */
+.colihues-container {
+    @apply flex w-full h-full bg-white p-4 rounded-3xl border border-slate-200 shadow-xl flex-col;
+}
+
+.colihues-title {
+    @apply text-xl font-bold text-slate-700 text-center border-b border-gray-100 shrink-0;
+}
+
+.colihues-grid {
+    @apply flex-1 flex items-center justify-center gap-12 w-full;
+}
+
+.colihues-column {
+    @apply flex flex-col justify-between h-[80%] gap-1;
+}
+
+/* Extracted from Status.tsx */
+.disconnected-icon {
+    @apply h-6 w-6 text-red-500;
+}
+
+.disconnected-text {
+    @apply text-red-600 font-bold text-lg;
+}
+
+.dieci-section {
+    @apply flex flex-col gap-2;
+}
+
+.dieci-title {
+    @apply text-gray-600 font-medium ml-1;
+}
+
+.dieci-icons-wrapper {
+    @apply flex gap-6;
+}
+
+.inclination-wrapper {
+    @apply flex gap-4 items-end;
+}
+
+.sidebar-section-title {
+    @apply text-gray-600 font-medium flex items-center justify-between;
+}
+
+.sensor-list {
+    @apply flex flex-col gap-2;
+}
+
+.primer-header {
+    @apply bg-white px-4 py-2 border-b border-gray-300;
+}
+
+.primer-header-title {
+    @apply text-lg font-medium text-slate-700;
+}
+
+.primer-content-wrapper {
+    @apply flex flex-1 min-h-0;
+}
+
+.vertical-tabs-container {
+    @apply w-12 bg-gray-300 flex flex-col pt-2 border-r border-gray-400 shrink-0 gap-y-1 rounded-tl-lg rounded-bl-lg h-full;
+}
+
+.primer-main-content {
+    @apply flex-1 p-6 bg-[#e6e7eb] overflow-hidden flex flex-col;
+}
+
+.batteries-title {
+    @apply text-lg font-medium text-slate-600 mb-4 ml-2;
+}
+
+.batteries-wrapper {
+    @apply flex gap-8 px-4 justify-center;
+}
+
+.battery-label {
+    @apply text-white font-medium text-lg;
+}

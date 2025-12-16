@@ -17,36 +17,33 @@ const DieciIcon = ({
 }: {
     icon: any, label: string, alert?: boolean
 }) => (
-    <div className="flex flex-col items-center">
-        <div className={`
-w-20 h-20 rounded-lg border-2 flex items-center justify-center mb-1 bg-white shadow-sm
-            ${alert ? 'border-red-500 text-red-500 bg-red-50' : 'border-gray-400 text-gray-600'}
-`}>
+    <div className="dieci-icon-container">
+        <div className={`dieci-icon-box ${alert ? 'dieci-icon-box-alert' : 'dieci-icon-box-normal'}`}>
             <Icon size={40} strokeWidth={1.5} />
         </div>
-        <span className={`text-sm font-medium text-center leading-tight max-w-[100px] ${alert ? 'text-red-600' : 'text-gray-600'} `}>{label}</span>
+        <span className={`dieci-icon-label ${alert ? 'dieci-icon-label-alert' : 'dieci-icon-label-normal'}`}>{label}</span>
     </div>
 );
 
 // 2. Inclination Box
 const InclinationBox = ({ label, value }: { label: string, value: string | number }) => (
-    <div className="flex flex-col items-center justify-center w-36 h-24 bg-white rounded-xl border border-gray-300 shadow-sm">
-        <span className="text-sm font-medium text-gray-600 mb-1 text-center px-1 leading-tight">{label}</span>
-        <span className="text-2xl font-bold text-gray-800">{value}°</span>
+    <div className="inclination-box">
+        <span className="inclination-label">{label}</span>
+        <span className="inclination-value">{value}°</span>
     </div>
 );
 
 // 3. Sensor Status Item
 const SensorItem = ({ label, status = 'idle' }: { label: string, status?: 'ok' | 'error' | 'idle' }) => {
     // Default / Idle styling
-    let bg = 'bg-white border-gray-300 text-gray-600';
+    let statusClass = 'sensor-item-idle';
 
-    // Status logic (can be expanded)
-    if (status === 'error') bg = 'bg-red-100 border-red-500 text-red-700';
-    if (status === 'ok') bg = 'bg-[#e6f4ea] border-[#1e8e3e] text-[#1e8e3e]';
+    // Status logic
+    if (status === 'error') statusClass = 'sensor-item-error';
+    if (status === 'ok') statusClass = 'sensor-item-ok';
 
     return (
-        <div className={`border rounded px-3 py-1.5 text-sm font-medium shadow-sm text-center mb-2 transition-colors ${bg} `}>
+        <div className={`sensor-item ${statusClass}`}>
             {label}
         </div>
     );
@@ -54,16 +51,16 @@ const SensorItem = ({ label, status = 'idle' }: { label: string, status?: 'ok' |
 
 // 4. Input Field Display
 const InfoField = ({ label, value }: { label: string, value: string | number }) => (
-    <div className="flex flex-col mb-4">
-        <div className="bg-white border border-gray-400 rounded-lg h-12 px-4 flex items-center justify-between shadow-sm">
-            <span className="text-slate-700 font-medium whitespace-nowrap mr-4">{label}</span>
-            <span className="font-mono font-bold text-lg text-slate-800">{value}</span>
+    <div className="info-field-container">
+        <div className="info-field-box">
+            <span className="info-field-label">{label}</span>
+            <span className="info-field-value">{value}</span>
         </div>
     </div>
 );
 
 const NumberDisplay = ({ value }: { value: number | string }) => (
-    <div className="bg-slate-700 text-white font-mono text-4xl px-4 py-1 rounded border-2 border-slate-500 shadow-inner min-w-[80px] text-center">
+    <div className="number-display">
         {value}
     </div>
 );
@@ -79,10 +76,7 @@ const unpackBits = (byte: number): boolean[] => {
 
 // --- Layout Helpers ---
 const GridItem = ({ label, active }: { label: string | number, active: boolean }) => (
-    <div className={`
-w-14 h-8 flex items-center justify-center rounded border border-gray-800 text-sm font-bold shadow-sm transition-colors
-        ${active ? 'bg-[#1B8819] text-white' : 'bg-white text-gray-800'}
-`}>
+    <div className={`grid-item ${active ? 'grid-item-active' : 'grid-item-inactive'}`}>
         {label}
     </div>
 );
@@ -150,7 +144,7 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
         // Col 3 (Rightmost): 5, 4, 3, 2, 1
 
         const renderColumn = (topNum: number, count: number) => (
-            <div className="flex flex-col gap-4">
+            <div className="spooler-column">
                 {Array.from({ length: count }).map((_, i) => {
                     const num = topNum - i; // e.g. 15, 14, 13
                     // array index (0-based) for num (1-based) is num - 1
@@ -164,7 +158,7 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
         const offset = startIdx === 0 ? 0 : 15;
 
         return (
-            <div className="flex gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner">
+            <div className="spooler-panel">
                 {/* Columns are inverted visually (left to right: High to low numbers? Wait)
                      Image 1: 
                      Left Panel ("Rack Derecho"??)
@@ -193,16 +187,16 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
         // items 8..14 to Col 2 (9..15)
 
         return (
-            <div className="bg-slate-50 p-2 rounded-2xl border border-slate-100 shadow-inner flex flex-col items-center gap-2">
-                <div className="flex gap-2">
+            <div className="booster-panel">
+                <div className="booster-columns-container">
                     {/* Col 1: 1..7 */}
-                    <div className="flex flex-col gap-1">
+                    <div className="booster-column">
                         {Array.from({ length: 7 }).map((_, i) => (
                             <GridItem key={i} label={startIdx + i + 1} active={items[i]} />
                         ))}
                     </div>
                     {/* Col 2: 9..15 */}
-                    <div className="flex flex-col gap-1">
+                    <div className="booster-column">
                         {Array.from({ length: 7 }).map((_, i) => (
                             <GridItem key={i} label={startIdx + i + 1 + 8} active={items[i + 8]} />
                         ))}
@@ -216,25 +210,25 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
 
 
     return (
-        <div className="flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden relative">
+        <div className="status-container">
             {/* Disconnected Overlay */}
             {!isConnected && (
-                <div className="absolute inset-0 z-50 bg-gray-200/50 backdrop-blur-[0.8px] flex items-center justify-center">
-                    <div className="bg-white/90 px-8 py-4 rounded-xl shadow-lg border border-red-200 flex items-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="disconnected-overlay">
+                    <div className="disconnected-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="disconnected-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <span className="text-red-600 font-bold text-lg">{t('app.disconnectedOverlay')}</span>
+                        <span className="disconnected-text">{t('app.disconnectedOverlay')}</span>
                     </div>
                 </div>
             )}
 
             {/* TOP SECTION: Dieci Info & Titles */}
-            <div className="flex items-start justify-between z-10 shrink-0">
+            <div className="status-top-section">
                 {/* Icons Group */}
-                <div className="flex flex-col gap-2">
-                    <h3 className="text-gray-600 font-medium ml-1">{t('status.dieciInfo')}</h3>
-                    <div className="flex gap-6">
+                <div className="dieci-section">
+                    <h3 className="dieci-title">{t('status.dieciInfo')}</h3>
+                    <div className="dieci-icons-wrapper">
                         <DieciIcon icon={Fuel} label={t('status.fuel')} alert={fuelLow} />
                         <DieciIcon icon={Battery} label={t('status.battery')} alert={batteryLow} />
                         <DieciIcon icon={Thermometer} label={t('status.tempAlert')} alert={tempAlert} />
@@ -243,25 +237,25 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                 </div>
 
                 {/* Inclination Dieci */}
-                <div className="flex gap-4 items-end">
+                <div className="inclination-wrapper">
                     <InclinationBox label={t('status.rollInclination')} value={inclinationData?.machine_roll_deg?.toFixed(1) ?? '0.0'} />
                     <InclinationBox label={t('status.pitchInclination')} value={inclinationData?.machine_pitch_deg?.toFixed(1) ?? '0.0'} />
                 </div>
             </div>
 
             {/* SPLIT SECTION */}
-            <div className="flex flex-1 gap-6 min-h-0">
+            <div className="status-mid-section">
 
                 {/* LEFT COLUMN: Sensors Sidebar */}
-                <div className="w-52 flex flex-col gap-3 overflow-y-auto pr-1">
-                    <h3 className="text-gray-600 font-medium flex items-center justify-between">
+                <div className="status-sidebar">
+                    <h3 className="sidebar-section-title">
                         {t('status.sensorsInfo')}
                     </h3>
 
                     {/* Laser Group */}
-                    <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
-                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{t('status.laser')}</h4>
-                        <div className="flex flex-col gap-2">
+                    <div className="sensor-group">
+                        <h4 className="sensor-group-title">{t('status.laser')}</h4>
+                        <div className="sensor-list">
                             <SensorItem label={t('status.laserRight')} />
                             <SensorItem label={t('status.laserLeft')} />
                             <SensorItem label={t('status.laserFront')} />
@@ -270,9 +264,9 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                     </div>
 
                     {/* IMU Group */}
-                    <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
-                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{t('status.imu')}</h4>
-                        <div className="flex flex-col gap-2">
+                    <div className="sensor-group">
+                        <h4 className="sensor-group-title">{t('status.imu')}</h4>
+                        <div className="sensor-list">
                             <SensorItem label={t('status.imuRight')} />
                             <SensorItem label={t('status.imuLeft')} />
                             <SensorItem label={t('status.imuFront')} />
@@ -281,9 +275,9 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                     </div>
 
                     {/* Others Group */}
-                    <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-200">
-                        <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{t('status.others')}</h4>
-                        <div className="flex flex-col gap-2">
+                    <div className="sensor-group">
+                        <h4 className="sensor-group-title">{t('status.others')}</h4>
+                        <div className="sensor-list">
                             <SensorItem label={t('status.primer')} />
                             <SensorItem label={t('status.porometer')} />
                             <SensorItem label={t('status.gnss')} />
@@ -292,17 +286,17 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                 </div>
 
                 {/* CENTRE/RIGHT COLUMN */}
-                <div className="flex-1 flex flex-col gap-6 min-w-0">
+                <div className="status-main-content">
 
                     {/* Primer Information Container */}
-                    <div className="bg-gray-200 rounded-lg flex flex-1 min-h-0 border border-gray-300 shadow-sm overflow-hidden flex-col">
-                        <div className="bg-white px-4 py-2 border-b border-gray-300">
-                            <h3 className="text-lg font-medium text-slate-700">{t('status.primerInfo')}</h3>
+                    <div className="primer-container">
+                        <div className="primer-header">
+                            <h3 className="primer-header-title">{t('status.primerInfo')}</h3>
                         </div>
 
-                        <div className="flex flex-1 min-h-0">
+                        <div className="primer-content-wrapper">
                             {/* Vertical Tabs */}
-                            <div className="w-12 bg-gray-300 flex flex-col pt-2 border-r border-gray-400 shrink-0 gap-y-1 rounded-tl-lg rounded-bl-lg h-full">
+                            <div className="vertical-tabs-container">
                                 {[
                                     { id: 'general', label: t('status.general') },
                                     { id: 'racks_spoolers', label: t('status.racksSpoolers') },
@@ -324,14 +318,14 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                             </div>
 
                             {/* Content Area */}
-                            <div className="flex-1 p-6 bg-[#e6e7eb] overflow-hidden flex flex-col">
+                            <div className="primer-main-content">
 
                                 {activePrimerTab === 'general' && (
-                                    <div className="flex flex-row w-full h-full gap-8">
+                                    <div className="tab-content-container">
                                         {/* Counts Card - Takes up available space */}
-                                        <div className="flex-[3] bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-between">
-                                            <h4 className="text-xl font-bold text-slate-700 border-b border-gray-100 pb-4">{t('status.generalCounts')}</h4>
-                                            <div className="flex flex-col flex-1 justify-center gap-1">
+                                        <div className="general-card">
+                                            <h4 className="card-title">{t('status.generalCounts')}</h4>
+                                            <div className="general-info-list">
                                                 <InfoField label={t('status.spoolersRight')} value={primerData?.spooler_count_right ?? '-'} />
                                                 <InfoField label={t('status.spoolersLeft')} value={primerData?.spooler_count_left ?? '-'} />
                                                 <InfoField label={t('status.boosterRight')} value={primerData?.booster_count_right ?? '-'} />
@@ -341,17 +335,17 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                                         </div>
 
                                         {/* Controls/Inclination Card - Takes up sidebar space but fills height */}
-                                        <div className="flex-[2] flex flex-col gap-6 p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
+                                        <div className="controls-card">
                                             <div>
-                                                <h4 className="text-xl font-bold text-slate-700 w-full text-center border-b border-gray-100 pb-2 mb-4">{t('status.inclinometer')}</h4>
-                                                <div className="flex flex-col gap-2 items-center">
+                                                <h4 className="inclinometer-title">{t('status.inclinometer')}</h4>
+                                                <div className="inclinometer-group">
                                                     <InclinationBox label={t('status.rollInclination')} value={inclinationData?.primer_roll_deg?.toFixed(1) ?? '0.0'} />
                                                     <InclinationBox label={t('status.pitchInclination')} value={inclinationData?.primer_pitch_deg?.toFixed(1) ?? '0.0'} />
                                                 </div>
                                             </div>
 
                                             <div className="w-full">
-                                                <button className="w-full h-16 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all duration-200 text-center text-xl leading-tight flex items-center justify-center whitespace-pre-wrap">
+                                                <button className="check-calibration-btn">
                                                     {t('status.checkCalibration')}
                                                 </button>
                                             </div>
@@ -361,15 +355,15 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
 
                                 {activePrimerTab === 'racks_spoolers' && (
                                     <div className="flex w-full h-full gap-8">
-                                        <div className="flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">{t('status.rackRight')}</span>
-                                            <div className="flex-1 flex items-center justify-center w-full">
+                                        <div className="rack-container">
+                                            <span className="rack-title">{t('status.rackRight')}</span>
+                                            <div className="panel-wrapper">
                                                 {renderSpoolerPanel(0)}
                                             </div>
                                         </div>
-                                        <div className="flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">{t('status.rackLeft')}</span>
-                                            <div className="flex-1 flex items-center justify-center w-full">
+                                        <div className="rack-container">
+                                            <span className="rack-title">{t('status.rackLeft')}</span>
+                                            <div className="panel-wrapper">
                                                 {renderSpoolerPanel(15)}
                                             </div>
                                         </div>
@@ -377,11 +371,11 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                                 )}
 
                                 {activePrimerTab === 'racks_colihues' && (
-                                    <div className="flex w-full h-full bg-white p-4 rounded-3xl border border-slate-200 shadow-xl flex-col">
-                                        <h4 className="text-xl font-bold text-slate-700 text-center border-b border-gray-100 shrink-0">{t('status.colihuesStatus')}</h4>
-                                        <div className="flex-1 flex items-center justify-center gap-12 w-full">
+                                    <div className="colihues-container">
+                                        <h4 className="colihues-title">{t('status.colihuesStatus')}</h4>
+                                        <div className="colihues-grid">
                                             {[0, 10, 20].map(offset => (
-                                                <div key={offset} className="flex flex-col justify-between h-[80%] gap-1">
+                                                <div key={offset} className="colihues-column">
                                                     {Array.from({ length: 10 }).map((_, i) => (
                                                         <GridItem key={i} label={offset + i + 1} active={false} />
                                                     ))}
@@ -393,15 +387,15 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
 
                                 {activePrimerTab === 'racks_booster' && (
                                     <div className="flex w-full h-full gap-1">
-                                        <div className="flex-1 flex flex-col items-center p-1 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-1">{t('status.rackRight')}</span>
-                                            <div className="flex-1 flex items-center justify-center w-full">
+                                        <div className="rack-container-booster">
+                                            <span className="rack-title-booster">{t('status.rackRight')}</span>
+                                            <div className="panel-wrapper">
                                                 {renderBoosterPanel(0)}
                                             </div>
                                         </div>
-                                        <div className="flex-1 flex flex-col items-center p-1 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-1">{t('status.rackLeft')}</span>
-                                            <div className="flex-1 flex items-center justify-center w-full">
+                                        <div className="rack-container-booster">
+                                            <span className="rack-title-booster">{t('status.rackLeft')}</span>
+                                            <div className="panel-wrapper">
                                                 {renderBoosterPanel(15)}
                                             </div>
                                         </div>
@@ -413,15 +407,15 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                     </div>
 
                     {/* Batteries Section */}
-                    <div className="bg-white border border-gray-300 rounded-lg p-5 shadow-sm shrink-0">
-                        <h3 className="text-lg font-medium text-slate-600 mb-4 ml-2">{t('status.batteriesInfo')}</h3>
-                        <div className="flex gap-8 px-4 justify-center">
-                            <div className="bg-slate-500 rounded-lg p-1 pr-4 pl-4 flex items-center gap-6 shadow-inset justify-between w-[400px]">
-                                <span className="text-white font-medium text-lg">{t('status.mainBatteryVoltage')}</span>
+                    <div className="batteries-section">
+                        <h3 className="batteries-title">{t('status.batteriesInfo')}</h3>
+                        <div className="batteries-wrapper">
+                            <div className="battery-item">
+                                <span className="battery-label">{t('status.mainBatteryVoltage')}</span>
                                 <NumberDisplay value={machineData?.main_battery_voltage?.toFixed(1) ?? '24.0'} />
                             </div>
-                            <div className="bg-slate-500 rounded-lg p-1 pr-4 pl-4 flex items-center gap-6 shadow-inset justify-between w-[400px]">
-                                <span className="text-white font-medium text-lg">{t('status.auxBatteryVoltage')}</span>
+                            <div className="battery-item">
+                                <span className="battery-label">{t('status.auxBatteryVoltage')}</span>
                                 <NumberDisplay value={(machineData as any)?.aux_battery_voltage?.toFixed(1) ?? '24.0'} />
                             </div>
                         </div>
