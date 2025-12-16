@@ -986,7 +986,7 @@ const Wizard = () => {
 
                 {activeTab === 'load' && (
                     <>
-                        <div className="sidebar-actions-grid p-4 pt-0">
+                        <div className="sidebar-actions-grid">
                             <button
                                 onClick={handleClearAll}
                                 className="btn-action-red"
@@ -1128,6 +1128,15 @@ const Wizard = () => {
                                 >
                                     {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="w-4 h-4" /> {t('wizard.generateRoute')}</>}
                                 </button>
+                                <div className="nav-buttons-row">
+                                    <button
+                                        onClick={() => setShowTransferModal(true)}
+                                        className="btn-transfer w-full"
+                                        title="Transfer files via SCP"
+                                    >
+                                        <Send className="w-4 h-4" /> {t('wizard.transfer')}
+                                    </button>
+                                </div>
 
                                 <div className="nav-buttons-row">
                                     <button
@@ -1179,15 +1188,6 @@ const Wizard = () => {
                                         <Download className="w-4 h-4" /> {t('wizard.downloadResults')}
                                     </button>
                                 </div>
-                                <div className="nav-buttons-row">
-                                    <button
-                                        onClick={() => setShowTransferModal(true)}
-                                        className="btn-transfer w-full"
-                                        title="Transfer files via SCP"
-                                    >
-                                        <Send className="w-4 h-4" /> {t('Transfer')}
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </>
@@ -1195,7 +1195,7 @@ const Wizard = () => {
 
                 {/* Path Interaction Section - Visible in Details tab */}
                 {activeTab === 'details' && (
-                    <div className="mt-auto pt-4 border-t border-slate-200 h-full overflow-y-auto">
+                    <div className="mt-auto p-4 border-t border-slate-200 h-full overflow-y-auto">
                         <h3 className="text-sm font-semibold text-slate-700 mb-2">Path Finder</h3>
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-2">
