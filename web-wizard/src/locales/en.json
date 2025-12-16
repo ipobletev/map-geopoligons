@@ -12,7 +12,7 @@
         "planner": "Planner"
     },
     "status": {
-        "systemReady": "System Ready",
+        "systemReady": "Connected",
         "connecting": "Connecting...",
         "disconnected": "Disconnected",
         "dieciInfo": "Dieci Information",
