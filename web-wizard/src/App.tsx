@@ -122,7 +122,7 @@ function App() {
                     isReconnecting ? 'bg-yellow-500 animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.6)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'}
                   `}></span>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-40">
                   {isReconnecting && (
                     <svg className="animate-spin h-3 w-3 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
