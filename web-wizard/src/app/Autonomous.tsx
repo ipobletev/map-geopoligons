@@ -6,16 +6,17 @@ import {
     AlertCircle
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import '../styles/components/Autonomous.css';
 
 // Helper for input fields with icons
 const InfoInput = ({ label, icon: Icon, value, placeholder }: any) => (
-    <div className="flex flex-col gap-1 w-full">
-        <span className="text-sm font-medium text-slate-600 ml-1">{label}</span>
-        <div className="flex items-center bg-white border border-slate-300 rounded-lg px-3 py-2 shadow-sm">
-            <Icon size={18} className="text-slate-400 mr-3" />
+    <div className="info-input-container">
+        <span className="info-input-label">{label}</span>
+        <div className="info-input-wrapper">
+            <Icon size={18} className="info-input-icon" />
             <input
                 type="text"
-                className="flex-1 bg-transparent border-none outline-none text-slate-700 font-medium"
+                className="info-input-field"
                 value={value}
                 placeholder={placeholder}
                 readOnly
@@ -26,10 +27,10 @@ const InfoInput = ({ label, icon: Icon, value, placeholder }: any) => (
 
 // Helper for Operation Summary Status Fields
 const StatusField = ({ label, value }: { label: string, value: string }) => (
-    <div className="flex flex-col gap-1 w-full">
-        <span className="text-sm font-medium text-slate-600 ml-1">{label}</span>
-        <div className="bg-white border border-slate-300 rounded-lg px-4 py-3 shadow-sm min-h-[48px] flex items-center">
-            <span className="text-slate-800 font-medium">{value}</span>
+    <div className="status-field-container">
+        <span className="status-field-label">{label}</span>
+        <div className="status-field-value-box">
+            <span className="status-field-value">{value}</span>
         </div>
     </div>
 );
@@ -40,67 +41,67 @@ const Autonomous: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
     const [consoleState] = useState<'idle' | 'request'>('idle');
 
     return (
-        <div className="flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden relative">
+        <div className="autonomous-container">
             {/* Disconnected Overlay */}
             {!isConnected && (
-                <div className="absolute inset-0 z-50 bg-gray-200/50 backdrop-blur-[0.8px] flex items-center justify-center">
-                    <div className="bg-white/90 px-8 py-4 rounded-xl shadow-lg border border-red-200 flex items-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="disconnected-overlay">
+                    <div className="disconnected-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="disconnected-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <span className="text-red-600 font-bold text-lg">{t('app.disconnectedOverlay')}</span>
+                        <span className="disconnected-text">{t('app.disconnectedOverlay')}</span>
                     </div>
                 </div>
             )}
 
 
             {/* TOP SECTION: Console & Operation Buttons */}
-            <div className="flex gap-6 h-[25%] min-h-[200px] shrink-0">
+            <div className="autonomous-top-section">
 
                 {/* Console */}
-                <div className="flex-[3] bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-                    <div className="bg-white px-6 py-3 border-b border-slate-100">
-                        <span className="font-bold text-slate-700 text-lg">{t('autonomous.console')}</span>
+                <div className="console-container">
+                    <div className="console-header">
+                        <span className="console-title">{t('autonomous.console')}</span>
                     </div>
                     {/* Console Viewport */}
-                    <div className={`flex-1 flex items-center justify-center p-6 ${consoleState === 'idle' ? 'bg-[#a3b3cc]/30' : 'bg-red-50'}`}>
+                    <div className={`console-viewport ${consoleState}`}>
                         {consoleState === 'idle' ? (
-                            <div className="flex items-center gap-4">
-                                <div className="bg-[#1B8819] rounded-full p-2">
+                            <div className="console-status-box">
+                                <div className="console-icon-bg">
                                     <CheckCircle size={48} className="text-white" />
                                 </div>
-                                <span className="text-xl font-medium text-slate-600">{t('autonomous.noRequests')}</span>
+                                <span className="console-status-text">{t('autonomous.noRequests')}</span>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-4">
+                            <div className="console-status-box">
                                 <AlertCircle size={48} className="text-red-500" />
-                                <span className="text-xl font-medium text-red-600">{t('autonomous.newRequest')}</span>
+                                <span className="console-status-text-error">{t('autonomous.newRequest')}</span>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* Operation Buttons */}
-                <div className="flex-[1] flex flex-col gap-3 h-full">
-                    <span className="text-sm font-medium text-slate-500 ml-1 mb-1 hidden">{t('autonomous.opButtons')}</span>
+                <div className="op-buttons-container">
+                    <span className="op-buttons-label">{t('autonomous.opButtons')}</span>
 
-                    <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center gap-3 transition-all relative overflow-hidden group">
-                        <div className="flex items-center justify-center bg-white/20 p-2 rounded-lg">
+                    <button className="op-button-start group">
+                        <div className="op-button-icon-box">
                             <Truck size={24} className="text-white fill-current" />
                         </div>
-                        <span className="font-bold text-lg leading-tight text-center">{t('autonomous.startOp')}</span>
-                        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="op-button-text">{t('autonomous.startOp')}</span>
+                        <div className="op-button-overlay" />
                     </button>
 
-                    <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center font-bold text-lg transition-all">
+                    <button className="op-button">
                         {t('autonomous.prime')}
                     </button>
 
-                    <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center font-bold text-lg transition-all">
+                    <button className="op-button">
                         {t('autonomous.abort')}
                     </button>
 
-                    <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center font-bold text-lg transition-all">
+                    <button className="op-button">
                         {t('autonomous.returnHome')}
                     </button>
                 </div>
@@ -108,20 +109,20 @@ const Autonomous: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
 
 
             {/* BOTTOM SECTION: Map, Well Info, Summary */}
-            <div className="flex-1 flex gap-6 min-h-0">
+            <div className="autonomous-bottom-section">
 
                 {/* 1. Map Area (Left) */}
-                <div className="flex-[2] bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                <div className="map-container">
                     {/* Placeholder for Map */}
-                    <div className="flex-1 m-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center">
-                        <span className="text-slate-400 font-medium">{t('autonomous.mapArea')}</span>
+                    <div className="map-placeholder">
+                        <span className="map-placeholder-text">{t('autonomous.mapArea')}</span>
                     </div>
                 </div>
 
                 {/* 2. Well Info (Center) */}
-                <div className="flex-[1] flex flex-col gap-4 min-w-[250px] overflow-y-auto pr-1">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg font-bold text-slate-700">{t('autonomous.wellsMap')}</span>
+                <div className="well-info-container">
+                    <div className="well-info-header">
+                        <span className="well-info-title">{t('autonomous.wellsMap')}</span>
                         <AlertCircle size={16} className="text-blue-500 cursor-help" />
                     </div>
 
@@ -132,24 +133,24 @@ const Autonomous: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                     <InfoInput label={t('autonomous.waterHeight')} icon={Droplet} placeholder="-" />
                     <InfoInput label={t('autonomous.boosterDepth')} icon={Zap} placeholder="-" />
 
-                    <button className="mt-4 w-full bg-[#0055cb] hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-colors">
+                    <button className="load-mesh-button">
                         <MapIcon size={20} />
                         {t('autonomous.loadMesh')}
                     </button>
                 </div>
 
                 {/* 3. Operation Summary (Right) */}
-                <div className="flex-[1] flex flex-col gap-4 min-w-[280px] bg-[#dbe4f0]/50 -m-2 p-4 rounded-xl border border-slate-200/50">
-                    <span className="text-lg font-bold text-slate-700 mb-2">{t('autonomous.opSummary')}</span>
+                <div className="op-summary-container">
+                    <span className="op-summary-title">{t('autonomous.opSummary')}</span>
 
-                    <div className="flex gap-4 mb-2">
-                        <div className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col items-center justify-center gap-2 h-32">
-                            <span className="text-3xl font-bold text-slate-800">0</span>
-                            <span className="text-xs font-medium text-slate-500 text-center leading-tight whitespace-pre-line">{t('autonomous.primedWells')}</span>
+                    <div className="summary-stats-row">
+                        <div className="summary-stat-card">
+                            <span className="summary-stat-value">0</span>
+                            <span className="summary-stat-label">{t('autonomous.primedWells')}</span>
                         </div>
-                        <div className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col items-center justify-center gap-2 h-32">
-                            <span className="text-3xl font-bold text-slate-800">0</span>
-                            <span className="text-xs font-medium text-slate-500 text-center leading-tight whitespace-pre-line">{t('autonomous.waterWells')}</span>
+                        <div className="summary-stat-card">
+                            <span className="summary-stat-value">0</span>
+                            <span className="summary-stat-label">{t('autonomous.waterWells')}</span>
                         </div>
                     </div>
 
@@ -157,12 +158,12 @@ const Autonomous: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
                     <StatusField label={`${t('autonomous.primerStatus')}:`} value="" />
                     <StatusField label={`${t('autonomous.porometerStatus')}:`} value="" />
 
-                    <div className="flex gap-3 mt-auto pt-4">
-                        <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 text-white text-xs font-bold py-3 px-2 rounded-lg shadow-sm flex flex-col items-center justify-center gap-1 text-center leading-tight h-16">
+                    <div className="summary-actions-row">
+                        <button className="summary-action-button">
                             <Upload size={18} />
                             {t('autonomous.uploadXml')}
                         </button>
-                        <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 text-white text-xs font-bold py-3 px-2 rounded-lg shadow-sm flex flex-col items-center justify-center gap-1 text-center leading-tight h-16">
+                        <button className="summary-action-button">
                             <RefreshCw size={18} />
                             {t('autonomous.incThresholds')}
                         </button>

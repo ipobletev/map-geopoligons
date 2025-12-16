@@ -1,0 +1,202 @@
+/* Autonomous Component Styles */
+
+.autonomous-container {
+    @apply flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden relative;
+}
+
+/* Disconnected Overlay */
+.disconnected-overlay {
+    @apply absolute inset-0 z-50 bg-gray-200/50 backdrop-blur-[0.8px] flex items-center justify-center;
+}
+
+.disconnected-box {
+    @apply bg-white/90 px-8 py-4 rounded-xl shadow-lg border border-red-200 flex items-center gap-3;
+}
+
+.disconnected-icon {
+    @apply h-6 w-6 text-red-500;
+}
+
+.disconnected-text {
+    @apply text-red-600 font-bold text-lg;
+}
+
+/* Top Section */
+.autonomous-top-section {
+    @apply flex gap-6 h-[25%] min-h-[200px] shrink-0;
+}
+
+/* Console */
+.console-container {
+    @apply flex-[3] bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden;
+}
+
+.console-header {
+    @apply bg-white px-6 py-3 border-b border-slate-100;
+}
+
+.console-title {
+    @apply font-bold text-slate-700 text-lg;
+}
+
+.console-viewport {
+    @apply flex-1 flex items-center justify-center p-6;
+}
+
+.console-viewport.idle {
+    @apply bg-[#a3b3cc]/30;
+}
+
+.console-viewport.request {
+    @apply bg-red-50;
+}
+
+.console-status-box {
+    @apply flex items-center gap-4;
+}
+
+.console-icon-bg {
+    @apply bg-[#1B8819] rounded-full p-2;
+}
+
+.console-status-text {
+    @apply text-xl font-medium text-slate-600;
+}
+
+.console-status-text-error {
+    @apply text-xl font-medium text-red-600;
+}
+
+/* Operation Buttons */
+.op-buttons-container {
+    @apply flex-[1] flex flex-col gap-3 h-full;
+}
+
+.op-buttons-label {
+    @apply text-sm font-medium text-slate-500 ml-1 mb-1 hidden;
+}
+
+.op-button {
+    @apply flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center font-bold text-lg transition-all;
+}
+
+.op-button-start {
+    @apply flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center gap-3 transition-all relative overflow-hidden;
+}
+
+.op-button-icon-box {
+    @apply flex items-center justify-center bg-white/20 p-2 rounded-lg;
+}
+
+.op-button-text {
+    @apply font-bold text-lg leading-tight text-center;
+}
+
+.op-button-overlay {
+    @apply absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity;
+}
+
+/* Bottom Section */
+.autonomous-bottom-section {
+    @apply flex-1 flex gap-6 min-h-0;
+}
+
+/* Map Area */
+.map-container {
+    @apply flex-[2] bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col;
+}
+
+.map-placeholder {
+    @apply flex-1 m-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center;
+}
+
+.map-placeholder-text {
+    @apply text-slate-400 font-medium;
+}
+
+/* Well Info */
+.well-info-container {
+    @apply flex-[1] flex flex-col gap-4 min-w-[250px] overflow-y-auto pr-1;
+}
+
+.well-info-header {
+    @apply flex items-center gap-2 mb-2;
+}
+
+.well-info-title {
+    @apply text-lg font-bold text-slate-700;
+}
+
+.load-mesh-button {
+    @apply mt-4 w-full bg-[#0055cb] hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 transition-colors;
+}
+
+/* Operation Summary */
+.op-summary-container {
+    @apply flex-[1] flex flex-col gap-4 min-w-[280px] bg-[#dbe4f0]/50 -m-2 p-4 rounded-xl border border-slate-200/50;
+}
+
+.op-summary-title {
+    @apply text-lg font-bold text-slate-700 mb-2;
+}
+
+.summary-stats-row {
+    @apply flex gap-4 mb-2;
+}
+
+.summary-stat-card {
+    @apply flex-1 bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-col items-center justify-center gap-2 h-32;
+}
+
+.summary-stat-value {
+    @apply text-3xl font-bold text-slate-800;
+}
+
+.summary-stat-label {
+    @apply text-xs font-medium text-slate-500 text-center leading-tight whitespace-pre-line;
+}
+
+.summary-actions-row {
+    @apply flex gap-3 mt-auto pt-4;
+}
+
+.summary-action-button {
+    @apply flex-1 bg-[#0055cb] hover:bg-blue-700 text-white text-xs font-bold py-3 px-2 rounded-lg shadow-sm flex flex-col items-center justify-center gap-1 text-center leading-tight h-16;
+}
+
+/* Helper Components */
+.info-input-container {
+    @apply flex flex-col gap-1 w-full;
+}
+
+.info-input-label {
+    @apply text-sm font-medium text-slate-600 ml-1;
+}
+
+.info-input-wrapper {
+    @apply flex items-center bg-white border border-slate-300 rounded-lg px-3 py-2 shadow-sm;
+}
+
+.info-input-icon {
+    @apply text-slate-400 mr-3;
+}
+
+.info-input-field {
+    @apply flex-1 bg-transparent border-none outline-none text-slate-700 font-medium;
+}
+
+.status-field-container {
+    @apply flex flex-col gap-1 w-full;
+}
+
+.status-field-label {
+    @apply text-sm font-medium text-slate-600 ml-1;
+}
+
+.status-field-value-box {
+    @apply bg-white border border-slate-300 rounded-lg px-4 py-3 shadow-sm min-h-[48px] flex items-center;
+}
+
+.status-field-value {
+    @apply text-slate-800 font-medium;
+}

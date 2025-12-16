@@ -149,7 +149,7 @@
 }
 
 .battery-item {
-    @apply bg-slate-500 rounded-lg p-1 pr-4 pl-4 flex items-center gap-6 shadow-inset justify-between w-[400px];
+    @apply bg-slate-500 rounded-lg p-1 pr-4 pl-4 flex items-center gap-6 shadow-inner justify-between w-[400px];
 }
 
 /* Panels & Cards */
