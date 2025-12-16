@@ -1,0 +1,59 @@
+/* Sidebar Container */
+.sidebar-container {
+    @apply flex flex-col w-64 h-full bg-gray-100 border-r border-gray-300 p-2 gap-2 shrink-0;
+}
+
+/* Info Sections */
+.info-section, .warning-section, .danger-section {
+    @apply flex flex-col h-1/3 bg-white border border-gray-300 rounded-sm;
+}
+
+.section-header {
+    @apply bg-gray-200 px-2 py-1 font-bold text-gray-700 text-base;
+}
+
+/* Message Lists */
+.message-list {
+    @apply flex-1 overflow-y-auto p-1 text-xs font-mono;
+}
+
+.message-item {
+    @apply whitespace-pre-wrap mb-1;
+}
+
+.message-list-warning {
+    @apply text-orange-600;
+}
+
+.message-list-danger {
+    @apply text-red-600;
+}
+
+/* Emergency Area */
+.emergency-area {
+    @apply flex flex-col gap-2 mt-auto;
+}
+
+.emergency-button-wrapper {
+    @apply relative w-full aspect-square bg-yellow-400 flex items-center justify-center overflow-hidden;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, #000 10px, #000 20px);
+}
+
+.emergency-button {
+    @apply w-20 h-20 rounded-full bg-red-600 border-4 border-red-800 flex items-center justify-center transition-transform;
+    box-shadow: 0 4px 0 rgb(153, 27, 27);
+}
+
+.emergency-button:active {
+    box-shadow: none;
+    transform: translateY(4px);
+}
+
+.emergency-icon {
+    @apply text-white w-10 h-10;
+}
+
+/* Ansul Button */
+.ansul-button {
+    @apply bg-gray-200 border border-gray-400 text-gray-700 font-bold py-1 px-4 rounded flex items-center justify-center gap-2;
+}
