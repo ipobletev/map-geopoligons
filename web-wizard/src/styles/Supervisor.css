@@ -1,0 +1,123 @@
+.supervisor-container {
+    @apply flex flex-col h-full w-full bg-gray-100 p-4 relative;
+}
+
+.disconnected-overlay {
+    @apply absolute inset-0 z-50 bg-gray-200/50 backdrop-blur-[0.8px] flex items-center justify-center rounded-xl;
+}
+
+.disconnected-box {
+    @apply bg-white/90 px-8 py-4 rounded-xl shadow-lg border border-red-200 flex items-center gap-3;
+}
+
+.disconnected-icon {
+    @apply h-6 w-6 text-red-500;
+}
+
+.disconnected-text {
+    @apply text-red-600 font-bold text-lg;
+}
+
+.machine-viz-area {
+    @apply flex-1 bg-gray-200 rounded-xl mb-4 relative flex items-center justify-center overflow-hidden shadow-inner;
+}
+
+.machine-placeholder {
+    @apply w-[400px] h-[250px] bg-white rounded-lg flex items-center justify-center shadow-sm;
+}
+
+.machine-svg {
+    @apply w-64 h-64 text-black;
+}
+
+.control-buttons-container {
+    @apply absolute bottom-10 flex gap-8 z-10;
+}
+
+.start-button {
+    @apply w-32 h-32 rounded-full border-4 flex items-center justify-center text-white font-bold text-xl shadow-lg transition-transform active:scale-95;
+}
+
+.start-button-active {
+    @apply bg-green-600 border-green-800;
+}
+
+.start-button-inactive {
+    @apply bg-black border-gray-700;
+}
+
+.right-buttons-group {
+    @apply flex flex-col gap-4 self-center;
+}
+
+.contact-button {
+    @apply w-32 h-16 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg transition-colors;
+}
+
+.contact-button-active {
+    @apply bg-green-600;
+}
+
+.contact-button-inactive {
+    @apply bg-black;
+}
+
+.clear-errors-button {
+    @apply w-32 h-16 rounded-lg bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-white font-bold text-lg shadow-lg transition-colors flex flex-col items-center justify-center leading-tight;
+}
+
+.instrument-cluster {
+    @apply h-48 grid grid-cols-4 gap-4;
+}
+
+.instrument-panel {
+    @apply bg-gray-300 rounded-t-lg p-2 flex flex-col relative;
+}
+
+.instrument-panel-centered {
+    @apply bg-gray-300 rounded-t-lg p-2 flex flex-col items-center;
+}
+
+.instrument-label {
+    @apply text-gray-700 font-bold mb-2;
+}
+
+.instrument-label-left {
+    @apply text-gray-700 font-bold w-full text-left mb-1;
+}
+
+.instrument-display {
+    @apply flex-1 bg-slate-700 flex items-center justify-end pr-4 rounded;
+}
+
+.instrument-value {
+    @apply font-mono text-5xl text-white tracking-widest;
+}
+
+.speed-circle {
+    @apply relative w-32 h-32 bg-slate-700 rounded-full flex items-center justify-center;
+}
+
+.speed-value {
+    @apply font-mono text-4xl text-white;
+}
+
+.speed-unit {
+    @apply absolute bottom-4 text-xs text-gray-400;
+}
+
+.roll-alert-panel {
+    @apply bg-white rounded-t-lg p-2 flex flex-col;
+}
+
+.roll-alert-content {
+    @apply flex-1 border-2 border-gray-300 flex items-center justify-center relative bg-gray-100;
+}
+
+.roll-warning-active {
+    @apply text-red-600 font-bold text-center animate-pulse;
+}
+
+.roll-warning-inactive {
+    @apply opacity-20 text-6xl;
+}
