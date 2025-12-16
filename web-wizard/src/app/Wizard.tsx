@@ -968,15 +968,15 @@ const Wizard = () => {
                     </h1>
                     <p className="wizard-subtitle">{t('wizard.subtitle')}</p>
 
-                    <div className="flex border-b border-slate-200 mb-4">
+                    <div className="tab-container">
                         <button
-                            className={`flex-1 py-2 text-sm font-medium ${activeTab === 'load' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`tab-button ${activeTab === 'load' ? 'tab-button-active' : ''}`}
                             onClick={() => setActiveTab('load')}
                         >
                             Carga
                         </button>
                         <button
-                            className={`flex-1 py-2 text-sm font-medium ${activeTab === 'details' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`tab-button ${activeTab === 'details' ? 'tab-button-active' : ''}`}
                             onClick={() => setActiveTab('details')}
                         >
                             Detalles
@@ -992,21 +992,21 @@ const Wizard = () => {
                                 className="btn-action-red"
                                 title="Delete all figures"
                             >
-                                <Trash2 className="w-3 h-3" /> {t('wizard.clearAll')}
+                                <Trash2 className="icon-sm" /> {t('wizard.clearAll')}
                             </button>
                             <button
                                 onClick={handleCenterMap}
                                 className="btn-action-blue"
                                 title="Center map on data"
                             >
-                                <Upload className="w-3 h-3 rotate-90" /> {t('wizard.centerMap')}
+                                <Upload className="icon-sm icon-rotate-90" /> {t('wizard.centerMap')}
                             </button>
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="btn-action-slate"
                                 title="Load GeoJSON"
                             >
-                                <Upload className="w-3 h-3" /> {t('wizard.loadJson')}
+                                <Upload className="icon-sm" /> {t('wizard.loadJson')}
                             </button>
                             <input
                                 type="file"
@@ -1020,7 +1020,7 @@ const Wizard = () => {
                                 className="btn-action-slate"
                                 title="Load Folder"
                             >
-                                <Folder className="w-3 h-3" /> {t('wizard.loadFolder')}
+                                <Folder className="icon-sm" /> {t('wizard.loadFolder')}
                             </button>
                             <input
                                 type="file"
@@ -1037,7 +1037,7 @@ const Wizard = () => {
                                 className="btn-action-slate"
                                 title="Load Result File"
                             >
-                                <Upload className="w-3 h-3" /> {t('Load Result')}
+                                <Upload className="icon-sm" /> {t('Load Result')}
                             </button>
                             <input
                                 type="file"
@@ -1079,13 +1079,13 @@ const Wizard = () => {
                                             </span>
                                             {hasData && (
                                                 <div className="step-status-wrapper">
-                                                    <CheckCircle className="w-4 h-4 text-green-500" />
+                                                    <CheckCircle className="icon-md icon-success" />
                                                     <button
                                                         onClick={(e) => handleClearStep(step.key, e)}
                                                         className="btn-clear-step"
                                                         title="Clear step data"
                                                     >
-                                                        <Trash2 className="w-4 h-4" />
+                                                        <Trash2 className="icon-md" />
                                                     </button>
                                                 </div>
                                             )}
@@ -1109,7 +1109,7 @@ const Wizard = () => {
                                         disabled={currentStepIndex === 0}
                                         className="btn-nav-back"
                                     >
-                                        <ArrowLeft className="w-4 h-4" />
+                                        <ArrowLeft className="icon-md" />
                                         {t('wizard.back')}
                                     </button>
                                     <button
@@ -1118,7 +1118,7 @@ const Wizard = () => {
                                         className="btn-nav-next"
                                     >
                                         {t('wizard.next')}
-                                        <ArrowRight className="w-4 h-4" />
+                                        <ArrowRight className="icon-md" />
                                     </button>
                                 </div>
                                 <button
@@ -1126,15 +1126,15 @@ const Wizard = () => {
                                     disabled={generating}
                                     className="btn-generate-route"
                                 >
-                                    {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="w-4 h-4" /> {t('wizard.generateRoute')}</>}
+                                    {generating ? t('wizard.generating', { progress: Math.round(genProgress) }) : <><Play className="icon-md" /> {t('wizard.generateRoute')}</>}
                                 </button>
                                 <div className="nav-buttons-row">
                                     <button
                                         onClick={() => setShowTransferModal(true)}
-                                        className="btn-transfer w-full"
+                                        className="btn-transfer"
                                         title="Transfer files via SCP"
                                     >
-                                        <Send className="w-4 h-4" /> {t('wizard.transfer')}
+                                        <Send className="icon-md" /> {t('wizard.transfer')}
                                     </button>
                                 </div>
 
@@ -1142,9 +1142,9 @@ const Wizard = () => {
                                     <button
                                         onClick={handleSaveAll}
                                         disabled={Object.keys(data).length === 0}
-                                        className="btn-download-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="btn-download-all"
                                     >
-                                        <Download className="w-4 h-4" /> {t('wizard.saveInputs')}
+                                        <Download className="icon-md" /> {t('wizard.saveInputs')}
                                     </button>
                                     <button
                                         onClick={() => {
@@ -1182,10 +1182,10 @@ const Wizard = () => {
                                             });
                                         }}
                                         disabled={!genResult}
-                                        className="btn-download-all bg-green-600 hover:bg-green-600 disabled:bg-slate-300"
+                                        className="btn-download-all btn-download-results"
                                         title={t('wizard.downloadGeneratedFiles')}
                                     >
-                                        <Download className="w-4 h-4" /> {t('wizard.downloadResults')}
+                                        <Download className="icon-md" /> {t('wizard.downloadResults')}
                                     </button>
                                 </div>
                             </div>
@@ -1195,16 +1195,16 @@ const Wizard = () => {
 
                 {/* Path Interaction Section - Visible in Details tab */}
                 {activeTab === 'details' && (
-                    <div className="mt-auto p-4 border-t border-slate-200 h-full overflow-y-auto">
-                        <h3 className="text-sm font-semibold text-slate-700 mb-2">Path Finder</h3>
-                        <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2">
+                    <div className="path-finder-container">
+                        <h3 className="path-finder-title">Path Finder</h3>
+                        <div className="path-finder-content">
+                            <div className="path-controls-grid">
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-500 mb-1">Start Node</label>
+                                    <label className="input-label">Start Node</label>
                                     <select
                                         value={pathStart}
                                         onChange={(e) => setPathStart(e.target.value)}
-                                        className="w-full text-sm border-slate-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                        className="input-select"
                                     >
                                         <option value="">Select Start</option>
                                         {pathNodes.map(node => (
@@ -1213,11 +1213,11 @@ const Wizard = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-500 mb-1">End Node</label>
+                                    <label className="input-label">End Node</label>
                                     <select
                                         value={pathEnd}
                                         onChange={(e) => setPathEnd(e.target.value)}
-                                        className="w-full text-sm border-slate-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                        className="input-select"
                                     >
                                         <option value="">Select End</option>
                                         {pathNodes.map(node => (
@@ -1227,27 +1227,29 @@ const Wizard = () => {
                                 </div>
                             </div>
 
+
+
                             <button
                                 onClick={handleCalculatePath}
                                 disabled={pathLoading}
-                                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                className="btn-calculate"
                             >
                                 {pathLoading ? (
                                     <>
-                                        <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                                        <span className="spinner"></span>
                                         Calculating...
                                     </>
                                 ) : (
                                     <>
-                                        <Play className="w-4 h-4 fill-current" /> Calculate Path
+                                        <Play className="icon-md icon-filled" /> Calculate Path
                                     </>
                                 )}
                             </button>
 
                             {calculatedPath && (
-                                <div className="mt-4 p-3 bg-slate-50 rounded border border-slate-200">
-                                    <div className="mb-2">
-                                        <label className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                                <div className="path-progress-container">
+                                    <div className="path-progress-header">
+                                        <label className="path-progress-label-row">
                                             <span>Robot Steps</span>
                                             <span>{pathProgress}%</span>
                                         </label>
@@ -1257,11 +1259,11 @@ const Wizard = () => {
                                             max="100"
                                             value={pathProgress}
                                             onChange={(e) => setPathProgress(parseInt(e.target.value))}
-                                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                            className="path-slider"
                                         />
                                     </div>
 
-                                    <div className="font-mono text-[10px] leading-tight text-slate-700 overflow-x-auto whitespace-pre bg-white p-2 rounded border border-slate-200 shadow-inner max-h-[200px] overflow-y-auto">
+                                    <div className="path-logs-container">
                                         {(() => {
                                             // 1. Calculate Robot Pose based on progress
                                             if (!calculatedPath || calculatedPath.length < 2) return "";
@@ -1357,11 +1359,11 @@ const Wizard = () => {
                                             return (
                                                 <>
                                                     <div>Nodos del camino ({calculatedPath.length}): [{pathIds.join(', ')}]</div>
-                                                    <div className="mt-1">Poses Waypoints: {waypointsStr}</div>
-                                                    <div className="mt-1 font-bold text-blue-700">Robot Pose:     x={rx.toFixed(2)}, y={ry.toFixed(2)}</div>
-                                                    <div className="text-green-700">Nearest Pose:   x={nearest_pose?.x.toFixed(2) || 'N/A'}, y={nearest_pose?.y.toFixed(2) || 'N/A'}</div>
-                                                    <div className="text-purple-700">Assigned Pose:  x={assigned_pose?.x.toFixed(2) || 'N/A'}, y={assigned_pose?.y.toFixed(2) || 'N/A'}</div>
-                                                    <div className="text-red-700">Recovery Pose:  x={recovery_pose?.x.toFixed(2) || 'N/A'}, y={recovery_pose?.y.toFixed(2) || 'N/A'}</div>
+                                                    <div className="text-log-item">Poses Waypoints: {waypointsStr}</div>
+                                                    <div className="mt-1 text-log-label">Robot Pose:     x={rx.toFixed(2)}, y={ry.toFixed(2)}</div>
+                                                    <div className="text-log-nearest">Nearest Pose:   x={nearest_pose?.x.toFixed(2) || 'N/A'}, y={nearest_pose?.y.toFixed(2) || 'N/A'}</div>
+                                                    <div className="text-log-assigned">Assigned Pose:  x={assigned_pose?.x.toFixed(2) || 'N/A'}, y={assigned_pose?.y.toFixed(2) || 'N/A'}</div>
+                                                    <div className="text-log-recovery">Recovery Pose:  x={recovery_pose?.x.toFixed(2) || 'N/A'}, y={recovery_pose?.y.toFixed(2) || 'N/A'}</div>
                                                 </>
                                             );
                                         })()}
@@ -1384,25 +1386,19 @@ const Wizard = () => {
 
             {/* Main Content */}
             <div className="main-content">
-                <div className="map-container relative">
+                <div className="map-container">
                     {/* Map Overlay Toggle */}
-                    <div className="absolute top-4 right-4 z-[1000] bg-white/90 backdrop-blur-sm shadow-md rounded-lg p-1 flex">
+                    <div className="map-view-toggle">
                         <button
                             onClick={() => setViewMode('raw')}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'raw'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                            className={`btn-view-toggle ${viewMode === 'raw' ? 'btn-view-toggle-active-blue' : ''}`}
                         >
                             {t('Raw Input')}
                         </button>
                         <button
                             onClick={() => setViewMode('generated')}
                             disabled={!genResult}
-                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'generated'
-                                ? 'bg-white text-green-600 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed'
-                                }`}
+                            className={`btn-view-toggle ${viewMode === 'generated' ? 'btn-view-toggle-active-green' : ''}`}
                         >
                             {t('Generated')}
                         </button>
@@ -1427,20 +1423,20 @@ const Wizard = () => {
                     </div>
                 )}
                 {viewMode === 'generated' && (
-                    <div className="floating-info border-green-200 bg-green-50/90">
-                        <p className="floating-info-text text-green-800">
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                            Viewing: <span className="drawing-label text-green-900">Generated Route</span>
+                    <div className="floating-info floating-info-generated">
+                        <p className="floating-info-text floating-info-text-generated">
+                            <CheckCircle className="icon-md icon-success" />
+                            Viewing: <span className="drawing-label drawing-label-generated">Generated Route</span>
                         </p>
                     </div>
                 )}
 
                 {/* Options Section - Below Map */}
-                <div className="bg-white p-4 border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10 shrink-0">
-                    <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                        <Settings className="w-4 h-4" /> {t('routeGenerator.options.title')}
+                <div className="options-container">
+                    <h3 className="options-title">
+                        <Settings className="icon-md" /> {t('routeGenerator.options.title')}
                     </h3>
-                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                    <div className="options-grid">
                         <Checkbox
                             label={t('routeGenerator.options.fitStreets')}
                             checked={options.fit_streets}
@@ -1483,28 +1479,28 @@ const Wizard = () => {
                             <div className="modal-header">
                                 <h2 className="modal-title">Route Generation Result</h2>
                                 <button onClick={() => setShowGenModal(false)} className="btn-close-modal">
-                                    <X className="w-6 h-6 text-gray-500" />
+                                    <X className="icon-lg icon-gray" />
                                 </button>
                             </div>
                             <div className="modal-body">
                                 <div className="modal-map-wrapper">
-                                    <img src={genResult.map_image} alt="Generated Map" className="w-full h-auto" />
+                                    <img src={genResult.map_image} alt="Generated Map" className="modal-map-image" />
                                 </div>
                                 <div className="modal-downloads-grid">
                                     <a href={genResult.download_links.csv} download className="download-card group">
-                                        <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
+                                        <Download className="download-card-icon" />
                                         <span className="download-card-text">Global Plan (CSV)</span>
                                     </a>
                                     <a href={genResult.download_links.map_png} download className="download-card group">
-                                        <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
+                                        <Download className="download-card-icon" />
                                         <span className="download-card-text">Map Image (PNG)</span>
                                     </a>
                                     <a href={genResult.download_links.map_yaml} download className="download-card group">
-                                        <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
+                                        <Download className="download-card-icon" />
                                         <span className="download-card-text">Map Config (YAML)</span>
                                     </a>
                                     <a href={genResult.download_links.latlon_yaml} download className="download-card group">
-                                        <Download className="w-6 h-6 text-gray-500 group-hover:text-blue-600" />
+                                        <Download className="download-card-icon" />
                                         <span className="download-card-text">LatLon Config (YAML)</span>
                                     </a>
                                 </div>
@@ -1521,14 +1517,14 @@ export default Wizard;
 
 function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
     return (
-        <label className="flex items-center gap-2 cursor-pointer select-none">
+        <label className="checkbox-label">
             <input
                 type="checkbox"
                 checked={checked}
                 onChange={(e) => onChange(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                className="checkbox-input"
             />
-            <span className="text-sm text-slate-600">{label}</span>
+            <span className="checkbox-text">{label}</span>
         </label>
     )
 }
