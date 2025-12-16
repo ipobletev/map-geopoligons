@@ -193,16 +193,16 @@ const Status: React.FC = () => {
         // items 8..14 to Col 2 (9..15)
 
         return (
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner flex flex-col items-center gap-6">
-                <div className="flex gap-6">
+            <div className="bg-slate-50 p-2 rounded-2xl border border-slate-100 shadow-inner flex flex-col items-center gap-2">
+                <div className="flex gap-2">
                     {/* Col 1: 1..7 */}
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
                         {Array.from({ length: 7 }).map((_, i) => (
                             <GridItem key={i} label={startIdx + i + 1} active={items[i]} />
                         ))}
                     </div>
                     {/* Col 2: 9..15 */}
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
                         {Array.from({ length: 7 }).map((_, i) => (
                             <GridItem key={i} label={startIdx + i + 1 + 8} active={items[i + 8]} />
                         ))}
@@ -245,7 +245,6 @@ const Status: React.FC = () => {
                 <div className="w-52 flex flex-col gap-3 overflow-y-auto pr-1">
                     <h3 className="text-gray-600 font-medium flex items-center justify-between">
                         {t('status.sensorsInfo')}
-                        <Settings size={16} className="text-blue-500" />
                     </h3>
 
                     {/* Laser Group */}
@@ -322,7 +321,7 @@ const Status: React.FC = () => {
                                         {/* Counts Card - Takes up available space */}
                                         <div className="flex-[3] bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-between">
                                             <h4 className="text-xl font-bold text-slate-700 border-b border-gray-100 pb-4">{t('status.generalCounts')}</h4>
-                                            <div className="flex flex-col flex-1 justify-center gap-4">
+                                            <div className="flex flex-col flex-1 justify-center gap-1">
                                                 <InfoField label={t('status.spoolersRight')} value={primerData?.spooler_count_right ?? '-'} />
                                                 <InfoField label={t('status.spoolersLeft')} value={primerData?.spooler_count_left ?? '-'} />
                                                 <InfoField label={t('status.boosterRight')} value={primerData?.booster_count_right ?? '-'} />
@@ -334,15 +333,15 @@ const Status: React.FC = () => {
                                         {/* Controls/Inclination Card - Takes up sidebar space but fills height */}
                                         <div className="flex-[2] flex flex-col gap-6 p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
                                             <div>
-                                                <h4 className="text-xl font-bold text-slate-700 w-full text-center border-b border-gray-100 pb-4 mb-8">{t('status.inclinometer')}</h4>
-                                                <div className="flex flex-col gap-8 items-center">
+                                                <h4 className="text-xl font-bold text-slate-700 w-full text-center border-b border-gray-100 pb-2 mb-4">{t('status.inclinometer')}</h4>
+                                                <div className="flex flex-col gap-2 items-center">
                                                     <InclinationBox label={t('status.rollInclination')} value={inclinationData?.primer_roll_deg?.toFixed(1) ?? '0.0'} />
                                                     <InclinationBox label={t('status.pitchInclination')} value={inclinationData?.primer_pitch_deg?.toFixed(1) ?? '0.0'} />
                                                 </div>
                                             </div>
 
                                             <div className="w-full">
-                                                <button className="w-full h-24 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all duration-200 text-center text-xl leading-tight flex items-center justify-center whitespace-pre-wrap">
+                                                <button className="w-full h-16 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all duration-200 text-center text-xl leading-tight flex items-center justify-center whitespace-pre-wrap">
                                                     {t('status.checkCalibration')}
                                                 </button>
                                             </div>
@@ -368,11 +367,11 @@ const Status: React.FC = () => {
                                 )}
 
                                 {activePrimerTab === 'racks_colihues' && (
-                                    <div className="flex w-full h-full bg-white p-12 rounded-3xl border border-slate-200 shadow-xl flex-col">
-                                        <h4 className="text-xl font-bold text-slate-700 text-center border-b border-gray-100 pb-4 shrink-0">{t('status.colihuesStatus')}</h4>
+                                    <div className="flex w-full h-full bg-white p-4 rounded-3xl border border-slate-200 shadow-xl flex-col">
+                                        <h4 className="text-xl font-bold text-slate-700 text-center border-b border-gray-100 shrink-0">{t('status.colihuesStatus')}</h4>
                                         <div className="flex-1 flex items-center justify-center gap-12 w-full">
                                             {[0, 10, 20].map(offset => (
-                                                <div key={offset} className="flex flex-col justify-between h-[80%]">
+                                                <div key={offset} className="flex flex-col justify-between h-[80%] gap-1">
                                                     {Array.from({ length: 10 }).map((_, i) => (
                                                         <GridItem key={i} label={offset + i + 1} active={false} />
                                                     ))}
@@ -383,15 +382,15 @@ const Status: React.FC = () => {
                                 )}
 
                                 {activePrimerTab === 'racks_booster' && (
-                                    <div className="flex w-full h-full gap-8">
-                                        <div className="flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">{t('status.rackRight')}</span>
+                                    <div className="flex w-full h-full gap-1">
+                                        <div className="flex-1 flex flex-col items-center p-1 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
+                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-1">{t('status.rackRight')}</span>
                                             <div className="flex-1 flex items-center justify-center w-full">
                                                 {renderBoosterPanel(0)}
                                             </div>
                                         </div>
-                                        <div className="flex-1 flex flex-col items-center p-8 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
-                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-4">{t('status.rackLeft')}</span>
+                                        <div className="flex-1 flex flex-col items-center p-1 bg-white rounded-3xl shadow-sm border border-slate-200 justify-between">
+                                            <span className="text-slate-700 font-bold text-2xl border-b border-gray-100 w-full text-center pb-1">{t('status.rackLeft')}</span>
                                             <div className="flex-1 flex items-center justify-center w-full">
                                                 {renderBoosterPanel(15)}
                                             </div>
