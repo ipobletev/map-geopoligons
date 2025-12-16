@@ -82,3 +82,77 @@
 .content-area {
     @apply flex-1 relative overflow-hidden;
 }
+
+/* Robot Mode Badge */
+.robot-mode-badge {
+    @apply px-3 py-1 rounded-md font-bold text-sm border shadow-sm transition-colors mr-4;
+}
+
+.robot-mode-badge.disconnected {
+    @apply bg-gray-100 text-gray-400 border-gray-200;
+}
+
+.robot-mode-badge.auto {
+    @apply bg-blue-100 text-blue-700 border-blue-200;
+}
+
+.robot-mode-badge.manual {
+    @apply bg-orange-100 text-orange-700 border-orange-200;
+}
+
+.robot-mode-badge.unknown {
+    @apply bg-gray-100 text-gray-500 border-gray-200;
+}
+
+/* System Status Badges (Pri, Poz, Die) */
+.system-badge {
+    @apply px-2 py-1 rounded text-xs font-bold border transition-colors relative;
+}
+
+.system-badge.disconnected {
+    @apply bg-gray-100 text-gray-400 border-gray-200;
+}
+
+.system-badge.error {
+    @apply bg-red-500 text-white border-red-600 animate-pulse;
+}
+
+.system-badge.ok {
+    @apply bg-green-100 text-green-700 border-green-200;
+}
+
+/* Error Popup Tooltip */
+.system-error-popup {
+    @apply absolute top-full left-1/2 -translate-x-1/2 text-[10px] font-bold text-red-600 bg-white px-1 rounded shadow-sm mt-0.5 whitespace-nowrap;
+}
+
+/* System Indicators Group */
+.system-indicators-group {
+    @apply flex gap-2 mr-6 border-r border-gray-200 pr-6;
+}
+
+/* Status Label */
+.status-label {
+    @apply font-medium;
+}
+
+.status-label-connected {
+    @apply text-green-600;
+}
+
+.status-label-connecting {
+    @apply text-yellow-600 italic;
+}
+
+.status-label-disconnected {
+    @apply text-red-500;
+}
+
+/* Spinner Internals */
+.spinner-track {
+    @apply opacity-25;
+}
+
+.spinner-path {
+    @apply opacity-75;
+}

@@ -18,7 +18,7 @@ const Sidebar: React.FC = () => {
     const dangerListRef = React.useRef<HTMLUListElement>(null);
 
     // Auto-scroll helper
-    const scrollToBottom = (ref: React.RefObject<HTMLUListElement>) => {
+    const scrollToBottom = (ref: React.RefObject<HTMLUListElement | null>) => {
         if (ref.current) {
             ref.current.scrollTop = ref.current.scrollHeight;
         }

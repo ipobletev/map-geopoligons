@@ -5,8 +5,7 @@ import { usePrimerInfo } from '../ros/topics/PrimerInfo';
 import { useInclination } from '../ros/topics/Inclination';
 import { useMachineInfo } from '../ros/topics/MachineInfo';
 import {
-    Fuel, Battery, Thermometer, Droplet,
-    Settings
+    Fuel, Battery, Thermometer, Droplet
 } from 'lucide-react';
 import '../styles/components/Status.css';
 

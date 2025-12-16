@@ -102,14 +102,14 @@ function App() {
 
             <div className="header-controls">
               {/* Robot Mode Badge */}
-              <div className={`px-3 py-1 rounded-md font-bold text-sm border shadow-sm transition-colors mr-4
+              <div className={`robot-mode-badge
                     ${!isConnected
-                  ? 'bg-gray-100 text-gray-400 border-gray-200'
+                  ? 'disconnected'
                   : machineData?.mode_op_autonomous
-                    ? 'bg-blue-100 text-blue-700 border-blue-200'
+                    ? 'auto'
                     : machineData?.mode_op_manual
-                      ? 'bg-orange-100 text-orange-700 border-orange-200'
-                      : 'bg-gray-100 text-gray-500 border-gray-200'}`}
+                      ? 'manual'
+                      : 'unknown'}`}
               >
                 {!isConnected
                   ? 'DISCONNECTED'
@@ -121,51 +121,51 @@ function App() {
               </div>
 
               {/* Error Badges */}
-              <div className="flex gap-2 mr-6 border-r border-gray-200 pr-6">
+              <div className="system-indicators-group">
                 {/* Primador */}
-                <div className={`px-2 py-1 rounded text-xs font-bold border transition-colors relative group
+                <div className={`system-badge
                         ${!isConnected
-                    ? 'bg-gray-100 text-gray-400 border-gray-200'
+                    ? 'disconnected'
                     : (primerData?.primer_error_code?.code ?? 0) !== 0
-                      ? 'bg-red-500 text-white border-red-600 animate-pulse'
-                      : 'bg-green-100 text-green-700 border-green-200'}`}
+                      ? 'error'
+                      : 'ok'}`}
                   title={t('status.subsystemPrimador')}
                 >
                   PRI
                   {isConnected && (primerData?.primer_error_code?.code ?? 0) !== 0 && (
-                    <span className="absolute top-full left-1/2 -translate-x-1/2 text-[10px] font-bold text-red-600 bg-white px-1 rounded shadow-sm mt-0.5 whitespace-nowrap">
+                    <span className="system-error-popup">
                       E: {primerData?.primer_error_code?.code}
                     </span>
                   )}
                 </div>
                 {/* Pozometro */}
-                <div className={`px-2 py-1 rounded text-xs font-bold border transition-colors relative group
+                <div className={`system-badge
                         ${!isConnected
-                    ? 'bg-gray-100 text-gray-400 border-gray-200'
+                    ? 'disconnected'
                     : (primerData?.level_probe_error_code?.code ?? 0) !== 0
-                      ? 'bg-red-500 text-white border-red-600 animate-pulse'
-                      : 'bg-green-100 text-green-700 border-green-200'}`}
+                      ? 'error'
+                      : 'ok'}`}
                   title={t('status.subsystemPozometro')}
                 >
                   POZ
                   {isConnected && (primerData?.level_probe_error_code?.code ?? 0) !== 0 && (
-                    <span className="absolute top-full left-1/2 -translate-x-1/2 text-[10px] font-bold text-red-600 bg-white px-1 rounded shadow-sm mt-0.5 whitespace-nowrap">
+                    <span className="system-error-popup">
                       E: {primerData?.level_probe_error_code?.code}
                     </span>
                   )}
                 </div>
                 {/* Dieci */}
-                <div className={`px-2 py-1 rounded text-xs font-bold border transition-colors relative group
+                <div className={`system-badge
                         ${!isConnected
-                    ? 'bg-gray-100 text-gray-400 border-gray-200'
+                    ? 'disconnected'
                     : machineData?.estop_dieci
-                      ? 'bg-red-500 text-white border-red-600 animate-pulse'
-                      : 'bg-green-100 text-green-700 border-green-200'}`}
+                      ? 'error'
+                      : 'ok'}`}
                   title={t('status.subsystemDieci')}
                 >
                   DIE
                   {isConnected && machineData?.estop_dieci && machineData?.emergency_stop_code?.code !== undefined && machineData?.emergency_stop_code?.code !== 0 && (
-                    <span className="absolute top-full left-1/2 -translate-x-1/2 text-[10px] font-bold text-red-600 bg-white px-1 rounded shadow-sm mt-0.5 whitespace-nowrap">
+                    <span className="system-error-popup">
                       E: {machineData?.emergency_stop_code?.code}
                     </span>
                   )}
@@ -200,11 +200,11 @@ function App() {
                 <div className="status-text-wrapper">
                   {isReconnecting && (
                     <svg className="status-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <circle className="spinner-track" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="spinner-path" fill="currentColor" d="M4 12a8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   )}
-                  <span className={`${isConnected ? 'text-green-600 font-medium' : isReconnecting ? 'text-yellow-600 italic' : 'text-red-500'}`}>
+                  <span className={`status-label ${isConnected ? 'status-label-connected' : isReconnecting ? 'status-label-connecting' : 'status-label-disconnected'}`}>
                     {isConnected ? t('status.systemReady') : isReconnecting ? t('status.connecting') : t('status.disconnected')}
                   </span>
                 </div>
