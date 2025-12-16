@@ -6,6 +6,9 @@ export interface MachineInfoMsg {
     rpm: number;
     fuel_level: number;
     main_battery_voltage: number;
+    aux_battery_voltage: number;
+    engine_temperature?: number;
+    oil_engine_pressure_indicator?: boolean;
     cell_load_95: boolean;
     contact_indicator: boolean;
     machine_on_status: boolean; // machine_on state

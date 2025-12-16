@@ -1,55 +1,73 @@
-import { useState } from 'react';
-import Wizard from './components/Wizard';
+import React, { useState } from 'react';
 import Supervisor from './components/Supervisor';
 import Sidebar from './components/Sidebar';
-import LanguageSwitcher from './components/LanguageSwitcher';
-import TabNavigation from './components/TabNavigation';
-import './styles/App.css';
+import Status from './components/Status';
+import Wizard from './components/Wizard';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('planner');
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'supervisor':
-        return <Supervisor />;
-      case 'status':
-        return <div className="p-4"><h2>Estado Component (Empty)</h2></div>;
-      case 'autonomous':
-        return <div className="p-4"><h2>Autonomo Component (Empty)</h2></div>;
-      case 'planner':
-        return (
-          <div className="h-full">
-            <Wizard />
-          </div>
-        );
-      default:
-        return <div className="p-4"><h2>Select a tab</h2></div>;
-    }
-  };
+  const [activeTab, setActiveTab] = useState('supervisor');
 
   return (
-    <div className="flex flex-row h-screen w-screen overflow-hidden bg-gray-50">
-
-      {/* Global Sidebar (Left) */}
+    <div className="flex h-screen w-screen bg-gray-100 overflow-hidden font-sans text-slate-800">
+      {/* Global Sidebar - Persistent across tabs */}
       <Sidebar />
 
-      {/* Main Content (Right) */}
-      <div className="flex flex-col flex-1 h-full overflow-hidden">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Top Navigation Bar */}
+        <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex-none z-10">
+          <div className="flex items-center h-full px-6">
+            <h1 className="text-xl font-bold text-blue-900 mr-12 tracking-tight">
+              ENAEX <span className="text-gray-400 font-light">|</span> WEB WIZARD
+            </h1>
 
-        {/* Header / Tabs Area */}
-        <div className="bg-gray-200 border-b border-gray-300 shrink-0">
-          <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
-            <h1 className="font-bold text-slate-700">Enaex Open Pit</h1>
-            <LanguageSwitcher />
+            <nav className="flex space-x-1 h-full">
+              {[
+                { id: 'supervisor', label: 'Supervisor' },
+                { id: 'status', label: 'Estado' },
+                { id: 'autonomous', label: 'Autónomo' },
+                { id: 'planner', label: 'Planificador' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    px-6 h-full flex items-center text-sm font-medium transition-colors relative
+                    ${activeTab === tab.id
+                      ? 'text-blue-600 bg-blue-50/50'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
+                  `}
+                >
+                  {tab.label}
+                  {activeTab === tab.id && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full" />
+                  )}
+                </button>
+              ))}
+            </nav>
+
+            <div className="ml-auto flex items-center text-sm text-gray-400">
+              <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+              System Ready
+            </div>
           </div>
-          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
+        </header>
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-auto bg-gray-100 relative">
-          {renderContent()}
-        </div>
+        {/* Dynamic Tab Content */}
+        <main className="flex-1 overflow-hidden relative bg-gray-50">
+          {activeTab === 'supervisor' && <Supervisor />}
+          {activeTab === 'status' && <Status />}
+          {activeTab === 'autonomous' && (
+            <div className="flex items-center justify-center h-full text-gray-400">
+              Contenido de Autónomo en construcción...
+            </div>
+          )}
+          {activeTab === 'planner' && (
+            <div className="h-full">
+              <Wizard />
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
