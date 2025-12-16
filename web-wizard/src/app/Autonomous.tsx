@@ -34,13 +34,25 @@ const StatusField = ({ label, value }: { label: string, value: string }) => (
     </div>
 );
 
-const Autonomous: React.FC = () => {
+const Autonomous: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
     const { t } = useTranslation();
     // Mock State for UI visualization
     const [consoleState] = useState<'idle' | 'request'>('idle');
 
     return (
-        <div className="flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden">
+        <div className="flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden relative">
+            {/* Disconnected Overlay */}
+            {!isConnected && (
+                <div className="absolute inset-0 z-50 bg-gray-200/50 backdrop-blur-[0.8px] flex items-center justify-center">
+                    <div className="bg-white/90 px-8 py-4 rounded-xl shadow-lg border border-red-200 flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span className="text-red-600 font-bold text-lg">{t('app.disconnectedOverlay')}</span>
+                    </div>
+                </div>
+            )}
+
 
             {/* TOP SECTION: Console & Operation Buttons */}
             <div className="flex gap-6 h-[25%] min-h-[200px] shrink-0">

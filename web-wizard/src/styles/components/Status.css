@@ -1,0 +1,10 @@
+/* Vertical Tabs (Status.tsx) */
+.vertical-tab {
+    @apply flex-grow flex items-center justify-center text-sm font-bold tracking-wide transition-colors text-gray-500 hover:bg-gray-200;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+
+.vertical-tab-active {
+    @apply bg-[#e6e7eb] text-slate-800;
+}

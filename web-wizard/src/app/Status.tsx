@@ -8,6 +8,7 @@ import {
     Fuel, Battery, Thermometer, Droplet,
     Settings
 } from 'lucide-react';
+import '../styles/components/Status.css';
 
 // --- Sub-components ---
 
@@ -87,7 +88,7 @@ w-14 h-8 flex items-center justify-center rounded border border-gray-800 text-sm
     </div>
 );
 
-const Status: React.FC = () => {
+const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
     const { t } = useTranslation();
     const { data: primerData } = usePrimerInfo();
     const { data: inclinationData } = useInclination();
@@ -216,7 +217,18 @@ const Status: React.FC = () => {
 
 
     return (
-        <div className="flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden">
+        <div className="flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden relative">
+            {/* Disconnected Overlay */}
+            {!isConnected && (
+                <div className="absolute inset-0 z-50 bg-gray-200/50 backdrop-blur-[0.8px] flex items-center justify-center">
+                    <div className="bg-white/90 px-8 py-4 rounded-xl shadow-lg border border-red-200 flex items-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span className="text-red-600 font-bold text-lg">{t('app.disconnectedOverlay')}</span>
+                    </div>
+                </div>
+            )}
 
             {/* TOP SECTION: Dieci Info & Titles */}
             <div className="flex items-start justify-between z-10 shrink-0">
@@ -301,12 +313,11 @@ const Status: React.FC = () => {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActivePrimerTab(tab.id as any)}
-                                        className={`flex-grow flex items-center justify-center text-sm font-bold tracking-wide transition-colors
+                                        className={`vertical-tab
                                             ${activePrimerTab === tab.id
-                                                ? 'bg-[#e6e7eb] text-slate-800'
-                                                : 'text-gray-500 hover:bg-gray-200'
+                                                ? 'vertical-tab-active'
+                                                : ''
                                             }`}
-                                        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
                                     >
                                         {tab.label}
                                     </button>

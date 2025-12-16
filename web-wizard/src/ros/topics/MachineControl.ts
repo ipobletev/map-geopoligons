@@ -22,3 +22,14 @@ export const toggleMachineOperative = (state: boolean) => {
     const msg = new (ROSLIB as any).Message({ data: state });
     topic.publish(msg);
 };
+
+export const clearErrors = () => {
+    const connection = RosConnection.getInstance();
+    const topic = new ROSLIB.Topic({
+        ros: connection.getRos(),
+        name: '/GUI/clear_errors',
+        messageType: 'std_msgs/Bool'
+    });
+    const msg = new (ROSLIB as any).Message({ data: true });
+    topic.publish(msg);
+};

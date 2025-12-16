@@ -1,7 +1,8 @@
 {
     "app": {
         "title": "Map Wizard",
-        "subtitle": "Advanced map processing and route generation tools"
+        "subtitle": "Advanced map processing and path generation tools",
+        "disconnectedOverlay": "System Disconnected"
     },
     "tabs": {
         "mapWizard": "Map Wizard",
@@ -92,6 +93,7 @@
     "supervisor": {
         "start": "START",
         "contact": "Contact",
+        "clearErrors": "Clear Errors",
         "fuel": "Fuel [%]",
         "speed": "Speed",
         "rpm": "RPM",

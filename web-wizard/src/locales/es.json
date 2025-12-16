@@ -1,7 +1,8 @@
 {
     "app": {
         "title": "Map Wizard",
-        "subtitle": "Herramientas avanzadas de procesamiento de mapas y generación de rutas"
+        "subtitle": "Herramientas avanzadas de procesamiento de mapas y generación de rutas",
+        "disconnectedOverlay": "Sistema Desconectado"
     },
     "tabs": {
         "mapWizard": "Asistente de Mapa",
@@ -92,6 +93,7 @@
     "supervisor": {
         "start": "INICIAR",
         "contact": "Contacto",
+        "clearErrors": "Limpiar Errores",
         "fuel": "Combustible [%]",
         "speed": "Velocidad",
         "rpm": "RPM",
