@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { WIZARD_STEPS } from '../types';
-import MapComponent from './MapComponent';
+import MapComponent from '../components/MapComponent';
 import { enrichGeoJSONWithUTM } from '../utils/utm';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { ArrowRight, ArrowLeft, CheckCircle, Trash2, Upload, Download, Folder, Play, X, Settings, Send } from 'lucide-react';
-import TransferModal from './TransferModal';
+import TransferModal from '../components/TransferModal';
 import { parseHolFile, generateHolString, UTM_ZONE_19S, WGS84 } from '../utils/holParser';
 import proj4 from 'proj4';
 import { generateRoutes } from '../routes/generateRoutes';
@@ -1414,6 +1414,7 @@ const Wizard = () => {
                         onUpdate={handleMapUpdate}
                         centerTrigger={centerTrigger}
                     />
+
                 </div>
 
                 {/* Floating Info */}
@@ -1434,12 +1435,12 @@ const Wizard = () => {
                     </div>
                 )}
 
-                {/* Options Section */}
-                <div className="mt-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm shrink-0">
+                {/* Options Section - Below Map */}
+                <div className="bg-white p-4 border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10 shrink-0">
                     <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
                         <Settings className="w-4 h-4" /> {t('routeGenerator.options.title')}
                     </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
                         <Checkbox
                             label={t('routeGenerator.options.fitStreets')}
                             checked={options.fit_streets}

@@ -131,11 +131,12 @@
 }
 
 .main-content {
-    @apply flex-1 flex flex-col h-full relative;
+    @apply flex-1 flex flex-col h-full relative overflow-hidden;
 }
 
 .map-container {
-    @apply flex-1 w-full relative p-4;
+    @apply w-full relative p-4 min-h-0;
+    height: 85%;
 }
 
 .floating-info {

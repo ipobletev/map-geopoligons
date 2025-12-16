@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    Play, XCircle, Home, Truck, CheckCircle,
+    Truck, CheckCircle,
     Settings, Ruler, FileText, Droplet, Zap,
     Upload, RefreshCw, Map as MapIcon,
     AlertCircle
@@ -35,7 +35,7 @@ const StatusField = ({ label, value }: { label: string, value: string }) => (
 
 const Autonomous: React.FC = () => {
     // Mock State for UI visualization
-    const [consoleState, setConsoleState] = useState<'idle' | 'request'>('idle');
+    const [consoleState] = useState<'idle' | 'request'>('idle');
 
     return (
         <div className="flex flex-col h-full bg-[#e6e7eb] p-6 gap-6 font-sans text-slate-800 overflow-hidden">
@@ -70,11 +70,11 @@ const Autonomous: React.FC = () => {
                 <div className="flex-[1] flex flex-col gap-3 h-full">
                     <span className="text-sm font-medium text-slate-500 ml-1 mb-1 hidden">Botones de Operación</span>
 
-                    <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center px-4 gap-3 transition-all relative overflow-hidden group">
+                    <button className="flex-1 bg-[#0055cb] hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center gap-3 transition-all relative overflow-hidden group">
                         <div className="flex items-center justify-center bg-white/20 p-2 rounded-lg">
                             <Truck size={24} className="text-white fill-current" />
                         </div>
-                        <span className="font-bold text-lg leading-tight text-left">Iniciar<br />Operación</span>
+                        <span className="font-bold text-lg leading-tight text-center">Iniciar Operación</span>
                         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
 

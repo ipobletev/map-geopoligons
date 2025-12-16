@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import Wizard from './components/Wizard';
-import Supervisor from './components/Supervisor';
-import Status from './components/Status';
-import Autonomous from './components/Autonomous';
-import Sidebar from './components/Sidebar';
+import { useState } from 'react';
+import Wizard from './app/Wizard';
+import Supervisor from './app/Supervisor';
+import Status from './app/Status';
+import Autonomous from './app/Autonomous';
+import Sidebar from './app/Sidebar';
 
 function App() {
   const [activeTab, setActiveTab] = useState('supervisor');
