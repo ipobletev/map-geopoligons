@@ -44,11 +44,11 @@
 
 /* Status Indicators */
 .status-container {
-    @apply flex items-center;
+    @apply flex flex-row items-center gap-2;
 }
 
 .status-dot {
-    @apply w-2 h-2 rounded-full mr-2 transition-all duration-500;
+    @apply w-2 h-2 rounded-full transition-all duration-500 flex-shrink-0 block;
 }
 
 /* Specific status colors are best kept utility or specific modifier classes */
@@ -68,7 +68,7 @@
 }
 
 .status-text-wrapper {
-    @apply flex items-center gap-2 w-40;
+    @apply flex items-center w-auto;
 }
 
 .status-spinner {
