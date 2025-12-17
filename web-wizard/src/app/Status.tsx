@@ -210,7 +210,7 @@ const Status: React.FC<{ isConnected: boolean }> = ({ isConnected }) => {
 
 
     return (
-        <div className="status-container">
+        <div className="status-page-container">
             {/* Disconnected Overlay */}
             {!isConnected && (
                 <div className="disconnected-overlay">
